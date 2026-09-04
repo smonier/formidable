@@ -23,3 +23,5 @@ export * from './step';
 export * from './validation';
 export * from './publication';
 // export * from './inputHidden';
+export * from './salesforce';
+export * from './hubspot';

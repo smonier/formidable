@@ -8,6 +8,8 @@
 		"formidable-elements",
 		"formidable-engine",
 		"formidable-extended-inputs",
+		"formidable-salesforce",
+		"formidable-hubspot",
 		"jahia-test-module/formidable-test-module-templateset-tsx",
 		"jahia-test-module/formidable-test-module-samples-tsx"
 	],

@@ -1,0 +1,16 @@
+<nt = 'http://www.jcp.org/jcr/nt/1.0'>
+<mix = 'http://www.jcp.org/jcr/mix/1.0'>
+<jnt = 'http://www.jahia.org/jahia/nt/1.0'>
+<fmdbmix = 'http://www.jahia.org/jahia/fmdb/mix/1.0'>
+<fmdbsfdc = 'http://www.jahia.org/jahia/fmdbsfdc/nt/1.0'>
+
+// Creates (or upserts) a Salesforce Lead from the submitted form values.
+// The Salesforce connection (instance URL, consumer key, private key) lives in operator
+// configuration (org.jahia.modules.formidable.salesforce-<id>.cfg); JCR only holds its id.
+// fieldMapping is a JSON document authored by the SalesforceLeadMapping selector type.
+[fmdbsfdc:createLeadAction] > jnt:content, fmdbmix:formAction, fmdbmix:readOnlyCompatibleAction, mix:title
+ - jcr:title (string) = resourceBundle('fmdbsfdc_createLeadAction') autocreated i18n
+ - connectionId (string, choicelist[formidableSfdcConnections]) mandatory indexed=no
+ - fieldMapping (string) indexed=no
+ - duplicateStrategy (string, choicelist[resourceBundle]) = 'create' autocreated indexed=no < 'create', 'upsertByEmail'
+ - failSubmissionOnError (boolean) = true autocreated indexed=no

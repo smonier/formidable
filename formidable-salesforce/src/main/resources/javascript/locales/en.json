@@ -1,0 +1,44 @@
+{
+	"leadMapping": {
+		"columns": {
+			"salesforceField": "Salesforce field",
+			"source": "Source",
+			"value": "Value"
+		},
+		"sources": {
+			"field": "Form field",
+			"constant": "Constant"
+		},
+		"selectSalesforceField": "Select a Salesforce field",
+		"selectFormField": "Select a form field",
+		"selectPicklistValue": "Select a value",
+		"constantPlaceholder": "Constant value",
+		"booleanTrue": "True",
+		"booleanFalse": "False",
+		"add": "Add mapping",
+		"autoMap": "Auto-map by name",
+		"remove": "Remove this mapping",
+		"noRows": "No field is mapped yet. Add a mapping or auto-map the form fields by name.",
+		"loadingSalesforce": "Loading Salesforce Lead fields...",
+		"noConnection": "Select a Salesforce connection first.",
+		"unresolvedContext": "Unable to resolve the edited node path.",
+		"formNotFound": "Unable to resolve the parent form.",
+		"formFieldsLoadError": "Unable to load the form fields.",
+		"salesforceLoadError": "Unable to load the Salesforce Lead fields",
+		"noFormFields": "This form has no submittable field yet. Only constants can be mapped.",
+		"noSalesforceFields": "This connection exposes no createable Lead field.",
+		"missingRequired": "Required Salesforce fields not mapped: {{fields}}",
+		"typeHint": "{{sfField}} expects a {{sfType}} value but \"{{formField}}\" is a {{kind}} field.",
+		"kinds": {
+			"choice": "choice",
+			"date": "date",
+			"number": "number",
+			"boolean": "yes/no",
+			"text": "text",
+			"email": "email"
+		},
+		"unknownFields": "Not available on this Salesforce connection (the lead would be rejected): {{fields}}",
+		"refreshFields": "Refresh Salesforce fields",
+		"refreshFieldsHint": "Fetch the Lead fields again from Salesforce, bypassing the server cache (after a schema or permission change in the org)"
+	}
+}

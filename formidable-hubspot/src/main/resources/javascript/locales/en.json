@@ -1,0 +1,44 @@
+{
+	"contactMapping": {
+		"columns": {
+			"hubspotField": "HubSpot property",
+			"source": "Source",
+			"value": "Value"
+		},
+		"sources": {
+			"field": "Form field",
+			"constant": "Constant"
+		},
+		"selectHubspotField": "Select a HubSpot property",
+		"selectFormField": "Select a form field",
+		"selectPicklistValue": "Select a value",
+		"constantPlaceholder": "Constant value",
+		"booleanTrue": "True",
+		"booleanFalse": "False",
+		"add": "Add mapping",
+		"autoMap": "Auto-map by name",
+		"remove": "Remove this mapping",
+		"noRows": "No property is mapped yet. Add a mapping or auto-map the form fields by name.",
+		"loadingHubspot": "Loading HubSpot contact properties...",
+		"noConnection": "Select a HubSpot connection first.",
+		"unresolvedContext": "Unable to resolve the edited node path.",
+		"formNotFound": "Unable to resolve the parent form.",
+		"formFieldsLoadError": "Unable to load the form fields.",
+		"hubspotLoadError": "Unable to load the HubSpot contact properties",
+		"noFormFields": "This form has no submittable field yet. Only constants can be mapped.",
+		"noHubspotFields": "This connection exposes no writable contact property.",
+		"missingRequired": "Required HubSpot properties not mapped: {{fields}}",
+		"typeHint": "{{hsProperty}} expects a {{hsType}} value but \"{{formField}}\" is a {{kind}} field.",
+		"kinds": {
+			"choice": "choice",
+			"date": "date",
+			"number": "number",
+			"boolean": "yes/no",
+			"text": "text",
+			"email": "email"
+		},
+		"unknownFields": "Not available on this HubSpot connection (the contact would be rejected): {{fields}}",
+		"refreshFields": "Refresh HubSpot properties",
+		"refreshFieldsHint": "Fetch the contact properties again from HubSpot, bypassing the server cache (after a property or private app scope change in the portal)"
+	}
+}

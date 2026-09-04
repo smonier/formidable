@@ -1,0 +1,9 @@
+{
+	"name": "fmdbhs:createContactAction",
+	"fields": [
+		{
+			"name": "fieldMapping",
+			"selectorType": "HubspotContactMapping"
+		}
+	]
+}

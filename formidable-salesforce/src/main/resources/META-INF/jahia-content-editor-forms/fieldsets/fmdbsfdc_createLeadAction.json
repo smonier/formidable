@@ -1,0 +1,9 @@
+{
+	"name": "fmdbsfdc:createLeadAction",
+	"fields": [
+		{
+			"name": "fieldMapping",
+			"selectorType": "SalesforceLeadMapping"
+		}
+	]
+}

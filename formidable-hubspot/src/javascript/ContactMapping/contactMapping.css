@@ -1,0 +1,67 @@
+/*
+ * The mapping table is a grid without being a <table>: every row lays its cells on the
+ * same four tracks (Hubspot field, source mode, value, remove button), so columns
+ * align vertically whatever each row renders. minmax(0, …) tracks plus min-width: 0
+ * children let the dropdowns shrink below their content instead of pushing the row
+ * apart; the remove button track is fixed to its icon.
+ */
+.fmdbhs-contactMapping {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.fmdbhs-contactMappingGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr) minmax(0, 1.4fr) 2.5rem;
+    gap: 0.5rem 0.75rem;
+    align-items: center;
+}
+
+.fmdbhs-contactMappingGrid > * {
+    min-width: 0;
+}
+
+.fmdbhs-contactMappingHeader {
+    color: var(--color-gray);
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--color-gray_light40, var(--color-gray_light));
+}
+
+/* Rows are `display: contents`: their cells sit directly on the grid tracks. */
+.fmdbhs-contactMappingRow {
+    display: contents;
+}
+
+.fmdbhs-contactMappingRemove {
+    display: flex;
+    justify-content: center;
+}
+
+.fmdbhs-contactMappingActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+/* Status lines (loading, no connection, load error) and non-blocking warnings. */
+.fmdbhs-contactMappingStatus {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 1.25rem;
+}
+
+.fmdbhs-contactMappingWarning {
+    color: var(--color-warning, #e67e22);
+}
+
+.fmdbhs-contactMappingError {
+    color: var(--color-danger);
+}
+
+.fmdbhs-contactMappingMuted {
+    color: var(--color-gray);
+}

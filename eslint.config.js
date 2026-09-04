@@ -55,6 +55,8 @@ export default defineConfig(
       // formidable-engine/.gitignore (the generated module-federation bundle,
       // ~600 false positives when linted).
       "formidable-engine/src/main/resources/javascript/apps/**",
+      "formidable-salesforce/src/main/resources/javascript/apps/**",
+      "formidable-hubspot/src/main/resources/javascript/apps/**",
     ],
   },
 );

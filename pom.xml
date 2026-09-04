@@ -51,6 +51,8 @@
         <module>formidable-engine</module>
         <module>formidable-elements</module>
         <module>formidable-extended-inputs</module>
+        <module>formidable-salesforce</module>
+        <module>formidable-hubspot</module>
         <module>jahia-test-module</module>
     </modules>
 

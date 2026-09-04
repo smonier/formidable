@@ -1,0 +1,44 @@
+{
+	"leadMapping": {
+		"columns": {
+			"salesforceField": "Champ Salesforce",
+			"source": "Source",
+			"value": "Valeur"
+		},
+		"sources": {
+			"field": "Champ du formulaire",
+			"constant": "Constante"
+		},
+		"selectSalesforceField": "Sélectionner un champ Salesforce",
+		"selectFormField": "Sélectionner un champ du formulaire",
+		"selectPicklistValue": "Sélectionner une valeur",
+		"constantPlaceholder": "Valeur constante",
+		"booleanTrue": "Vrai",
+		"booleanFalse": "Faux",
+		"add": "Ajouter une correspondance",
+		"autoMap": "Associer automatiquement par nom",
+		"remove": "Supprimer cette correspondance",
+		"noRows": "Aucun champ n'est encore associé. Ajoutez une correspondance ou associez automatiquement les champs du formulaire par nom.",
+		"loadingSalesforce": "Chargement des champs Lead Salesforce...",
+		"noConnection": "Sélectionnez d'abord une connexion Salesforce.",
+		"unresolvedContext": "Impossible de déterminer le chemin du nœud édité.",
+		"formNotFound": "Impossible de déterminer le formulaire parent.",
+		"formFieldsLoadError": "Impossible de charger les champs du formulaire.",
+		"salesforceLoadError": "Impossible de charger les champs Lead Salesforce",
+		"noFormFields": "Ce formulaire ne contient encore aucun champ soumis. Seules des constantes peuvent être associées.",
+		"noSalesforceFields": "Cette connexion n'expose aucun champ Lead créable.",
+		"missingRequired": "Champs Salesforce obligatoires non associés : {{fields}}",
+		"typeHint": "{{sfField}} attend une valeur de type {{sfType}} mais « {{formField}} » est un champ de type {{kind}}.",
+		"kinds": {
+			"choice": "choix",
+			"date": "date",
+			"number": "nombre",
+			"boolean": "oui/non",
+			"text": "texte",
+			"email": "e-mail"
+		},
+		"unknownFields": "Indisponible sur cette connexion Salesforce (le lead serait rejeté) : {{fields}}",
+		"refreshFields": "Actualiser les champs Salesforce",
+		"refreshFieldsHint": "Recharge les champs du Lead depuis Salesforce en ignorant le cache serveur (après une modification du schéma ou des droits dans l'org)"
+	}
+}

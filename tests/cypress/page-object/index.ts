@@ -12,6 +12,10 @@ export {Form, FORM_HYDRATION_TIMEOUT_MS, isFormHydrated} from './Form';
 export {Fieldset} from './Fieldset';
 export {ConditionalLogicEditor} from './ConditionalLogicEditor';
 export {ConditionalLogicField} from './ConditionalLogicField';
+export {SalesforceLeadActionEditor} from './SalesforceLeadActionEditor';
+export {SalesforceLeadMappingField} from './SalesforceLeadMappingField';
+export {HubspotContactActionEditor} from './HubspotContactActionEditor';
+export {HubspotContactMappingField} from './HubspotContactMappingField';
 
 // Form elements
 export {FormElement} from './elements/FormElement';

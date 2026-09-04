@@ -1,0 +1,67 @@
+/*
+ * The mapping table is a grid without being a <table>: every row lays its cells on the
+ * same four tracks (Salesforce field, source mode, value, remove button), so columns
+ * align vertically whatever each row renders. minmax(0, …) tracks plus min-width: 0
+ * children let the dropdowns shrink below their content instead of pushing the row
+ * apart; the remove button track is fixed to its icon.
+ */
+.fmdbsfdc-leadMapping {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.fmdbsfdc-leadMappingGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr) minmax(0, 1.4fr) 2.5rem;
+    gap: 0.5rem 0.75rem;
+    align-items: center;
+}
+
+.fmdbsfdc-leadMappingGrid > * {
+    min-width: 0;
+}
+
+.fmdbsfdc-leadMappingHeader {
+    color: var(--color-gray);
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--color-gray_light40, var(--color-gray_light));
+}
+
+/* Rows are `display: contents`: their cells sit directly on the grid tracks. */
+.fmdbsfdc-leadMappingRow {
+    display: contents;
+}
+
+.fmdbsfdc-leadMappingRemove {
+    display: flex;
+    justify-content: center;
+}
+
+.fmdbsfdc-leadMappingActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+/* Status lines (loading, no connection, load error) and non-blocking warnings. */
+.fmdbsfdc-leadMappingStatus {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 1.25rem;
+}
+
+.fmdbsfdc-leadMappingWarning {
+    color: var(--color-warning, #e67e22);
+}
+
+.fmdbsfdc-leadMappingError {
+    color: var(--color-danger);
+}
+
+.fmdbsfdc-leadMappingMuted {
+    color: var(--color-gray);
+}

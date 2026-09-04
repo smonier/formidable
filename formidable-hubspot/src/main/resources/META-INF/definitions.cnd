@@ -1,0 +1,16 @@
+<nt = 'http://www.jcp.org/jcr/nt/1.0'>
+<mix = 'http://www.jcp.org/jcr/mix/1.0'>
+<jnt = 'http://www.jahia.org/jahia/nt/1.0'>
+<fmdbmix = 'http://www.jahia.org/jahia/fmdb/mix/1.0'>
+<fmdbhs = 'http://www.jahia.org/jahia/fmdbhs/nt/1.0'>
+
+// Creates (or upserts) a HubSpot Contact from the submitted form values.
+// The HubSpot connection (API base URL, private app token) lives in operator configuration
+// (org.jahia.modules.formidable.hubspot-<id>.cfg); JCR only holds its id.
+// fieldMapping is a JSON document authored by the HubspotContactMapping selector type.
+[fmdbhs:createContactAction] > jnt:content, fmdbmix:formAction, fmdbmix:readOnlyCompatibleAction, mix:title
+ - jcr:title (string) = resourceBundle('fmdbhs_createContactAction') autocreated i18n
+ - connectionId (string, choicelist[formidableHubspotConnections]) mandatory indexed=no
+ - fieldMapping (string) indexed=no
+ - duplicateStrategy (string, choicelist[resourceBundle]) = 'create' autocreated indexed=no < 'create', 'upsertByEmail'
+ - failSubmissionOnError (boolean) = true autocreated indexed=no

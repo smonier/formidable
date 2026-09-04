@@ -7,6 +7,12 @@ import {JahiaNode, NodeProperty} from './types';
 
 interface CreateFormNodeOptions {
 	actions?: JahiaNode[];
+	/**
+	 * How to publish and wait. Defaults to publishAndWaitJobEnding (job scheduler based); a
+	 * fixture may pass another strategy, e.g. one polling the live workspace when the
+	 * instance carries a stale EXECUTING publication job.
+	 */
+	publish?: (path: string, languages?: string[]) => void;
 	mixins?: string[];
 	properties?: NodeProperty[];
 	pageProperties?: NodeProperty[];
@@ -145,8 +151,9 @@ export const createPublishedLiveFormPage = (
 			});
 		})
 		.then(() => {
-			publishAndWaitJobEnding(formPath, options.publishLanguages);
-			publishAndWaitJobEnding(pagePath, options.publishLanguages);
+			const publish = options.publish ?? publishAndWaitJobEnding;
+			publish(formPath, options.publishLanguages);
+			publish(pagePath, options.publishLanguages);
 
 			return cy.wrap<LiveFormPageInfo>({formId, formName, formPath, pagePath, livePath, referencePath}, {log: false});
 		});

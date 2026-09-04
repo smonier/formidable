@@ -1,0 +1,44 @@
+{
+	"contactMapping": {
+		"columns": {
+			"hubspotField": "Propriété HubSpot",
+			"source": "Source",
+			"value": "Valeur"
+		},
+		"sources": {
+			"field": "Champ du formulaire",
+			"constant": "Constante"
+		},
+		"selectHubspotField": "Sélectionner une propriété HubSpot",
+		"selectFormField": "Sélectionner un champ du formulaire",
+		"selectPicklistValue": "Sélectionner une valeur",
+		"constantPlaceholder": "Valeur constante",
+		"booleanTrue": "Vrai",
+		"booleanFalse": "Faux",
+		"add": "Ajouter une correspondance",
+		"autoMap": "Associer automatiquement par nom",
+		"remove": "Supprimer cette correspondance",
+		"noRows": "Aucune propriété n'est encore associée. Ajoutez une correspondance ou associez automatiquement les champs du formulaire par nom.",
+		"loadingHubspot": "Chargement des propriétés du contact HubSpot...",
+		"noConnection": "Sélectionnez d'abord une connexion HubSpot.",
+		"unresolvedContext": "Impossible de déterminer le chemin du nœud édité.",
+		"formNotFound": "Impossible de déterminer le formulaire parent.",
+		"formFieldsLoadError": "Impossible de charger les champs du formulaire.",
+		"hubspotLoadError": "Impossible de charger les propriétés du contact HubSpot",
+		"noFormFields": "Ce formulaire ne contient encore aucun champ soumis. Seules des constantes peuvent être associées.",
+		"noHubspotFields": "Cette connexion n'expose aucune propriété de contact modifiable.",
+		"missingRequired": "Propriétés HubSpot obligatoires non associées : {{fields}}",
+		"typeHint": "{{hsProperty}} attend une valeur de type {{hsType}} mais « {{formField}} » est un champ de type {{kind}}.",
+		"kinds": {
+			"choice": "choix",
+			"date": "date",
+			"number": "nombre",
+			"boolean": "oui/non",
+			"text": "texte",
+			"email": "e-mail"
+		},
+		"unknownFields": "Indisponible sur cette connexion HubSpot (le contact serait rejeté) : {{fields}}",
+		"refreshFields": "Actualiser les propriétés HubSpot",
+		"refreshFieldsHint": "Recharge les propriétés du contact depuis HubSpot en ignorant le cache serveur (après une modification des propriétés ou des droits de l'application privée dans le portail)"
+	}
+}
