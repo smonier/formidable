@@ -9,7 +9,7 @@
 		"lint": "eslint src/javascript"
 	},
 	"dependencies": {
-		"@apollo/client": "^3.7.17",
+		"@apollo/client": "3.14.0",
 		"@jahia/moonstone": "2.16.2",
 		"@jahia/ui-extender": "^1.2.0",
 		"graphql": "^16.10.0",

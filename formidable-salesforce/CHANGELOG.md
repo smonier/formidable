@@ -26,6 +26,12 @@ Release notes for the whole repository are assembled by [chachalog](../.chachalo
 * English and French labels; `dev-unsigned` Maven profile for local deployments on Jahia
   Enterprise.
 
+### Fixes
+
+* The selector bundle no longer ships its own `@apollo/client`: it is declared host-provided and
+  pinned to the app shell's version, so the federation runtime cannot elect a second Apollo copy
+  (white jContent page with `Invariant Violation` after a server restart).
+
 ### Tests
 
 * JUnit: value coercion, mapping parsing, URL allowlist, error and describe parsing.
