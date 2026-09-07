@@ -28,9 +28,9 @@ Release notes for the whole repository are assembled by [chachalog](../.chachalo
 
 ### Fixes
 
-* The selector bundle no longer ships its own `@apollo/client`: it is declared host-provided and
-  pinned to the app shell's version, so the federation runtime cannot elect a second Apollo copy
-  (white jContent page with `Invariant Violation` after a server restart).
+* `@apollo/client` is pinned to the app shell's exact version (3.14.0), so the federation runtime
+  never elects a second Apollo copy (white jContent page with `Invariant Violation` after a server
+  restart).
 
 ### Tests
 

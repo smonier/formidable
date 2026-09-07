@@ -7,14 +7,11 @@ export default defineConfig({
   },
   plugins: [
     jahia({
-      // The app shell owns the Apollo client and its cache: never ship a competing copy.
-      // A bundle that registers its own @apollo/client version as a singleton can get elected
-      // over the host's after a server restart, and jContent then mixes two Apollo copies on one
-      // cache (white page, "Invariant Violation"). Same protection as formidable-salesforce/hubspot.
-      shared: {
-        // @ts-expect-error `import: false` is implemented by @module-federation/vite but missing from the Jahia plugin typing
-        "@apollo/client": { singleton: true, import: false, requiredVersion: "^3.14.0" },
-      },
+      // @apollo/client is pinned in package.json to the app shell's exact version (3.14.0): the
+      // bundle shares the same version as the host, so the federation runtime never elects a
+      // different Apollo copy. Do NOT use `shared: {..., import: false}` here: the vite plugin still
+      // registers a share entry whose loader throws "must be provided by host", and any webpack
+      // remote electing it breaks the whole Jahia UI.
       exposes: {
         "./init": "./src/javascript/init.tsx",
       },
