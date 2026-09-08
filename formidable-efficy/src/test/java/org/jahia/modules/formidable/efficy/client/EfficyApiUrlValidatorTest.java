@@ -16,7 +16,7 @@ class EfficyApiUrlValidatorTest {
     @Test
     void rejectsOthers() {
         assertThrows(IllegalArgumentException.class, () -> EfficyApiUrlValidator.validate("https://evil.example.com", "", false));
-        assertThrows(IllegalArgumentException.class, () -> EfficyApiUrlValidator.validate("http://presales.efficytest.cloud", "", false));
+        assertThrows(IllegalArgumentException.class, () -> EfficyApiUrlValidator.validate("http://acme.efficytest.cloud", "", false));
         assertThrows(IllegalArgumentException.class, () -> EfficyApiUrlValidator.validate("https://efficy.com.evil.com", "", false));
         assertThrows(IllegalArgumentException.class, () -> EfficyApiUrlValidator.validate("", "", false));
     }
