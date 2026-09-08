@@ -9,7 +9,7 @@ class EfficyApiUrlValidatorTest {
 
     @Test
     void acceptsEfficyHostsAndExtraHosts() {
-        assertEquals("https://presales-sectors.efficytest.cloud", EfficyApiUrlValidator.validate("https://presales-sectors.efficytest.cloud/", "", false));
+        assertEquals("https://acme.efficytest.cloud", EfficyApiUrlValidator.validate("https://acme.efficytest.cloud/", "", false));
         assertEquals("https://crm.acme.com", EfficyApiUrlValidator.validate("https://crm.acme.com", "acme.com, other.org", false));
     }
 
