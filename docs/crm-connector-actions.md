@@ -47,9 +47,11 @@ Step-by-step guides: [Salesforce](how-to-salesforce-lead-action.md), [HubSpot](h
   bypasses the server-side cache. The mapping is persisted as a JSON document in the
   `fieldMapping` property.
 - **A GraphQL extension** per module (`formidableSalesforce`, `formidableHubspot`,
-  `formidableEfficy`) exposing `connections`, `objectFields(connectionId, contextPath, refresh)`
-  and `testConnection`. Every query requires `jcr:modifyProperties` on the node being edited and
-  refuses guests, so the editor can only inspect a CRM through a node it may edit.
+  `formidableEfficy`) exposing `connections(contextPath)`, `objectFields(connectionId, contextPath, refresh)`
+  and `testConnection(connectionId, contextPath)`. Every query requires `jcr:modifyProperties` on the node being
+  edited, which must be the action node, the form's `actions` list or the form (any other writable node is
+  refused, since every account owns its own user node), and refuses guests. Error text returned to the editor
+  carries the CRM error code only.
 - **Value coercion** from the submitted strings to what the CRM expects per field type, and
   **structured error parsing** of the CRM's error payload.
 - **A fail-or-log policy**: `failSubmissionOnError` (default true) makes a CRM failure fail the
@@ -146,7 +148,9 @@ flags as missing.
 ## Errors, logging and the visitor
 
 - A CRM failure is logged at `WARN` with the connection id, the CRM error code and the offending
-  fields when the CRM names them. Tokens and private keys are never logged.
+  fields when the CRM names them; the CRM's own message, which may quote the rejected value, is logged
+  at `DEBUG` only. Coercion errors name the field and the type, never the value. Tokens and private keys
+  are never logged.
 - With `failSubmissionOnError=true` the visitor sees the form's error message and the submission
   reports `FMDB-008` (see [error-codes.md](error-codes.md)); actions later in the list do not run.
 - With `failSubmissionOnError=false` the submission succeeds from the visitor's point of view and
@@ -157,7 +161,8 @@ flags as missing.
 
 - Credentials live in operator configuration, never in the JCR and never in the browser. The
   selector talks to the CRM through the module's GraphQL extension only.
-- GraphQL queries require `jcr:modifyProperties` on the edited node and refuse guests.
+- GraphQL queries require `jcr:modifyProperties` on the edited node, which must be the action node, the
+  form's `actions` list or the form, and refuse guests.
 - Outbound URLs are validated against a per-CRM host allowlist, so a mistyped or hostile
   connection file cannot turn Jahia into a proxy.
 - Entity and field names are validated before they reach a URL or a filter expression; the Efficy

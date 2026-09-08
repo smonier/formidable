@@ -6,6 +6,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -49,5 +50,14 @@ class HubspotValueCoercerTest {
     void enumerations() {
         assertEquals("a;b", HubspotValueCoercer.coerce("enumeration", "checkbox", List.of("a", "b")));
         assertEquals("a", HubspotValueCoercer.coerce("enumeration", "select", List.of("a", "b")));
+    }
+
+    @Test
+    void errorMessagesNeverEchoTheSubmittedValue() {
+        // Builders log these messages at WARN: a visitor's input must not end up in the server log.
+        for (String[] bad : new String[][] {{"number", "abc-secret-42"}, {"number", "12abc"}, {"date", "04/09/2026-secret"}, {"datetime", "yesterday-secret"}}) {
+            IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> HubspotValueCoercer.coerce(bad[0], "", List.of(bad[1])), bad[0]);
+            assertFalse(ex.getMessage() == null || ex.getMessage().contains("secret") || ex.getMessage().contains("12abc"), bad[0] + " message leaks the value: " + ex.getMessage());
+        }
     }
 }

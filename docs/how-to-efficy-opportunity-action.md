@@ -59,7 +59,7 @@ referentialCacheTtlSeconds=300
 
 Only `https` on `efficy.com`, `efficy.cloud`, `efficytest.cloud` or an `extraAllowedHosts`
 suffix is accepted. Check the connection with
-`formidableEfficy { testConnection(connectionId: "<id>", contextPath: "/sites/<site>/contents") { ok message } }`.
+`formidableEfficy { testConnection(connectionId: "<id>", contextPath: "/sites/<site>/contents/<form>/actions/<action>") { ok message } }`.
 
 The default catalog: `OppTitle` (required), `OppDetail`, `OppEntID` (required, reference),
 `OppPerID` (required, reference), `OppStoID` (required, referential), `OppOpbID` (required,
@@ -109,7 +109,7 @@ e-deal answers are wrapped in `{return_status, error_code, error_message}`; a `K
 non-2xx code is logged with the code and never with submitted values, and the submission fails
 with 502 under the default policy. The action is `fmdbmix:readOnlyCompatibleAction`. Entity and
 field names are validated against the SQL-name shape, filter values against the e-deal filter
-syntax, and the GraphQL fields require `jcr:modifyProperties` on the edited node.
+syntax, and the GraphQL fields require `jcr:modifyProperties` on the edited node, which must be the action node, the form's `actions` list or the form.
 
 Build locally with `mvn -Pdev-unsigned clean install` (Jahia Enterprise signature check, see the
 Salesforce how-to).

@@ -134,8 +134,9 @@ public class CreateOpportunityFormAction implements FormAction {
             String id = client.createRecord(connection.getObjectType(), connection.idField(), payload);
             log.info("[formidable-efficy] Created Efficy {} {} from {} ({} field(s))", connection.getObjectType(), id.isBlank() ? "(id not returned)" : id, actionPath, payload.size());
         } catch (EfficyApiException e) {
+            log.debug("[formidable-efficy] {}: upstream message: {}", actionPath, e.getMessage());
             fail(failOnError, actionPath, "Efficy refused the " + connection.getObjectType() + ": " + e.getErrorCode()
-                    + " (HTTP " + e.getHttpStatus() + ") - " + e.getMessage(), e);
+                    + " (HTTP " + e.getHttpStatus() + ")", e);
         } catch (IOException e) {
             fail(failOnError, actionPath, "Efficy is unreachable: " + e.getMessage(), e);
         } catch (InterruptedException e) {

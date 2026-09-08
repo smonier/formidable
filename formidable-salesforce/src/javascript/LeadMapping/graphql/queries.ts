@@ -76,7 +76,7 @@ export const FORM_FIELDS_BY_PATH = gql`
 export const LEAD_FIELDS = gql`
     query SalesforceLeadMappingLeadFields($connectionId: String!, $contextPath: String!, $refresh: Boolean) {
         formidableSalesforce {
-            objectFields(connectionId: $connectionId, sObject: "Lead", contextPath: $contextPath, refresh: $refresh) {
+            objectFields(connectionId: $connectionId, contextPath: $contextPath, refresh: $refresh) {
                 name
                 label
                 type

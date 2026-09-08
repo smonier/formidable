@@ -76,7 +76,7 @@ export const FORM_FIELDS_BY_PATH = gql`
 export const CONTACT_PROPERTIES = gql`
     query HubspotContactMappingContactFields($connectionId: String!, $contextPath: String!, $refresh: Boolean) {
         formidableHubspot {
-            objectFields(connectionId: $connectionId, objectType: "contacts", contextPath: $contextPath, refresh: $refresh) {
+            objectFields(connectionId: $connectionId, contextPath: $contextPath, refresh: $refresh) {
                 name
                 label
                 type

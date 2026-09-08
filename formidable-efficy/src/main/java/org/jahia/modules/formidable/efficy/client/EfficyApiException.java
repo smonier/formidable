@@ -44,6 +44,6 @@ public class EfficyApiException extends Exception {
     @Override
     public String toString() {
         return "EfficyApiException{status=" + httpStatus + ", code=" + errorCode
-                + ", fields=" + fields + ", message=" + getMessage() + "}";
+                + ", fields=" + fields + "}";
     }
 }

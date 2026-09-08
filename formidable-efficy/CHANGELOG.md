@@ -24,6 +24,15 @@ Release notes for the whole repository are assembled by [chachalog](../.chachalo
   connection defaults as fallback; value coercion per catalog type; e-deal envelope error parsing.
 * English and French labels; `dev-unsigned` Maven profile for local deployments.
 
+### Security
+
+* The GraphQL gate also requires the `contextPath` node to be the action node, the form's `actions`
+  list or the form: `jcr:modifyProperties` alone let any authenticated account reach the Efficy
+  metadata through its own user node. `connections` takes the same `contextPath`; the object
+  argument of `objectFields` is gone. Error text returned to the editor carries the error code only.
+* Coercion errors no longer echo the submitted value, the Efficy error message is logged at `DEBUG`
+  only, and the API exception's `toString` drops it, so a visitor's input never reaches the log.
+
 ### Tests
 
 * JUnit: value coercion, mapping parsing (four sources), URL allowlist, error envelope and catalog

@@ -119,8 +119,9 @@ public class CreateLeadFormAction implements FormAction {
             String id = client.createRecord(SOBJECT, payload);
             log.info("[formidable-salesforce] Created Salesforce Lead {} from {} ({} field(s))", id, actionPath, payload.size());
         } catch (SalesforceApiException e) {
+            log.debug("[formidable-salesforce] {}: upstream message: {}", actionPath, e.getMessage());
             fail(failOnError, actionPath, "Salesforce refused the lead: " + e.getErrorCode()
-                    + (e.getFields().isEmpty() ? "" : " on " + e.getFields()) + " (HTTP " + e.getHttpStatus() + ") - " + e.getMessage(), e);
+                    + (e.getFields().isEmpty() ? "" : " on " + e.getFields()) + " (HTTP " + e.getHttpStatus() + ")", e);
         } catch (IOException e) {
             fail(failOnError, actionPath, "Salesforce is unreachable: " + e.getMessage(), e);
         } catch (InterruptedException e) {

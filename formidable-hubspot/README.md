@@ -126,8 +126,8 @@ in the mapping editor. Verify a connection from the GraphQL playground as an edi
 
 ```graphql
 { formidableHubspot {
-    connections { id label ready error }
-    testConnection(connectionId: "marketing", contextPath: "/sites/<site>/contents") { ok message }
+    connections(contextPath: "/sites/<site>/contents/<form>") { id label ready error }
+    testConnection(connectionId: "marketing", contextPath: "/sites/<site>/contents/<form>/actions/<action>") { ok message }
 } }
 ```
 
@@ -216,7 +216,7 @@ The action is `fmdbmix:readOnlyCompatibleAction`.
 - The action node holds a connection **id**, never a token.
 - API base URL allowlist (https + `hubapi.com`).
 - Object types and record ids are validated against their API shape before reaching a URL.
-- GraphQL fields require `jcr:modifyProperties` on the node being edited (action node, or the
+- GraphQL fields require `jcr:modifyProperties` on the node being edited, and the node must be this module's action node, the form's `actions` list or the form itself; any other node is refused even when the caller can modify it, since every account owns its own user node; error text carries the HubSpot error code only (action node, or the
   form's `actions` list while creating); guests are refused.
 
 ## Build, deploy, test

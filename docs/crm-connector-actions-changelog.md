@@ -66,6 +66,16 @@ file ([Salesforce](../formidable-salesforce/CHANGELOG.md), [HubSpot](../formidab
 * Cypress `84-efficy-opportunity-action`, `85-efficy-opportunity-mapping-selector`; mock on
   port 8092.
 
+### Security
+
+* The GraphQL gate now also requires the `contextPath` node to be the module's action node, the form's
+  `actions` list or the form: a permission check alone let any authenticated account read the CRM
+  metadata and exercise the connections through its own user node. `connections` takes the same
+  `contextPath` and gate; the free object argument of `objectFields` is gone (Lead, contacts, or the
+  Efficy connection's entity). Error text returned to the editor carries the CRM error code only.
+* Log hygiene: coercion errors no longer echo the submitted value, the CRM's own error message is
+  logged at `DEBUG` only, and the API exceptions' `toString` (printed in stack traces) drops it too.
+
 ### Fixed
 
 * All editor bundles, including `formidable-engine`, pin `@apollo/client` to the app shell's exact

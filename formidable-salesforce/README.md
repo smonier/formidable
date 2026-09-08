@@ -143,8 +143,8 @@ connection from the GraphQL playground as an editor of the path:
 
 ```graphql
 { formidableSalesforce {
-    connections { id label ready error }
-    testConnection(connectionId: "prod", contextPath: "/sites/<site>/contents") { ok message }
+    connections(contextPath: "/sites/<site>/contents/<form>") { id label ready error }
+    testConnection(connectionId: "prod", contextPath: "/sites/<site>/contents/<form>/actions/<action>") { ok message }
 } }
 ```
 
@@ -216,7 +216,7 @@ read-only maintenance mode.
   returned by the token endpoint.
 - Object names are validated against the API-name shape before reaching a URL or SOQL; the email
   of the upsert lookup is escaped for the SOQL literal.
-- GraphQL fields require the caller to hold `jcr:modifyProperties` on the node being edited
+- GraphQL fields require the caller to hold `jcr:modifyProperties` on the node being edited, and the node must be this module's action node, the form's `actions` list or the form itself; any other node is refused even when the caller can modify it, since every account owns its own user node. Error text returned to the editor carries the Salesforce error code only
   (action node, or the form's `actions` list while creating); guests are refused. No CSRF
   allowlist is needed because the editor talks GraphQL.
 - The token is cached for `tokenCacheTtlSeconds` and refreshed once on 401.

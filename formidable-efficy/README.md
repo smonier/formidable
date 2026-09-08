@@ -138,8 +138,8 @@ Verify a connection from the GraphQL playground as an editor of the path:
 
 ```graphql
 { formidableEfficy {
-    connections { id label ready error }
-    testConnection(connectionId: "production", contextPath: "/sites/<site>/contents") { ok message }
+    connections(contextPath: "/sites/<site>/contents/<form>") { id label ready error }
+    testConnection(connectionId: "production", contextPath: "/sites/<site>/contents/<form>/actions/<action>") { ok message }
 } }
 ```
 
@@ -210,7 +210,7 @@ The action is `fmdbmix:readOnlyCompatibleAction`.
 - Server URL allowlist (https + Efficy domains or operator-declared suffixes).
 - Entity and field names are validated against the SQL-name shape; the email used in the Person
   filter is refused when it contains filter syntax characters.
-- GraphQL fields require `jcr:modifyProperties` on the node being edited; guests are refused.
+- GraphQL fields require `jcr:modifyProperties` on the node being edited, and the node must be this module's action node, the form's `actions` list or the form itself; any other node is refused even when the caller can modify it, since every account owns its own user node; guests are refused. Error text returned to the editor carries the e-deal error code only.
 
 ## Build, deploy, test
 

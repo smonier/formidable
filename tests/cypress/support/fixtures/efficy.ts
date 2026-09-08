@@ -1,5 +1,9 @@
 import gql from 'graphql-tag';
 import {JahiaNode, NodeProperty} from './types';
+import {CONTENT_PATH} from '../constants';
+import {createFormNode} from './forms';
+
+const PROBE_FORM = 'efficy-connections-probe';
 
 /**
  * The development Efficy connection the specs rely on: a factory configuration
@@ -83,8 +87,13 @@ export const isEfficyMockAvailable = (): Cypress.Chainable<boolean> =>
 				return cy.wrap(false, {log: false});
 			}
 
+			// connections is gated like the other fields: it needs a form (or action) node the
+			// caller can edit, so probe through a throwaway form in the test site.
+			createFormNode(PROBE_FORM, 'CRM connections probe');
+
 			return cy.apollo({
-				query: gql`query { formidableEfficy { connections { id ready } } }`
+				variables: {contextPath: `${CONTENT_PATH}/${PROBE_FORM}`},
+				query: gql`query CrmConnectionsProbe($contextPath: String!) { formidableEfficy { connections(contextPath: $contextPath) { id ready } } }`
 			}).then((result: {data?: {formidableEfficy?: {connections?: Array<{id: string; ready: boolean}>}}}) => {
 				const connections = result.data?.formidableEfficy?.connections ?? [];
 				return cy.wrap(connections.some(c => c.id === EFFICY_MOCK.connectionId && c.ready), {log: false});

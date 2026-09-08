@@ -43,20 +43,20 @@ public final class EfficyValueCoercer {
                 try {
                     return Double.parseDouble(first.replace(',', '.'));
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("Not a number: " + first, e);
+                    throw new IllegalArgumentException("Not a number", e);
                 }
             case "date":
                 try {
                     return LocalDate.parse(first).toString();
                 } catch (DateTimeParseException e) {
-                    throw new IllegalArgumentException("Not a yyyy-MM-dd date: " + first, e);
+                    throw new IllegalArgumentException("Not a yyyy-MM-dd date", e);
                 }
             case "datetime":
                 try {
                     LocalDateTime local = first.length() == 16 ? LocalDateTime.parse(first + ":00") : LocalDateTime.parse(first);
                     return local.toString().length() == 16 ? local + ":00" : local.toString();
                 } catch (DateTimeParseException e) {
-                    throw new IllegalArgumentException("Not a datetime-local value: " + first, e);
+                    throw new IllegalArgumentException("Not a datetime-local value", e);
                 }
             case "referential-multi":
                 return List.copyOf(present);

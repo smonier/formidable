@@ -28,10 +28,11 @@ import java.util.List;
 /**
  * {@code formidableEfficy} query type.
  *
- * <p>Authorization: every field that touches Efficy takes the path of the node being edited
- * (the action node, or the form's {@code actions} list while creating) and requires the current
- * user to hold {@code jcr:modifyProperties} there. Guests are always refused. This keeps the org's
- * field metadata to the contributors who can author the action, without a CSRF allowlist.
+ * <p>Authorization: every field takes the path of the node being edited and requires it to be
+ * this module's action node, the form's {@code actions} list (create mode) or the form itself,
+ * with the current user holding {@code jcr:modifyProperties} there. Any other node is refused
+ * even when writable, since every account owns its own user node. Guests are always refused.
+ * Error text returned to the editor carries the CRM error code only; details go to the log.
  */
 @GraphQLName("FormidableEfficyQuery")
 @GraphQLDescription("Efficy e-deal metadata for the Formidable 'Create Efficy Opportunity' action")
@@ -39,6 +40,9 @@ public class GqlFormidableEfficy {
 
     private static final Logger log = LoggerFactory.getLogger(GqlFormidableEfficy.class);
     private static final String REQUIRED_PERMISSION = "jcr:modifyProperties";
+    private static final String NODE_TYPE_ACTION = "fmdbeff:createOpportunityAction";
+    private static final String NODE_TYPE_ACTION_LIST = "fmdb:actionList";
+    private static final String NODE_TYPE_FORM = "fmdb:form";
 
     @Inject
     @GraphQLOsgiService
@@ -47,8 +51,9 @@ public class GqlFormidableEfficy {
     @GraphQLField
     @GraphQLName("connections")
     @GraphQLDescription("Efficy connections declared by the operator")
-    public List<GqlEfficyConnection> connections() {
-        requireAuthenticated();
+    public List<GqlEfficyConnection> connections(
+            @GraphQLName("contextPath") @GraphQLNonNull @GraphQLDescription("Path of the node being edited (action node, actions list or form)") String contextPath) {
+        requireEditor(contextPath);
         return registry.all().stream()
                 .map(c -> new GqlEfficyConnection(c.getId(), c.getLabel(), c.isReady(), c.getConfigurationError()))
                 .toList();
@@ -56,15 +61,14 @@ public class GqlFormidableEfficy {
 
     @GraphQLField
     @GraphQLName("objectFields")
-    @GraphQLDescription("Fields of the connection's field catalog (Opportunity by default), referential values resolved")
+    @GraphQLDescription("Fields of the connection's field catalog for its entity (Opportunity by default), referential values resolved")
     public List<GqlEfficyField> objectFields(
             @GraphQLName("connectionId") @GraphQLNonNull @GraphQLDescription("Connection id") String connectionId,
-            @GraphQLName("objectType") @GraphQLDescription("e-deal entity, default: the connection's object type") String objectType,
             @GraphQLName("contextPath") @GraphQLNonNull @GraphQLDescription("Path of the node being edited (action node or actions list)") String contextPath,
             @GraphQLName("refresh") @GraphQLDescription("Bypass the server-side describe cache and fetch the fields again from Efficy") Boolean refresh) {
         requireEditor(contextPath);
         EfficyConnection connection = requireConnection(connectionId);
-        String object = objectType == null || objectType.isBlank() ? connection.getObjectType() : objectType;
+        String object = connection.getObjectType();
         try {
             return connection.describe(object, Boolean.TRUE.equals(refresh)).stream()
                     .filter(EfficyFieldDescription::createable)
@@ -74,9 +78,10 @@ public class GqlFormidableEfficy {
                     .toList();
         } catch (EfficyApiException e) {
             log.warn("[formidable-efficy] fields of {} on '{}' failed: {}", object, connectionId, e.toString());
-            throw new DataFetchingException("Efficy error " + e.getErrorCode() + ": " + e.getMessage());
+            throw new DataFetchingException("Efficy error " + e.getErrorCode());
         } catch (IOException e) {
-            throw new DataFetchingException("Efficy is unreachable: " + e.getMessage());
+            log.warn("[formidable-efficy] describe on '{}' failed: {}", connectionId, e.toString());
+            throw new DataFetchingException("Efficy is unreachable");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new DataFetchingException("Interrupted while calling Efficy");
@@ -97,9 +102,11 @@ public class GqlFormidableEfficy {
             connection.client().ping();
             return new GqlConnectionTest(true, "Connection OK");
         } catch (EfficyApiException e) {
-            return new GqlConnectionTest(false, e.getErrorCode() + ": " + e.getMessage());
+            log.warn("[formidable-efficy] test of '{}' failed: {}", connectionId, e.toString());
+            return new GqlConnectionTest(false, e.getErrorCode() + " (HTTP " + e.getHttpStatus() + ")");
         } catch (IOException e) {
-            return new GqlConnectionTest(false, "Efficy is unreachable: " + e.getMessage());
+            log.warn("[formidable-efficy] test of '{}' failed: {}", connectionId, e.toString());
+            return new GqlConnectionTest(false, "Efficy is unreachable");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return new GqlConnectionTest(false, "Interrupted");
@@ -126,13 +133,24 @@ public class GqlFormidableEfficy {
         try {
             JCRSessionWrapper session = JCRSessionFactory.getInstance().getCurrentUserSession();
             JCRNodeWrapper node = session.getNode(contextPath);
-            if (!node.hasPermission(REQUIRED_PERMISSION)) {
+            if (!isAuthoringContext(node) || !node.hasPermission(REQUIRED_PERMISSION)) {
                 throw new DataFetchingException("Permission denied");
             }
         } catch (PathNotFoundException e) {
             throw new DataFetchingException("Permission denied");
         } catch (RepositoryException e) {
-            throw new DataFetchingException("Could not check permissions: " + e.getMessage());
+            log.warn("[formidable-efficy] Permission check failed on {}: {}", contextPath, e.toString());
+            throw new DataFetchingException("Could not check permissions");
         }
+    }
+
+    /**
+     * Only the nodes this action is authored on count as a context: the action node itself, the
+     * form's {@code actions} list (create mode) or the form. Every account can modify some node
+     * (its own user node, for one), so the permission check alone would let any authenticated
+     * user read the CRM metadata and exercise the connections.
+     */
+    private static boolean isAuthoringContext(JCRNodeWrapper node) throws RepositoryException {
+        return node.isNodeType(NODE_TYPE_ACTION) || node.isNodeType(NODE_TYPE_ACTION_LIST) || node.isNodeType(NODE_TYPE_FORM);
     }
 }

@@ -126,8 +126,9 @@ public class CreateContactFormAction implements FormAction {
                 log.info("[formidable-hubspot] Updated HubSpot contact {} (found through the duplicate conflict) from {}", existingId, actionPath);
             }
         } catch (HubspotApiException e) {
+            log.debug("[formidable-hubspot] {}: upstream message: {}", actionPath, e.getMessage());
             fail(failOnError, actionPath, "HubSpot refused the contact: " + e.getErrorCode()
-                    + (e.getFields().isEmpty() ? "" : " on " + e.getFields()) + " (HTTP " + e.getHttpStatus() + ") - " + e.getMessage(), e);
+                    + (e.getFields().isEmpty() ? "" : " on " + e.getFields()) + " (HTTP " + e.getHttpStatus() + ")", e);
         } catch (IOException e) {
             fail(failOnError, actionPath, "HubSpot is unreachable: " + e.getMessage(), e);
         } catch (InterruptedException e) {

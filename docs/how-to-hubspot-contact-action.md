@@ -57,7 +57,7 @@ propertiesCacheTtlSeconds=300
 Only `https` on a `hubapi.com` host is accepted. Several files = several connections. A
 misconfigured file is still listed (suffixed "(misconfigured)") and the reason is in the log and
 in the mapping editor. Check it with
-`formidableHubspot { testConnection(connectionId: "marketing", contextPath: "/sites/<site>/contents") { ok message } }`
+`formidableHubspot { testConnection(connectionId: "marketing", contextPath: "/sites/<site>/contents/<form>/actions/<action>") { ok message } }`
 in the GraphQL playground as an editor of that path.
 
 For automated tests only, `allowInsecureDevUrl=true` lets `apiBaseUrl` be plain `http` on
@@ -126,5 +126,5 @@ HubSpot errors are parsed (`category`, `errors[].context.propertyName`) and logg
 submitted values; with the default policy the action fails with 502, surfaced to the visitor as
 the generic action failure code (`docs/error-codes.md`). The action is
 `fmdbmix:readOnlyCompatibleAction`. The API base URL is allowlisted, object types are validated
-against the API-name shape, and the GraphQL fields require `jcr:modifyProperties` on the node
+against the API-name shape, and the GraphQL fields require `jcr:modifyProperties` on the node (which must be the action node, the form's `actions` list or the form)
 being edited (guests refused).

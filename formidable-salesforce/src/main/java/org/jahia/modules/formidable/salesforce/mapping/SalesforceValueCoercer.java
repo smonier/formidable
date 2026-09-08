@@ -60,17 +60,17 @@ public final class SalesforceValueCoercer {
                 try {
                     return Long.parseLong(first);
                 } catch (NumberFormatException e) {
-                    return (long) Double.parseDouble(first.replace(',', '.'));
+                    return (long) parseDouble(first);
                 }
             case "double":
             case "currency":
             case "percent":
-                return Double.parseDouble(first.replace(',', '.'));
+                return parseDouble(first);
             case "date":
                 try {
                     return LocalDate.parse(first).toString();
                 } catch (DateTimeParseException e) {
-                    throw new IllegalArgumentException("Not a yyyy-MM-dd date: " + first, e);
+                    throw new IllegalArgumentException("Not a yyyy-MM-dd date", e);
                 }
             case "datetime":
                 return toSalesforceDateTime(first);
@@ -86,7 +86,17 @@ public final class SalesforceValueCoercer {
             LocalDateTime local = value.length() == 16 ? LocalDateTime.parse(value + ":00") : LocalDateTime.parse(value);
             return local.atZone(ZoneId.systemDefault()).format(SF_DATETIME);
         } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Not a datetime-local value: " + value, e);
+            throw new IllegalArgumentException("Not a datetime-local value", e);
         }
     }
+
+    /** Parses a decimal (comma or dot); the error never quotes the input, which may be visitor data. */
+    private static double parseDouble(String raw) {
+        try {
+            return Double.parseDouble(raw.replace(',', '.'));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Not a number", e);
+        }
+    }
+
 }

@@ -60,14 +60,14 @@ public final class HubspotValueCoercer {
                 try {
                     Double.parseDouble(normalised);
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("Not a number: " + first, e);
+                    throw new IllegalArgumentException("Not a number", e);
                 }
                 return normalised;
             case "date":
                 try {
                     return LocalDate.parse(first).toString();
                 } catch (DateTimeParseException e) {
-                    throw new IllegalArgumentException("Not a yyyy-MM-dd date: " + first, e);
+                    throw new IllegalArgumentException("Not a yyyy-MM-dd date", e);
                 }
             case "datetime":
                 return toHubspotDateTime(first);
@@ -83,7 +83,7 @@ public final class HubspotValueCoercer {
             LocalDateTime local = value.length() == 16 ? LocalDateTime.parse(value + ":00") : LocalDateTime.parse(value);
             return local.atZone(ZoneId.systemDefault()).format(HS_DATETIME);
         } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Not a datetime-local value: " + value, e);
+            throw new IllegalArgumentException("Not a datetime-local value", e);
         }
     }
 }

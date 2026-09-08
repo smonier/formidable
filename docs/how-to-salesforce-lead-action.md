@@ -68,7 +68,7 @@ Use `https://test.salesforce.com` for a sandbox, or the org's My Domain URL. Onl
 misconfigured file is still listed (suffixed "(misconfigured)") and the reason is in the log and
 in the mapping editor, so operators can fix it without guessing.
 
-Check it: `formidableSalesforce { testConnection(connectionId: "prod", contextPath: "/sites/<site>/contents") { ok message } }`
+Check it: `formidableSalesforce { testConnection(connectionId: "prod", contextPath: "/sites/<site>/contents/<form>/actions/<action>") { ok message } }`
 in the GraphQL playground as an editor of that path.
 
 For automated tests only, `allowInsecureDevUrl=true` lets `instanceUrl` be plain `http` on
@@ -147,7 +147,7 @@ The action is `fmdbmix:readOnlyCompatibleAction`: it keeps working during read-o
 
 - Instance URL allowlist (https + Salesforce domains) both for the configured URL and for the
   `instance_url` returned by the token endpoint.
-- The GraphQL fields require the caller to hold `jcr:modifyProperties` on the node being edited
+- The GraphQL fields require the caller to hold `jcr:modifyProperties` on the node being edited, and the node must be this module's action node, the form's `actions` list or the form itself; any other node is refused even when the caller can modify it, since every account owns its own user node
   (action node, or the form's `actions` list while creating); guests are refused.
 - Object names are validated against the API-name shape before reaching a URL or SOQL; the
   email used by the upsert lookup is escaped for the SOQL literal.

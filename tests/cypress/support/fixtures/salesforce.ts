@@ -1,5 +1,9 @@
 import gql from 'graphql-tag';
 import {JahiaNode, NodeProperty} from './types';
+import {CONTENT_PATH} from '../constants';
+import {createFormNode} from './forms';
+
+const PROBE_FORM = 'salesforce-connections-probe';
 
 /**
  * The development Salesforce connection the specs rely on: a factory configuration
@@ -75,8 +79,13 @@ export const isSalesforceMockAvailable = (): Cypress.Chainable<boolean> =>
 				return cy.wrap(false, {log: false});
 			}
 
+			// connections is gated like the other fields: it needs a form (or action) node the
+			// caller can edit, so probe through a throwaway form in the test site.
+			createFormNode(PROBE_FORM, 'CRM connections probe');
+
 			return cy.apollo({
-				query: gql`query { formidableSalesforce { connections { id ready } } }`
+				variables: {contextPath: `${CONTENT_PATH}/${PROBE_FORM}`},
+				query: gql`query CrmConnectionsProbe($contextPath: String!) { formidableSalesforce { connections(contextPath: $contextPath) { id ready } } }`
 			}).then((result: {data?: {formidableSalesforce?: {connections?: Array<{id: string; ready: boolean}>}}}) => {
 				const connections = result.data?.formidableSalesforce?.connections ?? [];
 				return cy.wrap(connections.some(c => c.id === SALESFORCE_MOCK.connectionId && c.ready), {log: false});

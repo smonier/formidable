@@ -44,6 +44,6 @@ public class SalesforceApiException extends Exception {
     @Override
     public String toString() {
         return "SalesforceApiException{status=" + httpStatus + ", code=" + errorCode
-                + ", fields=" + fields + ", message=" + getMessage() + "}";
+                + ", fields=" + fields + "}";
     }
 }

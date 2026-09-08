@@ -6,6 +6,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class EfficyValueCoercerTest {
@@ -33,5 +34,14 @@ class EfficyValueCoercerTest {
         assertThrows(IllegalArgumentException.class, () -> EfficyValueCoercer.coerce("date", List.of("12/09/2026")));
         assertEquals(List.of("000000000086cdda", "000000000086cde1"), EfficyValueCoercer.coerce("referential-multi", List.of("000000000086cdda", "000000000086cde1")));
         assertEquals("000000000000074f", EfficyValueCoercer.coerce("referential", List.of("000000000000074f", "x")));
+    }
+
+    @Test
+    void errorMessagesNeverEchoTheSubmittedValue() {
+        // Builders log these messages at WARN: a visitor's input must not end up in the server log.
+        for (String[] bad : new String[][] {{"number", "abc-secret-42"}, {"number", "12abc"}, {"date", "04/09/2026-secret"}, {"datetime", "yesterday-secret"}}) {
+            IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> EfficyValueCoercer.coerce(bad[0], List.of(bad[1])), bad[0]);
+            assertFalse(ex.getMessage() == null || ex.getMessage().contains("secret") || ex.getMessage().contains("12abc"), bad[0] + " message leaks the value: " + ex.getMessage());
+        }
     }
 }

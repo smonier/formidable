@@ -44,6 +44,6 @@ public class HubspotApiException extends Exception {
     @Override
     public String toString() {
         return "HubspotApiException{status=" + httpStatus + ", code=" + errorCode
-                + ", fields=" + fields + ", message=" + getMessage() + "}";
+                + ", fields=" + fields + "}";
     }
 }
