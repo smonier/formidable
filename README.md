@@ -29,6 +29,7 @@ Formidable is based on Jahia standard technologies:
 - [Custom validation](docs/custom-validation.md) - inline validation messages replacing native browser tooltips, with per-field contributor overrides
 - [Conditional logic field resolution](docs/conditional-logic-field-resolution.md) - weakref-based model for conditional logic dependencies
 - [Error codes](docs/error-codes.md) - server-side error codes returned on form submission failure
+- [CRM connector actions](docs/crm-connector-actions.md) - the Salesforce, HubSpot and Efficy actions side by side: shared architecture, per-CRM differences, connections, troubleshooting; [consolidated changelog](docs/crm-connector-actions-changelog.md)
 - [Efficy Opportunity action](docs/how-to-efficy-opportunity-action.md) - `formidable-efficy`: create e-deal Opportunities from any form, with a field catalog per connection, referential values and a person lookup by email
 - [HubSpot Contact action](docs/how-to-hubspot-contact-action.md) - `formidable-hubspot`: create Contacts from any form, same mapping approach with the private app token in operator configuration
 - [Salesforce Lead action](docs/how-to-salesforce-lead-action.md) - `formidable-salesforce`: create Leads from any form, with the field mapping authored in Content Editor and the org credentials in operator configuration
@@ -78,11 +79,13 @@ The current release includes the ability to:
   - Create a new field type (CND + server view + optional client Island)
 
 ### Packaging
-- 4 modules:
+- 6 modules:
   - **formidable-elements** — provides the fields, form structure and rendering views
   - **formidable-engine** — provides the action framework (Java/OSGi), CAPTCHA verification, editor extensions (custom selectors, form results panel)
   - **formidable-extended-inputs** — provides the optional extra field types, as a separate module so a site can stay on the core set
   - **formidable-salesforce** — optional: the "Create Salesforce Lead" action (Java/OSGi) plus its `SalesforceLeadMapping` Content Editor selector (React 18, Module Federation)
+  - **formidable-hubspot** - optional: the "Create HubSpot Contact" action plus its `HubspotContactMapping` selector, same architecture
+  - **formidable-efficy** - optional: the "Create Efficy Opportunity" action (e-deal) plus its `EfficyOpportunityMapping` selector, with a field catalog per connection
 
 ### Current known limitations
 - When selecting a field, users don't know what it will look like. This pain point will be addressed globally inside Jahia in 2026.

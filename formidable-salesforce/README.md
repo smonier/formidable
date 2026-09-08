@@ -11,6 +11,10 @@ operator-managed OSGi configuration file.
 Its HubSpot twin is [`formidable-hubspot`](../formidable-hubspot/README.md); both share the same
 architecture and the same authoring experience.
 
+Part of the CRM connector family with the two other modules: see
+[docs/crm-connector-actions.md](../docs/crm-connector-actions.md) for the shared architecture and
+the side-by-side comparison, and its [consolidated changelog](../docs/crm-connector-actions-changelog.md).
+
 ## Contents
 
 - [What you get](#what-you-get)

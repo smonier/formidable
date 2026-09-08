@@ -11,6 +11,10 @@ configuration file.
 It is the twin of [`formidable-salesforce`](../formidable-salesforce/README.md): same
 architecture, same selector, same error policies. Only the CRM layer differs.
 
+Part of the CRM connector family with the two other modules: see
+[docs/crm-connector-actions.md](../docs/crm-connector-actions.md) for the shared architecture and
+the side-by-side comparison, and its [consolidated changelog](../docs/crm-connector-actions-changelog.md).
+
 ## Contents
 
 - [What you get](#what-you-get)
