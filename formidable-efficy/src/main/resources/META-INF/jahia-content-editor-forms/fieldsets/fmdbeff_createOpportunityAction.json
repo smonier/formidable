@@ -1,0 +1,9 @@
+{
+	"name": "fmdbeff:createOpportunityAction",
+	"fields": [
+		{
+			"name": "fieldMapping",
+			"selectorType": "EfficyOpportunityMapping"
+		}
+	]
+}

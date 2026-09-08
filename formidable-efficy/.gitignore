@@ -1,0 +1,6 @@
+# UI extensions
+src/main/resources/javascript/apps
+
+# module-federation dts leftovers
+.__mf__temp
+dummy-non-existing-folder

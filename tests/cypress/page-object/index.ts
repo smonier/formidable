@@ -16,6 +16,8 @@ export {SalesforceLeadActionEditor} from './SalesforceLeadActionEditor';
 export {SalesforceLeadMappingField} from './SalesforceLeadMappingField';
 export {HubspotContactActionEditor} from './HubspotContactActionEditor';
 export {HubspotContactMappingField} from './HubspotContactMappingField';
+export {EfficyOpportunityActionEditor} from './EfficyOpportunityActionEditor';
+export {EfficyOpportunityMappingField} from './EfficyOpportunityMappingField';
 
 // Form elements
 export {FormElement} from './elements/FormElement';

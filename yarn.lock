@@ -3818,6 +3818,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"formidable-efficy@workspace:formidable-efficy":
+  version: 0.0.0-use.local
+  resolution: "formidable-efficy@workspace:formidable-efficy"
+  dependencies:
+    "@apollo/client": "npm:3.14.0"
+    "@jahia/moonstone": "npm:2.16.2"
+    "@jahia/ui-extender": "npm:^1.2.0"
+    "@jahia/vite-federation-plugin": "npm:^0.1.1"
+    "@types/react": "npm:^18.3.28"
+    eslint: "npm:^9.39.2"
+    graphql: "npm:^16.10.0"
+    graphql-tag: "npm:^2.12.6"
+    i18next: "npm:^20.6.1"
+    prop-types: "npm:^15.7.2"
+    react: "npm:^18.3.1"
+    react-dom: "npm:^18.3.1"
+    react-i18next: "npm:^11.2.2"
+    typescript: "npm:^5.9.3"
+    vite: "npm:7.3.5"
+    vitest: "npm:^3.2.4"
+  languageName: unknown
+  linkType: soft
+
 "formidable-elements@workspace:formidable-elements":
   version: 0.0.0-use.local
   resolution: "formidable-elements@workspace:formidable-elements"

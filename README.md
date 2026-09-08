@@ -29,6 +29,7 @@ Formidable is based on Jahia standard technologies:
 - [Custom validation](docs/custom-validation.md) - inline validation messages replacing native browser tooltips, with per-field contributor overrides
 - [Conditional logic field resolution](docs/conditional-logic-field-resolution.md) - weakref-based model for conditional logic dependencies
 - [Error codes](docs/error-codes.md) - server-side error codes returned on form submission failure
+- [Efficy Opportunity action](docs/how-to-efficy-opportunity-action.md) - `formidable-efficy`: create e-deal Opportunities from any form, with a field catalog per connection, referential values and a person lookup by email
 - [HubSpot Contact action](docs/how-to-hubspot-contact-action.md) - `formidable-hubspot`: create Contacts from any form, same mapping approach with the private app token in operator configuration
 - [Salesforce Lead action](docs/how-to-salesforce-lead-action.md) - `formidable-salesforce`: create Leads from any form, with the field mapping authored in Content Editor and the org credentials in operator configuration
 - [Dependency decisions](docs/dependency-decisions.md) - rationale for embedded vs. provided dependencies in Java modules

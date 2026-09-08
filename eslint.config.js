@@ -57,6 +57,7 @@ export default defineConfig(
       "formidable-engine/src/main/resources/javascript/apps/**",
       "formidable-salesforce/src/main/resources/javascript/apps/**",
       "formidable-hubspot/src/main/resources/javascript/apps/**",
+      "formidable-efficy/src/main/resources/javascript/apps/**",
     ],
   },
 );

@@ -17,6 +17,7 @@ Yarn 4 workspaces + Maven multi-module. Toolchain: Java 17 (Temurin), Node LTS, 
 | `formidable-engine/` | Java/OSGi action pipeline + editor extensions (custom selectors, form results panel) | Maven bundle, `@jahia/vite-federation-plugin` (Module Federation, React 18) |
 | `formidable-salesforce/` | Optional "Create Salesforce Lead" action (JWT bearer, REST) + `SalesforceLeadMapping` selector + `formidableSalesforce` GraphQL extension | Maven bundle, `@jahia/vite-federation-plugin` (React 18) |
 | `formidable-hubspot/` | Optional "Create HubSpot Contact" action (private app token, CRM v3) + `HubspotContactMapping` selector + `formidableHubspot` GraphQL extension; mirrors formidable-salesforce | Maven bundle, `@jahia/vite-federation-plugin` (React 18) |
+| `formidable-efficy/` | Optional "Create Efficy Opportunity" action (e-deal base_data API, token auth, field catalog + referentials) + `EfficyOpportunityMapping` selector + `formidableEfficy` GraphQL extension | Maven bundle, `@jahia/vite-federation-plugin` (React 18) |
 | `jahia-test-module/` | Java/JSP helper module for Cypress tests | Maven |
 | `tests/` | Cypress E2E suite (not a Maven module) | Cypress 14, `@jahia/cypress` |
 
@@ -31,6 +32,7 @@ Architecture decisions and internal flows are documented in `docs/`:
 - `captcha-server-side-validation.md` — provider verification and token handling
 - `how-to-salesforce-lead-action.md` — Salesforce connection setup (factory .cfg), mapping JSON contract, value coercion
 - `how-to-hubspot-contact-action.md` — HubSpot connection setup (private app token .cfg), contact property mapping, value coercion
+- `how-to-efficy-opportunity-action.md` — Efficy e-deal connection (token, field catalog), person lookup by email, submission date source
 
 ## Global Instructions
 

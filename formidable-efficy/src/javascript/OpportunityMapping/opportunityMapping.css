@@ -1,0 +1,67 @@
+/*
+ * The mapping table is a grid without being a <table>: every row lays its cells on the
+ * same four tracks (Efficy field, source mode, value, remove button), so columns
+ * align vertically whatever each row renders. minmax(0, …) tracks plus min-width: 0
+ * children let the dropdowns shrink below their content instead of pushing the row
+ * apart; the remove button track is fixed to its icon.
+ */
+.fmdbeff-opportunityMapping {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.fmdbeff-opportunityMappingGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr) minmax(0, 1.4fr) 2.5rem;
+    gap: 0.5rem 0.75rem;
+    align-items: center;
+}
+
+.fmdbeff-opportunityMappingGrid > * {
+    min-width: 0;
+}
+
+.fmdbeff-opportunityMappingHeader {
+    color: var(--color-gray);
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--color-gray_light40, var(--color-gray_light));
+}
+
+/* Rows are `display: contents`: their cells sit directly on the grid tracks. */
+.fmdbeff-opportunityMappingRow {
+    display: contents;
+}
+
+.fmdbeff-opportunityMappingRemove {
+    display: flex;
+    justify-content: center;
+}
+
+.fmdbeff-opportunityMappingActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+/* Status lines (loading, no connection, load error) and non-blocking warnings. */
+.fmdbeff-opportunityMappingStatus {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 1.25rem;
+}
+
+.fmdbeff-opportunityMappingWarning {
+    color: var(--color-warning, #e67e22);
+}
+
+.fmdbeff-opportunityMappingError {
+    color: var(--color-danger);
+}
+
+.fmdbeff-opportunityMappingMuted {
+    color: var(--color-gray);
+}

@@ -1,0 +1,47 @@
+{
+	"opportunityMapping": {
+		"columns": {
+			"efficyField": "Efficy field",
+			"source": "Source",
+			"value": "Value"
+		},
+		"sources": {
+			"field": "Form field",
+			"constant": "Constant",
+			"today": "Submission date",
+			"personByEmail": "Efficy person from the submitted email"
+		},
+		"todayValue": "The day the form is submitted",
+		"selectEfficyField": "Select an Efficy field",
+		"selectFormField": "Select a form field",
+		"selectPicklistValue": "Select a value",
+		"constantPlaceholder": "Constant value",
+		"booleanTrue": "True",
+		"booleanFalse": "False",
+		"add": "Add mapping",
+		"autoMap": "Auto-map by name",
+		"remove": "Remove this mapping",
+		"noRows": "No field is mapped yet. Add a mapping or auto-map the form fields by name.",
+		"loadingEfficy": "Loading Efficy fields...",
+		"noConnection": "Select an Efficy connection first.",
+		"unresolvedContext": "Unable to resolve the edited node path.",
+		"formNotFound": "Unable to resolve the parent form.",
+		"formFieldsLoadError": "Unable to load the form fields.",
+		"efficyLoadError": "Unable to load the Efficy fields",
+		"noFormFields": "This form has no submittable field yet. Only constants, the submission date and the person lookup can be mapped.",
+		"noEfficyFields": "This connection declares no field in its catalog.",
+		"missingRequired": "Required Efficy fields not mapped: {{fields}}",
+		"typeHint": "{{effField}} expects a {{effType}} value but \"{{formField}}\" is a {{kind}} field.",
+		"kinds": {
+			"choice": "choice",
+			"date": "date",
+			"number": "number",
+			"boolean": "yes/no",
+			"text": "text",
+			"email": "email"
+		},
+		"unknownFields": "Not declared in this Efficy connection's field catalog (the opportunity would be rejected): {{fields}}",
+		"refreshFields": "Refresh Efficy fields",
+		"refreshFieldsHint": "Reload the field catalog and its referential values from Efficy, bypassing the server cache"
+	}
+}

@@ -25,3 +25,4 @@ export * from './publication';
 // export * from './inputHidden';
 export * from './salesforce';
 export * from './hubspot';
+export * from './efficy';

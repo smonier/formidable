@@ -1,0 +1,15 @@
+<nt = 'http://www.jcp.org/jcr/nt/1.0'>
+<mix = 'http://www.jcp.org/jcr/mix/1.0'>
+<jnt = 'http://www.jahia.org/jahia/nt/1.0'>
+<fmdbmix = 'http://www.jahia.org/jahia/fmdb/mix/1.0'>
+<fmdbeff = 'http://www.jahia.org/jahia/fmdbeff/nt/1.0'>
+
+// Creates an Efficy e-deal Opportunity from the submitted form values.
+// The Efficy connection (server, application context, API token, field catalog) lives in operator
+// configuration (org.jahia.modules.formidable.efficy-<id>.cfg); JCR only holds its id.
+// fieldMapping is a JSON document authored by the EfficyOpportunityMapping selector type.
+[fmdbeff:createOpportunityAction] > jnt:content, fmdbmix:formAction, fmdbmix:readOnlyCompatibleAction, mix:title
+ - jcr:title (string) = resourceBundle('fmdbeff_createOpportunityAction') autocreated i18n
+ - connectionId (string, choicelist[formidableEfficyConnections]) mandatory indexed=no
+ - fieldMapping (string) indexed=no
+ - failSubmissionOnError (boolean) = true autocreated indexed=no

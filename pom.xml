@@ -53,6 +53,7 @@
         <module>formidable-extended-inputs</module>
         <module>formidable-salesforce</module>
         <module>formidable-hubspot</module>
+        <module>formidable-efficy</module>
         <module>jahia-test-module</module>
     </modules>
 

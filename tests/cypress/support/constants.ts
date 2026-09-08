@@ -9,7 +9,8 @@ export const FORMIDABLE_MODULE_IDS = [
 	'formidable-extended-inputs',
 	'formidable-test-module-samples-java',
 	'formidable-salesforce',
-	'formidable-hubspot'
+	'formidable-hubspot',
+	'formidable-efficy'
 ] as const
 
 /**
