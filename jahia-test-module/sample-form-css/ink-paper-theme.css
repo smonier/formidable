@@ -1,0 +1,823 @@
+/* "Ink & Paper" — modern-classic sample theme for a form's own CSS field.
+   A white paper card on a warm hairline, ruled like a printed document: a solid
+   ink-blue rule across the top, serif headings and step titles, uppercase
+   letter-spaced labels, and crisp 1px fields. One accent colour, used flat:
+   every button is a single solid fill, no gradients anywhere.
+
+   Written against docs/styling.md: every rule is prefixed with .fmdb-form or
+   .fmdb-message, because a form's custom CSS is injected next to the form and is
+   NOT scoped to it.
+
+   Accessibility and authoring are part of the design, not an afterthought:
+   focus-visible keeps a visible ring, transitions stop under
+   prefers-reduced-motion, and the edit-mode cue for conditional fields is
+   re-themed rather than switched off. */
+
+.fmdb-form {
+	/* Palette: paper, ink, one accent */
+	--ink-paper: #ffffff;
+	--ink-paper-soft: #fbfaf8;
+	--ink-canvas: #f4f2ee;
+	--ink-text: #17212e;
+	--ink-text-soft: #4d5768;
+	--ink-text-muted: #7c8697;
+	--ink-rule: #e0ddd6;
+	--ink-rule-strong: #c8c4ba;
+	--ink-accent: #1c3f6e;
+	--ink-accent-dark: #142e51;
+	--ink-accent-tint: #eef2f7;
+	--ink-danger: #a3231f;
+	--ink-radius: 6px;
+	--ink-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+	--ink-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+	/* Formidable theming hooks */
+	--fmdb-validation-error-color: var(--ink-danger);
+	--fmdb-invalid-border-color: var(--ink-danger);
+	--fmdb-invalid-outline-color: rgba(163, 35, 31, 0.16);
+
+	/* Multi-step navigation */
+	--fmdb-steps-nav-gap: 1.75rem;
+	--fmdb-steps-nav-mb: 2rem;
+	--fmdb-step-gap: 0.6rem;
+	--fmdb-step-padding: 0 0 0.75rem;
+	--fmdb-step-font-size: 0.8rem;
+	--fmdb-step-color: var(--ink-text-muted);
+	--fmdb-step-border: transparent;
+	--fmdb-step-border-width: 2px;
+	--fmdb-step-transition: color 0.2s ease, border-color 0.2s ease;
+	--fmdb-step-active-color: var(--ink-text);
+	--fmdb-step-active-border: var(--ink-accent);
+	--fmdb-step-active-font-weight: 600;
+	--fmdb-step-done-color: var(--ink-accent);
+	--fmdb-step-done-border: var(--ink-rule-strong);
+	--fmdb-step-done-font-weight: 500;
+	--fmdb-step-number-size: 1.6rem;
+	--fmdb-step-number-radius: 50%;
+	--fmdb-step-number-font-size: 0.72rem;
+	--fmdb-step-number-font-weight: 700;
+	--fmdb-step-number-bg: var(--ink-canvas);
+	--fmdb-step-number-color: var(--ink-text-muted);
+	--fmdb-step-active-number-bg: var(--ink-accent);
+	--fmdb-step-active-number-color: #ffffff;
+	--fmdb-step-done-number-bg: var(--ink-accent-tint);
+	--fmdb-step-done-number-color: var(--ink-accent);
+
+	/* Range slider */
+	--fmdb-range-gap: 0.85rem;
+	--fmdb-range-output-min-width: 3.5ch;
+	--fmdb-range-end-label-size: 0.75rem;
+
+	/* Submission spinner */
+	--fmdb-spinner-overlay-bg: rgba(255, 255, 255, 0.92);
+	--fmdb-spinner-overlay-backdrop: blur(1px);
+	--fmdb-spinner-overlay-radius: var(--ink-radius);
+	--fmdb-spinner-color: var(--ink-accent);
+	--fmdb-spinner-track-color: var(--ink-rule);
+	--fmdb-spinner-text-color: var(--ink-text-soft);
+	--fmdb-spinner-text-weight: 500;
+
+	/* Edit-mode cue for conditional fields, in the paper palette */
+	--fmdb-logic-target-card-display: block;
+	--fmdb-logic-target-card-bg: var(--ink-canvas);
+	--fmdb-logic-target-card-radius: 4px;
+	--fmdb-logic-target-card-shadow: 0 0 0 1px var(--ink-rule-strong), 0 2px 6px rgba(23, 33, 46, 0.12);
+
+	/* Extended inputs follow the same single accent */
+	--fmdbext-focus: rgba(28, 63, 110, 0.18);
+	--fmdbext-rating-on: var(--ink-accent);
+	--fmdbext-rating-off: var(--ink-rule-strong);
+	--fmdbext-rating-gap: 0.3rem;
+	--fmdbext-chip-bg: var(--ink-paper);
+	--fmdbext-chip-border: var(--ink-rule-strong);
+	--fmdbext-chip-radius: var(--ink-radius);
+	--fmdbext-chip-on-bg: var(--ink-accent);
+	--fmdbext-chip-on-fg: #ffffff;
+	--fmdbext-switch-off-bg: var(--ink-rule-strong);
+	--fmdbext-switch-on-bg: var(--ink-accent);
+	--fmdbext-end-labels-color: var(--ink-text-muted);
+	--fmdbext-warning-bg: #fdf6e3;
+	--fmdbext-warning-border: #e6d3a3;
+	--fmdbext-warning-fg: #6b5420;
+
+	box-sizing: border-box;
+	width: min(100%, 620px);
+	margin: 3rem auto;
+	padding: clamp(1.5rem, 4vw, 2.75rem);
+	border: 1px solid var(--ink-rule);
+	/* The classic letterhead rule, in the accent, flat */
+	border-top: 3px solid var(--ink-accent);
+	border-radius: var(--ink-radius);
+	background: var(--ink-paper);
+	box-shadow: 0 1px 2px rgba(23, 33, 46, 0.04), 0 12px 28px -18px rgba(23, 33, 46, 0.28);
+	color: var(--ink-text);
+	font-family: var(--ink-sans);
+	font-size: 15px;
+	line-height: 1.55;
+	accent-color: var(--ink-accent);
+}
+
+/* Intro: the document header, in serif */
+.fmdb-form .fmdb-form-intro {
+	margin: 0 0 2rem;
+	padding-bottom: 1.25rem;
+	border-bottom: 1px solid var(--ink-rule);
+	color: var(--ink-text-soft);
+	font-size: 0.95rem;
+}
+
+.fmdb-form .fmdb-form-intro :is(h1, h2, h3) {
+	margin: 0 0 0.4rem;
+	color: var(--ink-text);
+	font-family: var(--ink-serif);
+	font-size: 1.7rem;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+}
+
+.fmdb-form .fmdb-form-intro a {
+	color: var(--ink-accent);
+	text-underline-offset: 2px;
+}
+
+/* Field wrappers */
+.fmdb-form .fmdb-form-group {
+	margin-bottom: 1.35rem;
+}
+
+.fmdb-form fieldset.fmdb-form-group {
+	border: none;
+	padding: 0;
+	margin-inline: 0;
+}
+
+/* Labels: uppercase, letter-spaced, the printed-form signature */
+.fmdb-form .fmdb-form-label,
+.fmdb-form .fmdb-group-legend,
+.fmdb-form .fmdb-file-label {
+	display: block;
+	margin-bottom: 0.45rem;
+	padding: 0;
+	color: var(--ink-text-soft);
+	font-family: var(--ink-sans);
+	font-size: 0.69rem;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+}
+
+.fmdb-form .fmdb-required-indicator {
+	margin-left: 0.2rem;
+	color: var(--ink-danger);
+}
+
+.fmdb-form .fmdb-form-help {
+	margin-top: 0.4rem;
+	color: var(--ink-text-muted);
+	font-size: 0.78rem;
+	line-height: 1.45;
+}
+
+/* Fieldsets: a ruled block, legend in serif */
+.fmdb-form .fmdb-fieldset {
+	margin: 0 0 1.5rem;
+	padding: 1.25rem 1.35rem;
+	border: 1px solid var(--ink-rule);
+	border-radius: var(--ink-radius);
+	background: var(--ink-paper-soft);
+}
+
+.fmdb-form .fmdb-fieldset-legend {
+	padding: 0 0.5rem;
+	color: var(--ink-text);
+	font-family: var(--ink-serif);
+	font-size: 1.05rem;
+	font-weight: 600;
+	letter-spacing: 0;
+}
+
+/* Text fields, selects, textareas: crisp, white, 1px */
+.fmdb-form .fmdb-form-control {
+	width: 100%;
+	box-sizing: border-box;
+	min-height: 2.9rem;
+	padding: 0.75rem 0.9rem;
+	border: 1px solid var(--ink-rule-strong);
+	border-radius: var(--ink-radius);
+	background: var(--ink-paper);
+	color: var(--ink-text);
+	font-family: inherit;
+	font-size: 0.95rem;
+	outline: none;
+	transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.fmdb-form .fmdb-form-control::placeholder {
+	color: var(--ink-text-muted);
+}
+
+.fmdb-form .fmdb-form-control:hover:not(:disabled) {
+	border-color: var(--ink-text-muted);
+}
+
+.fmdb-form .fmdb-form-control:focus,
+.fmdb-form .fmdb-form-control:focus-visible {
+	border-color: var(--ink-accent);
+	box-shadow: 0 0 0 3px rgba(28, 63, 110, 0.14);
+}
+
+.fmdb-form .fmdb-form-control:disabled {
+	background: var(--ink-canvas);
+	color: var(--ink-text-muted);
+	cursor: not-allowed;
+}
+
+/* Single select: custom chevron, no native arrow. A multiple select is a list
+   box, not a dropdown, so it keeps its native look and is excluded here -
+   a chevron would sit on top of its options. */
+.fmdb-form select.fmdb-form-control:not([multiple]) {
+	appearance: none;
+	padding-right: 2.6rem;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234d5768' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 0.9rem center;
+	background-size: 1rem;
+	cursor: pointer;
+}
+
+/* Multiple select: option rows with room to breathe */
+.fmdb-form select[multiple].fmdb-form-control {
+	padding: 0.4rem;
+	min-height: 8rem;
+	cursor: pointer;
+}
+
+.fmdb-form select[multiple].fmdb-form-control option {
+	padding: 0.4rem 0.55rem;
+	border-radius: 4px;
+}
+
+.fmdb-form textarea.fmdb-form-control {
+	min-height: 7.5rem;
+	resize: vertical;
+	line-height: 1.6;
+}
+
+/* Colour picker: a compact swatch reads as a control, a full-width slab of pure
+   hue reads as a mistake. */
+.fmdb-form input[type="color"].fmdb-form-control {
+	width: 5rem;
+	height: 2.9rem;
+	min-height: 0;
+	padding: 0.3rem;
+	cursor: pointer;
+}
+
+.fmdb-form input[type="color"].fmdb-form-control::-webkit-color-swatch-wrapper {
+	padding: 0;
+}
+
+.fmdb-form input[type="color"].fmdb-form-control::-webkit-color-swatch {
+	border: 1px solid var(--ink-rule-strong);
+	border-radius: 3px;
+}
+
+.fmdb-form input[type="color"].fmdb-form-control::-moz-color-swatch {
+	border: 1px solid var(--ink-rule-strong);
+	border-radius: 3px;
+}
+
+/* File field: a dashed deposit box with a flat accent picker */
+.fmdb-form .fmdb-file-input-container {
+	position: relative;
+}
+
+.fmdb-form input[type="file"].fmdb-form-control {
+	min-height: 3.1rem;
+	padding: 0.65rem 0.8rem;
+	border-style: dashed;
+	background: var(--ink-paper-soft);
+	color: var(--ink-text-soft);
+	font-size: 0.85rem;
+	cursor: pointer;
+}
+
+.fmdb-form input[type="file"].fmdb-form-control::file-selector-button {
+	margin-right: 0.8rem;
+	padding: 0.5rem 1rem;
+	border: none;
+	border-radius: 4px;
+	background: var(--ink-accent);
+	color: #ffffff;
+	font-family: inherit;
+	font-size: 0.78rem;
+	font-weight: 600;
+	letter-spacing: 0.03em;
+	cursor: pointer;
+	transition: background-color 0.18s ease;
+}
+
+.fmdb-form input[type="file"].fmdb-form-control::file-selector-button:hover {
+	background: var(--ink-accent-dark);
+}
+
+.fmdb-form input[type="file"].fmdb-form-control:disabled::file-selector-button {
+	background: var(--ink-rule-strong);
+	cursor: not-allowed;
+}
+
+/* Selected files */
+.fmdb-form .fmdb-selected-files,
+.fmdb-form .fmdb-file-selection-note {
+	margin-top: 0.75rem;
+}
+
+.fmdb-form .fmdb-selected-files-title,
+.fmdb-form .fmdb-file-selection-note {
+	color: var(--ink-text-muted);
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.fmdb-form .fmdb-file-list {
+	margin: 0.5rem 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.fmdb-form .fmdb-file-item {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+	margin-bottom: 0.35rem;
+	padding: 0.55rem 0.8rem;
+	border: 1px solid var(--ink-rule);
+	border-radius: 4px;
+	background: var(--ink-paper-soft);
+	font-size: 0.82rem;
+}
+
+.fmdb-form .fmdb-file-name {
+	color: var(--ink-text);
+	overflow-wrap: anywhere;
+}
+
+.fmdb-form .fmdb-file-size {
+	color: var(--ink-text-muted);
+	white-space: nowrap;
+}
+
+.fmdb-form .fmdb-file-remove {
+	margin-left: auto;
+	width: 1.6rem;
+	height: 1.6rem;
+	flex: none;
+	display: grid;
+	place-content: center;
+	border: 1px solid transparent;
+	border-radius: 50%;
+	background: transparent;
+	color: var(--ink-text-muted);
+	font-size: 0.95rem;
+	line-height: 1;
+	cursor: pointer;
+	transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.fmdb-form .fmdb-file-remove:hover {
+	border-color: rgba(163, 35, 31, 0.35);
+	background: #fbeceb;
+	color: var(--ink-danger);
+}
+
+/* CAPTCHA: the widget draws itself, so the wrapper only gives it a frame that
+   belongs to the card. */
+.fmdb-form .fmdb-captcha {
+	padding: 1rem;
+	border: 1px solid var(--ink-rule);
+	border-radius: var(--ink-radius);
+	background: var(--ink-paper-soft);
+}
+
+.fmdb-form .fmdb-captcha img {
+	border-radius: 4px;
+}
+
+/* Radio and checkbox groups: each option is a ruled row.
+   The extended inputs build their own visuals on inputs that also carry
+   .fmdb-form-control, so they are excluded from the box below. */
+.fmdb-form .fmdb-radio-group .fmdb-group-items,
+.fmdb-form .fmdb-checkbox-group .fmdb-group-items,
+.fmdb-form .fmdb-group-items {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+
+.fmdb-form .fmdb-group-item {
+	display: flex;
+	align-items: center;
+	gap: 0.7rem;
+	padding: 0.65rem 0.85rem;
+	border: 1px solid var(--ink-rule);
+	border-radius: var(--ink-radius);
+	background: var(--ink-paper);
+	transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.fmdb-form .fmdb-group-item:hover {
+	border-color: var(--ink-rule-strong);
+	background: var(--ink-paper-soft);
+}
+
+/* Checked row: accent rule and a pale accent wash, both flat */
+@supports selector(:has(*)) {
+	.fmdb-form .fmdb-group-item:has(input:checked) {
+		border-color: var(--ink-accent);
+		background: var(--ink-accent-tint);
+	}
+}
+
+.fmdb-form .fmdb-group-item input[type="checkbox"].fmdb-form-control:not([class*="fmdbext-"]),
+.fmdb-form .fmdb-group-item input[type="radio"].fmdb-form-control:not([class*="fmdbext-"]) {
+	appearance: none;
+	width: 1.1rem;
+	height: 1.1rem;
+	min-height: 0;
+	flex: none;
+	margin: 0;
+	padding: 0;
+	border: 1px solid var(--ink-rule-strong);
+	background: var(--ink-paper);
+	box-shadow: none;
+	cursor: pointer;
+	transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.fmdb-form .fmdb-group-item input[type="checkbox"].fmdb-form-control:not([class*="fmdbext-"]) {
+	border-radius: 3px;
+}
+
+.fmdb-form .fmdb-group-item input[type="radio"].fmdb-form-control:not([class*="fmdbext-"]) {
+	border-radius: 50%;
+}
+
+.fmdb-form .fmdb-group-item input[type="checkbox"].fmdb-form-control:not([class*="fmdbext-"]):checked {
+	border-color: var(--ink-accent);
+	background: var(--ink-accent)
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 12.5l5 5L20 6.5'/%3E%3C/svg%3E")
+		center / 0.7rem no-repeat;
+}
+
+.fmdb-form .fmdb-group-item input[type="radio"].fmdb-form-control:not([class*="fmdbext-"]):checked {
+	border-color: var(--ink-accent);
+	background: var(--ink-accent);
+	box-shadow: inset 0 0 0 3px var(--ink-paper);
+}
+
+.fmdb-form .fmdb-group-item input.fmdb-form-control:not([class*="fmdbext-"]):focus-visible {
+	box-shadow: 0 0 0 3px rgba(28, 63, 110, 0.18);
+}
+
+.fmdb-form .fmdb-checkbox-label,
+.fmdb-form .fmdb-radio-label {
+	flex: 1;
+	color: var(--ink-text);
+	font-size: 0.9rem;
+	letter-spacing: 0;
+	text-transform: none;
+	cursor: pointer;
+}
+
+/* Range slider: flat rule for the track, solid accent thumb */
+.fmdb-form .fmdb-range-row {
+	display: flex;
+	align-items: center;
+	gap: var(--fmdb-range-gap);
+}
+
+.fmdb-form input[type="range"].fmdb-form-control {
+	appearance: none;
+	min-height: 0;
+	height: 1.5rem;
+	padding: 0;
+	border: none;
+	background: transparent;
+	box-shadow: none;
+	cursor: pointer;
+}
+
+.fmdb-form input[type="range"].fmdb-form-control:focus,
+.fmdb-form input[type="range"].fmdb-form-control:hover:not(:disabled) {
+	background: transparent;
+	box-shadow: none;
+	border: none;
+}
+
+.fmdb-form input[type="range"].fmdb-form-control::-webkit-slider-runnable-track {
+	height: 0.3rem;
+	border-radius: 999px;
+	background: var(--ink-rule);
+}
+
+.fmdb-form input[type="range"].fmdb-form-control::-moz-range-track {
+	height: 0.3rem;
+	border-radius: 999px;
+	background: var(--ink-rule);
+}
+
+.fmdb-form input[type="range"].fmdb-form-control::-webkit-slider-thumb {
+	appearance: none;
+	width: 1.05rem;
+	height: 1.05rem;
+	margin-top: -0.375rem;
+	border: none;
+	border-radius: 50%;
+	background: var(--ink-accent);
+}
+
+.fmdb-form input[type="range"].fmdb-form-control::-moz-range-thumb {
+	width: 1.05rem;
+	height: 1.05rem;
+	border: none;
+	border-radius: 50%;
+	background: var(--ink-accent);
+}
+
+.fmdb-form input[type="range"].fmdb-form-control:focus-visible::-webkit-slider-thumb {
+	box-shadow: 0 0 0 4px rgba(28, 63, 110, 0.2);
+}
+
+.fmdb-form .fmdb-range-output {
+	padding: 0.2rem 0.5rem;
+	border: 1px solid var(--ink-rule);
+	border-radius: 4px;
+	background: var(--ink-paper-soft);
+	color: var(--ink-text);
+	font-size: 0.8rem;
+	font-variant-numeric: tabular-nums;
+	text-align: center;
+}
+
+.fmdb-form .fmdb-range-end-label {
+	color: var(--ink-text-muted);
+	font-size: var(--fmdb-range-end-label-size);
+}
+
+/* Multi-step navigation: a ruled tab strip. The active step is the one carrying
+   aria-current, a stable hook; its colours come from the variables above. */
+.fmdb-form .fmdb-steps-nav {
+	display: flex;
+	flex-wrap: wrap;
+	border-bottom: 1px solid var(--ink-rule);
+}
+
+.fmdb-form .fmdb-step-indicator {
+	align-items: center;
+	margin-bottom: -1px;
+	letter-spacing: 0.01em;
+}
+
+.fmdb-form .fmdb-step-label {
+	white-space: nowrap;
+}
+
+.fmdb-form .fmdb-step-title {
+	margin: 0 0 0.3rem;
+	color: var(--ink-text);
+	font-family: var(--ink-serif);
+	font-size: 1.3rem;
+	font-weight: 600;
+	letter-spacing: -0.005em;
+}
+
+.fmdb-form .fmdb-step-intro {
+	margin: 0 0 1.5rem;
+	color: var(--ink-text-soft);
+	font-size: 0.88rem;
+}
+
+/* Buttons: one solid fill each, flat */
+.fmdb-form .fmdb-form-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.65rem;
+	align-items: center;
+	margin-top: 1.75rem;
+	padding-top: 1.5rem;
+	border-top: 1px solid var(--ink-rule);
+}
+
+.fmdb-form .fmdb-btn {
+	min-height: 2.9rem;
+	padding: 0 1.5rem;
+	border: 1px solid transparent;
+	border-radius: var(--ink-radius);
+	font-family: inherit;
+	font-size: 0.88rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	cursor: pointer;
+	outline: none;
+	transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.fmdb-form .fmdb-btn:focus-visible {
+	box-shadow: 0 0 0 3px rgba(28, 63, 110, 0.25);
+}
+
+.fmdb-form .fmdb-btn-primary,
+.fmdb-form .fmdb-next-btn,
+.fmdb-form .fmdb-new-form-btn {
+	flex: 1 1 12rem;
+	background: var(--ink-accent);
+	color: #ffffff;
+}
+
+.fmdb-form .fmdb-btn-primary:hover:not(:disabled),
+.fmdb-form .fmdb-next-btn:hover:not(:disabled),
+.fmdb-form .fmdb-new-form-btn:hover:not(:disabled) {
+	background: var(--ink-accent-dark);
+}
+
+.fmdb-form .fmdb-btn-secondary,
+.fmdb-form .fmdb-prev-btn {
+	border-color: var(--ink-rule-strong);
+	background: var(--ink-paper);
+	color: var(--ink-text);
+}
+
+.fmdb-form .fmdb-btn-secondary:hover:not(:disabled),
+.fmdb-form .fmdb-prev-btn:hover:not(:disabled) {
+	border-color: var(--ink-text-muted);
+	background: var(--ink-paper-soft);
+}
+
+/* A button is disabled while the form submits, and the submit button also is in
+   edit and preview: it must read as unavailable, not merely unclicked. */
+.fmdb-form .fmdb-btn:disabled {
+	border-color: var(--ink-rule);
+	background: var(--ink-canvas);
+	color: var(--ink-text-muted);
+	cursor: not-allowed;
+}
+
+/* Inline validation */
+.fmdb-form .fmdb-validation-error,
+.fmdb-form .fmdb-options-source-error {
+	display: block;
+	margin-top: 0.4rem;
+	color: var(--fmdb-validation-error-color);
+	font-size: 0.78rem;
+	font-weight: 500;
+}
+
+.fmdb-form .fmdb-form-control.fmdb-invalid {
+	border-color: var(--ink-danger);
+	box-shadow: 0 0 0 3px var(--fmdb-invalid-outline-color);
+}
+
+/* Extended inputs: rating, scale, switch, consent */
+.fmdb-form .fmdbext-rating-item,
+.fmdb-form .fmdbext-scale-item {
+	cursor: pointer;
+}
+
+.fmdb-form .fmdbext-scale-label {
+	border-radius: var(--fmdbext-chip-radius);
+	color: var(--ink-text);
+	font-size: 0.85rem;
+	font-weight: 600;
+	transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.fmdb-form .fmdbext-scale-item:hover .fmdbext-scale-label {
+	background: var(--ink-accent-tint);
+}
+
+.fmdb-form .fmdbext-end-labels {
+	color: var(--fmdbext-end-labels-color);
+	font-size: 0.75rem;
+}
+
+.fmdb-form .fmdbext-switch-track {
+	box-shadow: inset 0 0 0 1px rgba(23, 33, 46, 0.08);
+}
+
+.fmdb-form .fmdbext-switch-knob {
+	box-shadow: 0 1px 2px rgba(23, 33, 46, 0.25);
+}
+
+.fmdb-form .fmdbext-switch-state,
+.fmdb-form .fmdbext-switch-text,
+.fmdb-form .fmdbext-switch-toggle-label {
+	color: var(--ink-text);
+	font-size: 0.88rem;
+}
+
+.fmdb-form .fmdbext-switch-state-off {
+	color: var(--ink-text-muted);
+}
+
+.fmdb-form .fmdbext-consent {
+	padding: 0.9rem 1rem;
+	border: 1px solid var(--ink-rule);
+	border-radius: var(--ink-radius);
+	background: var(--ink-paper-soft);
+}
+
+.fmdb-form .fmdbext-consent-label,
+.fmdb-form .fmdbext-consent-statement {
+	color: var(--ink-text);
+	font-size: 0.88rem;
+	letter-spacing: 0;
+	text-transform: none;
+}
+
+.fmdb-form .fmdbext-consent-terms-link {
+	color: var(--ink-accent);
+	text-underline-offset: 2px;
+}
+
+.fmdb-form .fmdbext-edit-warning {
+	border-radius: 4px;
+	font-size: 0.8rem;
+}
+
+/* Authoring surfaces. Page Builder keeps its own boxes and buttons over the
+   card; the theme only has to stay legible in edit mode and in jContent's
+   scriptless previews (a div, not a form). */
+.fmdb-form[data-fmdb-edit-mode="true"] .fmdb-logic-target,
+.fmdb-form[data-fmdb-cm-view="true"] .fmdb-logic-target {
+	color: var(--ink-text);
+}
+
+/* Submission feedback. Outside the form, so it carries the palette itself. */
+.fmdb-message {
+	box-sizing: border-box;
+	width: min(100%, 620px);
+	margin: 1.5rem auto;
+	padding: 1.05rem 1.3rem;
+	border: 1px solid #e0ddd6;
+	border-left: 4px solid #1c3f6e;
+	border-radius: 6px;
+	background: #ffffff;
+	box-shadow: 0 1px 2px rgba(23, 33, 46, 0.04), 0 12px 28px -18px rgba(23, 33, 46, 0.28);
+	color: #17212e;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	font-size: 0.95rem;
+	line-height: 1.55;
+}
+
+.fmdb-message-success {
+	border-left-color: #1e6b4f;
+}
+
+.fmdb-message-error {
+	border-left-color: #a3231f;
+}
+
+.fmdb-message-maintenance {
+	border-left-color: #9a7b20;
+}
+
+.fmdb-message .fmdb-message-content :is(h1, h2, h3) {
+	margin: 0 0 0.3rem;
+	font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+	font-size: 1.2rem;
+	font-weight: 600;
+}
+
+.fmdb-message .fmdb-message-content a {
+	color: #1c3f6e;
+}
+
+/* Narrow screens: tighter card, stacked actions */
+@media (max-width: 640px) {
+	.fmdb-form {
+		margin: 1.5rem auto;
+		padding: 1.35rem;
+	}
+
+	.fmdb-form .fmdb-form-actions .fmdb-btn {
+		flex: 1 1 100%;
+	}
+
+	.fmdb-form {
+		--fmdb-steps-nav-gap: 1rem;
+	}
+}
+
+/* Motion is decoration here: none of it is needed to use the form */
+@media (prefers-reduced-motion: reduce) {
+	.fmdb-form .fmdb-form-control,
+	.fmdb-form .fmdb-btn,
+	.fmdb-form .fmdb-group-item,
+	.fmdb-form .fmdb-file-remove,
+	.fmdb-form .fmdbext-scale-label {
+		transition: none;
+	}
+}

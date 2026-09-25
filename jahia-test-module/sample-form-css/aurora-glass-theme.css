@@ -1,0 +1,967 @@
+/* "Aurora Glass" — modern sample theme for a form's own CSS field.
+   A dark glass card lit by a slow aurora: gradient hairline border, frosted
+   translucent fields, options as selectable pills, a gradient submit button with
+   a shine sweep, and gradient step badges for multi-step forms. Extended inputs
+   (rating, scale, switch, consent) follow the same accents.
+
+   Written against docs/styling.md: every rule is prefixed with .fmdb-form or
+   .fmdb-message, because a form's custom CSS is injected next to the form and is
+   NOT scoped to it. Keyframes are namespaced for the same reason.
+
+   Accessibility and authoring are part of the design, not an afterthought:
+   focus-visible keeps a visible ring, the aurora and the shine stop under
+   prefers-reduced-motion, and the edit-mode cue for conditional fields is
+   re-themed for a dark card instead of being switched off. */
+
+.fmdb-form {
+	/* Palette */
+	--aur-bg-deep: #080b18;
+	--aur-bg-card: #131a33;
+	--aur-violet: #7c5cff;
+	--aur-cyan: #22d3ee;
+	--aur-pink: #f45cc8;
+	--aur-ink: #eceffd;
+	--aur-ink-soft: #b9c0e4;
+	--aur-ink-dim: #8b93bd;
+	--aur-line: rgba(255, 255, 255, 0.14);
+	--aur-line-strong: rgba(255, 255, 255, 0.28);
+	--aur-field: rgba(255, 255, 255, 0.05);
+	--aur-field-hover: rgba(255, 255, 255, 0.09);
+	--aur-danger: #ff6b81;
+	--aur-accent-grad: linear-gradient(135deg, var(--aur-violet), var(--aur-cyan) 55%, var(--aur-pink));
+	--aur-ring: 0 0 0 3px rgba(124, 92, 255, 0.35);
+	--aur-radius: 14px;
+
+	/* Formidable theming hooks */
+	--fmdb-validation-error-color: var(--aur-danger);
+	--fmdb-invalid-border-color: var(--aur-danger);
+	--fmdb-invalid-outline-color: rgba(255, 107, 129, 0.3);
+
+	/* Multi-step navigation */
+	--fmdb-steps-nav-gap: 0.5rem;
+	--fmdb-steps-nav-mb: 2rem;
+	--fmdb-step-gap: 0.6rem;
+	--fmdb-step-padding: 0.5rem 0.85rem;
+	--fmdb-step-font-size: 0.8rem;
+	--fmdb-step-color: var(--aur-ink-dim);
+	--fmdb-step-border: transparent;
+	--fmdb-step-border-width: 0;
+	--fmdb-step-transition: color 0.25s ease, background-color 0.25s ease;
+	--fmdb-step-active-color: var(--aur-ink);
+	--fmdb-step-active-border: transparent;
+	--fmdb-step-active-font-weight: 600;
+	--fmdb-step-done-color: var(--aur-cyan);
+	--fmdb-step-done-border: transparent;
+	--fmdb-step-done-font-weight: 500;
+	--fmdb-step-number-size: 1.75rem;
+	--fmdb-step-number-radius: 50%;
+	--fmdb-step-number-font-size: 0.75rem;
+	--fmdb-step-number-font-weight: 700;
+	--fmdb-step-number-bg: rgba(255, 255, 255, 0.08);
+	--fmdb-step-number-color: var(--aur-ink-soft);
+	--fmdb-step-active-number-bg: var(--aur-violet);
+	--fmdb-step-active-number-color: #ffffff;
+	--fmdb-step-done-number-bg: rgba(34, 211, 238, 0.2);
+	--fmdb-step-done-number-color: var(--aur-cyan);
+
+	/* Range slider */
+	--fmdb-range-gap: 0.85rem;
+	--fmdb-range-output-min-width: 3.5ch;
+	--fmdb-range-end-label-size: 0.75rem;
+
+	/* Submission spinner */
+	--fmdb-spinner-overlay-bg: rgba(8, 11, 24, 0.82);
+	--fmdb-spinner-overlay-backdrop: blur(6px);
+	--fmdb-spinner-overlay-radius: var(--aur-radius);
+	--fmdb-spinner-color: var(--aur-cyan);
+	--fmdb-spinner-track-color: rgba(255, 255, 255, 0.12);
+	--fmdb-spinner-text-color: var(--aur-ink-soft);
+	--fmdb-spinner-text-weight: 500;
+
+	/* Edit-mode cue for conditional fields, re-themed for a dark card */
+	--fmdb-logic-target-card-display: block;
+	--fmdb-logic-target-card-bg: rgba(255, 255, 255, 0.07);
+	--fmdb-logic-target-card-radius: 10px;
+	--fmdb-logic-target-card-shadow: 0 0 0 1px rgba(124, 92, 255, 0.45), 0 8px 24px -12px rgba(0, 0, 0, 0.9);
+
+	/* Extended inputs */
+	--fmdbext-focus: rgba(124, 92, 255, 0.35);
+	--fmdbext-rating-on: #ffc861;
+	--fmdbext-rating-off: rgba(255, 255, 255, 0.18);
+	--fmdbext-rating-gap: 0.3rem;
+	--fmdbext-chip-bg: var(--aur-field);
+	--fmdbext-chip-border: var(--aur-line);
+	--fmdbext-chip-radius: 10px;
+	--fmdbext-chip-on-bg: var(--aur-violet);
+	--fmdbext-chip-on-fg: #ffffff;
+	--fmdbext-switch-off-bg: rgba(255, 255, 255, 0.18);
+	--fmdbext-switch-on-bg: var(--aur-violet);
+	--fmdbext-end-labels-color: var(--aur-ink-dim);
+	--fmdbext-warning-bg: rgba(255, 200, 97, 0.12);
+	--fmdbext-warning-border: rgba(255, 200, 97, 0.45);
+	--fmdbext-warning-fg: #ffd79a;
+
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
+	box-sizing: border-box;
+	width: min(100%, 640px);
+	margin: 3rem auto;
+	padding: clamp(1.5rem, 4vw, 2.75rem);
+	border: 1px solid transparent;
+	border-radius: 24px;
+	/* Gradient hairline: card fill in padding-box, gradient in border-box */
+	background:
+		linear-gradient(165deg, var(--aur-bg-card), var(--aur-bg-deep)) padding-box,
+		linear-gradient(135deg, rgba(124, 92, 255, 0.8), rgba(34, 211, 238, 0.35) 50%, rgba(244, 92, 200, 0.75)) border-box;
+	box-shadow:
+		0 40px 90px -30px rgba(6, 8, 20, 0.85),
+		0 2px 0 0 rgba(255, 255, 255, 0.04) inset;
+	color: var(--aur-ink);
+	font-family: "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+	font-size: 15px;
+	line-height: 1.55;
+	accent-color: var(--aur-violet);
+}
+
+/* The aurora itself: blurred colour fields drifting behind the content.
+   A negative z-index paints it over the card background and under the fields.
+   The blobs are sized in pixels, not percentages: a long form makes the card
+   very tall, and percentage-sized blobs would stretch out and leave the middle
+   of it flat. Anchors run down both edges so any card height stays lit. */
+.fmdb-form::before {
+	content: "";
+	position: absolute;
+	inset: -80px;
+	z-index: -1;
+	pointer-events: none;
+	background:
+		radial-gradient(420px 340px at 12% 4%, rgba(124, 92, 255, 0.85), transparent 72%),
+		radial-gradient(360px 300px at 92% 12%, rgba(34, 211, 238, 0.5), transparent 72%),
+		radial-gradient(380px 320px at 6% 52%, rgba(244, 92, 200, 0.34), transparent 72%),
+		radial-gradient(420px 360px at 96% 62%, rgba(124, 92, 255, 0.42), transparent 72%),
+		radial-gradient(460px 380px at 78% 98%, rgba(244, 92, 200, 0.5), transparent 72%),
+		radial-gradient(380px 320px at 18% 96%, rgba(34, 211, 238, 0.34), transparent 72%);
+	filter: blur(48px);
+	animation: fmdb-aurora-drift 22s ease-in-out infinite alternate;
+}
+
+@keyframes fmdb-aurora-drift {
+	from {
+		transform: translate3d(-3%, -2%, 0) scale(1);
+	}
+	to {
+		transform: translate3d(4%, 3%, 0) scale(1.12);
+	}
+}
+
+/* Intro */
+.fmdb-form .fmdb-form-intro {
+	margin: 0 0 2rem;
+	padding-bottom: 1.25rem;
+	border-bottom: 1px solid var(--aur-line);
+	color: var(--aur-ink-soft);
+	font-size: 0.95rem;
+}
+
+.fmdb-form .fmdb-form-intro :is(h1, h2, h3) {
+	margin: 0 0 0.4rem;
+	color: var(--aur-ink);
+	font-size: 1.6rem;
+	font-weight: 650;
+	letter-spacing: -0.02em;
+	line-height: 1.2;
+}
+
+.fmdb-form .fmdb-form-intro a {
+	color: var(--aur-cyan);
+}
+
+/* Field wrappers */
+.fmdb-form .fmdb-form-group {
+	margin-bottom: 1.35rem;
+}
+
+.fmdb-form fieldset.fmdb-form-group {
+	border: none;
+	padding: 0;
+	margin-inline: 0;
+}
+
+/* Labels: small caps micro-type, the modern form signature */
+.fmdb-form .fmdb-form-label,
+.fmdb-form .fmdb-group-legend,
+.fmdb-form .fmdb-file-label {
+	display: block;
+	margin-bottom: 0.5rem;
+	padding: 0;
+	color: var(--aur-ink-soft);
+	font-size: 0.7rem;
+	font-weight: 600;
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+}
+
+.fmdb-form .fmdb-required-indicator {
+	margin-left: 0.2rem;
+	color: var(--aur-pink);
+}
+
+.fmdb-form .fmdb-form-help {
+	margin-top: 0.4rem;
+	color: var(--aur-ink-dim);
+	font-size: 0.78rem;
+	line-height: 1.45;
+}
+
+/* Fieldsets */
+.fmdb-form .fmdb-fieldset {
+	margin: 0 0 1.5rem;
+	padding: 1.25rem;
+	border: 1px solid var(--aur-line);
+	border-radius: 16px;
+	background: rgba(255, 255, 255, 0.03);
+}
+
+.fmdb-form .fmdb-fieldset-legend {
+	padding: 0 0.5rem;
+	color: var(--aur-ink);
+	font-size: 0.85rem;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+}
+
+/* Text fields, selects, textareas: frosted glass over the aurora */
+.fmdb-form .fmdb-form-control {
+	width: 100%;
+	box-sizing: border-box;
+	min-height: 3rem;
+	padding: 0.8rem 1rem;
+	border: 1px solid var(--aur-line);
+	border-radius: var(--aur-radius);
+	background: var(--aur-field);
+	backdrop-filter: blur(8px);
+	color: var(--aur-ink);
+	font-family: inherit;
+	font-size: 0.95rem;
+	outline: none;
+	transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.fmdb-form .fmdb-form-control::placeholder {
+	color: var(--aur-ink-dim);
+}
+
+.fmdb-form .fmdb-form-control:hover:not(:disabled) {
+	border-color: var(--aur-line-strong);
+	background: var(--aur-field-hover);
+}
+
+.fmdb-form .fmdb-form-control:focus,
+.fmdb-form .fmdb-form-control:focus-visible {
+	border-color: rgba(124, 92, 255, 0.85);
+	background: var(--aur-field-hover);
+	box-shadow: var(--aur-ring);
+	transform: translateY(-1px);
+}
+
+.fmdb-form .fmdb-form-control:disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+
+/* Native calendar and spinner glyphs are black on a dark field: invert them */
+.fmdb-form input[type="date"].fmdb-form-control::-webkit-calendar-picker-indicator,
+.fmdb-form input[type="time"].fmdb-form-control::-webkit-calendar-picker-indicator,
+.fmdb-form input[type="datetime-local"].fmdb-form-control::-webkit-calendar-picker-indicator,
+.fmdb-form input[type="month"].fmdb-form-control::-webkit-calendar-picker-indicator,
+.fmdb-form input[type="week"].fmdb-form-control::-webkit-calendar-picker-indicator {
+	filter: invert(1) opacity(0.7);
+	cursor: pointer;
+}
+
+/* Single select: custom chevron, no native arrow. A multiple select is a list
+   box, not a dropdown, so it keeps its native look and is excluded here -
+   a chevron would sit on top of its options. */
+.fmdb-form select.fmdb-form-control:not([multiple]) {
+	appearance: none;
+	padding-right: 2.75rem;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9c0e4' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 1rem center;
+	background-size: 1.05rem;
+	cursor: pointer;
+}
+
+/* Multiple select: option rows with room to breathe */
+.fmdb-form select[multiple].fmdb-form-control {
+	padding: 0.5rem;
+	min-height: 8rem;
+	cursor: pointer;
+}
+
+.fmdb-form select[multiple].fmdb-form-control option {
+	padding: 0.45rem 0.6rem;
+	border-radius: 8px;
+}
+
+.fmdb-form select[multiple].fmdb-form-control option:checked {
+	background: var(--aur-violet) linear-gradient(0deg, var(--aur-violet), var(--aur-violet));
+	color: #ffffff;
+}
+
+/* Option lists render with the OS palette: keep them legible */
+.fmdb-form select.fmdb-form-control option {
+	background: var(--aur-bg-card);
+	color: var(--aur-ink);
+}
+
+.fmdb-form textarea.fmdb-form-control {
+	min-height: 7.5rem;
+	resize: vertical;
+	line-height: 1.6;
+}
+
+/* Colour picker: a compact swatch reads as a control, a full-width slab of pure
+   hue reads as a mistake. */
+.fmdb-form input[type="color"].fmdb-form-control {
+	width: 5.5rem;
+	height: 2.9rem;
+	min-height: 0;
+	padding: 0.3rem;
+	cursor: pointer;
+}
+
+.fmdb-form input[type="color"].fmdb-form-control::-webkit-color-swatch-wrapper {
+	padding: 0;
+}
+
+.fmdb-form input[type="color"].fmdb-form-control::-webkit-color-swatch {
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: 8px;
+}
+
+.fmdb-form input[type="color"].fmdb-form-control::-moz-color-swatch {
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: 8px;
+}
+
+/* File field: a dashed dropzone with a gradient picker button */
+.fmdb-form .fmdb-file-input-container {
+	position: relative;
+}
+
+.fmdb-form input[type="file"].fmdb-form-control {
+	min-height: 3.25rem;
+	padding: 0.7rem 0.9rem;
+	border-style: dashed;
+	border-color: var(--aur-line-strong);
+	color: var(--aur-ink-soft);
+	font-size: 0.85rem;
+	cursor: pointer;
+}
+
+.fmdb-form input[type="file"].fmdb-form-control::file-selector-button {
+	margin-right: 0.85rem;
+	padding: 0.5rem 1rem;
+	border: none;
+	border-radius: 9px;
+	background: var(--aur-accent-grad);
+	color: #ffffff;
+	font-family: inherit;
+	font-size: 0.8rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.fmdb-form input[type="file"].fmdb-form-control::file-selector-button:hover {
+	filter: brightness(1.12);
+	transform: translateY(-1px);
+}
+
+.fmdb-form input[type="file"].fmdb-form-control:disabled::file-selector-button {
+	background: rgba(255, 255, 255, 0.14);
+	cursor: not-allowed;
+}
+
+/* Selected files */
+.fmdb-form .fmdb-selected-files,
+.fmdb-form .fmdb-file-selection-note {
+	margin-top: 0.75rem;
+}
+
+.fmdb-form .fmdb-selected-files-title,
+.fmdb-form .fmdb-file-selection-note {
+	color: var(--aur-ink-dim);
+	font-size: 0.75rem;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.fmdb-form .fmdb-file-list {
+	margin: 0.5rem 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.fmdb-form .fmdb-file-item {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+	margin-bottom: 0.4rem;
+	padding: 0.6rem 0.85rem;
+	border: 1px solid var(--aur-line);
+	border-radius: 10px;
+	background: rgba(255, 255, 255, 0.04);
+	font-size: 0.82rem;
+}
+
+.fmdb-form .fmdb-file-name {
+	color: var(--aur-ink);
+	overflow-wrap: anywhere;
+}
+
+.fmdb-form .fmdb-file-size {
+	color: var(--aur-ink-dim);
+	white-space: nowrap;
+}
+
+.fmdb-form .fmdb-file-remove {
+	margin-left: auto;
+	width: 1.6rem;
+	height: 1.6rem;
+	flex: none;
+	display: grid;
+	place-content: center;
+	border: 1px solid transparent;
+	border-radius: 50%;
+	background: transparent;
+	color: var(--aur-ink-dim);
+	font-size: 0.95rem;
+	line-height: 1;
+	cursor: pointer;
+	transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.fmdb-form .fmdb-file-remove:hover {
+	border-color: rgba(255, 107, 129, 0.5);
+	background: rgba(255, 107, 129, 0.14);
+	color: var(--aur-danger);
+}
+
+/* CAPTCHA: the widget draws itself, so the wrapper only gives it a frame that
+   belongs to the card. */
+.fmdb-form .fmdb-captcha {
+	padding: 1rem;
+	border: 1px solid var(--aur-line);
+	border-radius: 12px;
+	background: rgba(255, 255, 255, 0.035);
+}
+
+.fmdb-form .fmdb-captcha img {
+	border-radius: 8px;
+}
+
+/* Radio and checkbox groups: each option is a pill card.
+   The extended inputs build their own visuals on inputs that also carry
+   .fmdb-form-control, so they are excluded from the box below. */
+.fmdb-form .fmdb-radio-group .fmdb-group-items,
+.fmdb-form .fmdb-checkbox-group .fmdb-group-items,
+.fmdb-form .fmdb-group-items {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.fmdb-form .fmdb-group-item {
+	display: flex;
+	align-items: center;
+	gap: 0.7rem;
+	padding: 0.7rem 0.9rem;
+	border: 1px solid var(--aur-line);
+	border-radius: 12px;
+	background: rgba(255, 255, 255, 0.035);
+	transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.fmdb-form .fmdb-group-item:hover {
+	border-color: var(--aur-line-strong);
+	background: var(--aur-field-hover);
+}
+
+/* Checked pill: modern browsers only, and purely decorative */
+@supports selector(:has(*)) {
+	.fmdb-form .fmdb-group-item:has(input:checked) {
+		border-color: rgba(124, 92, 255, 0.7);
+		background: linear-gradient(120deg, rgba(124, 92, 255, 0.22), rgba(34, 211, 238, 0.12));
+	}
+}
+
+.fmdb-form .fmdb-group-item input[type="checkbox"].fmdb-form-control:not([class*="fmdbext-"]),
+.fmdb-form .fmdb-group-item input[type="radio"].fmdb-form-control:not([class*="fmdbext-"]) {
+	appearance: none;
+	width: 1.2rem;
+	height: 1.2rem;
+	min-height: 0;
+	flex: none;
+	margin: 0;
+	padding: 0;
+	border: 1.5px solid var(--aur-line-strong);
+	background: rgba(255, 255, 255, 0.06);
+	backdrop-filter: none;
+	box-shadow: none;
+	cursor: pointer;
+	transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fmdb-form .fmdb-group-item input[type="checkbox"].fmdb-form-control:not([class*="fmdbext-"]) {
+	border-radius: 6px;
+}
+
+.fmdb-form .fmdb-group-item input[type="radio"].fmdb-form-control:not([class*="fmdbext-"]) {
+	border-radius: 50%;
+}
+
+.fmdb-form .fmdb-group-item input[type="checkbox"].fmdb-form-control:not([class*="fmdbext-"]):checked {
+	border-color: transparent;
+	background:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 12.5l5 5L20 6.5'/%3E%3C/svg%3E")
+			center / 0.75rem no-repeat,
+		var(--aur-accent-grad);
+}
+
+.fmdb-form .fmdb-group-item input[type="radio"].fmdb-form-control:not([class*="fmdbext-"]):checked {
+	border-color: var(--aur-violet);
+	background: var(--aur-accent-grad);
+	box-shadow: inset 0 0 0 3.5px var(--aur-bg-card);
+}
+
+.fmdb-form .fmdb-group-item input.fmdb-form-control:not([class*="fmdbext-"]):focus-visible {
+	box-shadow: var(--aur-ring);
+	transform: none;
+}
+
+.fmdb-form .fmdb-checkbox-label,
+.fmdb-form .fmdb-radio-label {
+	flex: 1;
+	color: var(--aur-ink);
+	font-size: 0.9rem;
+	letter-spacing: 0;
+	text-transform: none;
+	cursor: pointer;
+}
+
+/* A lone checkbox (consent-style) keeps the pill but drops the label caps */
+.fmdb-form .fmdb-checkbox-group .fmdb-group-items:has(> .fmdb-group-item:only-child) {
+	gap: 0;
+}
+
+/* Range slider: gradient track, glowing thumb */
+.fmdb-form .fmdb-range-row {
+	display: flex;
+	align-items: center;
+	gap: var(--fmdb-range-gap);
+}
+
+.fmdb-form input[type="range"].fmdb-form-control {
+	appearance: none;
+	min-height: 0;
+	height: 1.5rem;
+	padding: 0;
+	border: none;
+	background: transparent;
+	backdrop-filter: none;
+	box-shadow: none;
+	cursor: pointer;
+}
+
+.fmdb-form input[type="range"].fmdb-form-control:focus,
+.fmdb-form input[type="range"].fmdb-form-control:hover:not(:disabled) {
+	background: transparent;
+	box-shadow: none;
+	transform: none;
+}
+
+.fmdb-form input[type="range"].fmdb-form-control::-webkit-slider-runnable-track {
+	height: 0.4rem;
+	border-radius: 999px;
+	background: linear-gradient(90deg, rgba(124, 92, 255, 0.9), rgba(34, 211, 238, 0.9));
+}
+
+.fmdb-form input[type="range"].fmdb-form-control::-moz-range-track {
+	height: 0.4rem;
+	border-radius: 999px;
+	background: linear-gradient(90deg, rgba(124, 92, 255, 0.9), rgba(34, 211, 238, 0.9));
+}
+
+.fmdb-form input[type="range"].fmdb-form-control::-webkit-slider-thumb {
+	appearance: none;
+	width: 1.15rem;
+	height: 1.15rem;
+	margin-top: -0.375rem;
+	border: 2px solid #ffffff;
+	border-radius: 50%;
+	background: var(--aur-violet);
+	box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.28);
+}
+
+.fmdb-form input[type="range"].fmdb-form-control::-moz-range-thumb {
+	width: 1.15rem;
+	height: 1.15rem;
+	border: 2px solid #ffffff;
+	border-radius: 50%;
+	background: var(--aur-violet);
+	box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.28);
+}
+
+.fmdb-form input[type="range"].fmdb-form-control:focus-visible::-webkit-slider-thumb {
+	box-shadow: 0 0 0 6px rgba(124, 92, 255, 0.45);
+}
+
+.fmdb-form .fmdb-range-output {
+	padding: 0.2rem 0.55rem;
+	border: 1px solid var(--aur-line);
+	border-radius: 8px;
+	background: rgba(255, 255, 255, 0.06);
+	color: var(--aur-ink);
+	font-size: 0.8rem;
+	font-variant-numeric: tabular-nums;
+	text-align: center;
+}
+
+.fmdb-form .fmdb-range-end-label {
+	color: var(--aur-ink-dim);
+	font-size: var(--fmdb-range-end-label-size);
+}
+
+/* Multi-step navigation. The active step is the one carrying aria-current,
+   a stable hook; the colours themselves come from the variables above. */
+.fmdb-form .fmdb-steps-nav {
+	display: flex;
+	flex-wrap: wrap;
+	padding: 0.4rem;
+	border: 1px solid var(--aur-line);
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.04);
+}
+
+.fmdb-form .fmdb-step-indicator {
+	border-radius: 999px;
+	letter-spacing: 0.02em;
+}
+
+.fmdb-form .fmdb-step-indicator[aria-current="step"] {
+	background: rgba(124, 92, 255, 0.18);
+	box-shadow: inset 0 0 0 1px rgba(124, 92, 255, 0.45);
+}
+
+.fmdb-form .fmdb-step-number {
+	box-shadow: 0 4px 12px -6px rgba(0, 0, 0, 0.9);
+}
+
+.fmdb-form .fmdb-step-label {
+	white-space: nowrap;
+}
+
+.fmdb-form .fmdb-step-title {
+	margin: 0 0 0.3rem;
+	color: var(--aur-ink);
+	font-size: 1.15rem;
+	font-weight: 650;
+	letter-spacing: -0.01em;
+}
+
+.fmdb-form .fmdb-step-intro {
+	margin: 0 0 1.5rem;
+	color: var(--aur-ink-soft);
+	font-size: 0.88rem;
+}
+
+/* Buttons */
+.fmdb-form .fmdb-form-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	align-items: center;
+	margin-top: 1.75rem;
+	padding-top: 1.5rem;
+	border-top: 1px solid var(--aur-line);
+}
+
+.fmdb-form .fmdb-btn {
+	position: relative;
+	overflow: hidden;
+	min-height: 3rem;
+	padding: 0 1.6rem;
+	border: 1px solid transparent;
+	border-radius: 999px;
+	font-family: inherit;
+	font-size: 0.9rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	cursor: pointer;
+	outline: none;
+	transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease, background-color 0.2s ease;
+}
+
+.fmdb-form .fmdb-btn:focus-visible {
+	box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.5);
+}
+
+.fmdb-form .fmdb-btn-primary,
+.fmdb-form .fmdb-next-btn,
+.fmdb-form .fmdb-new-form-btn {
+	flex: 1 1 12rem;
+	background: var(--aur-accent-grad);
+	color: #ffffff;
+	box-shadow: 0 14px 30px -14px rgba(124, 92, 255, 0.9);
+}
+
+.fmdb-form .fmdb-btn-primary:hover:not(:disabled),
+.fmdb-form .fmdb-next-btn:hover:not(:disabled),
+.fmdb-form .fmdb-new-form-btn:hover:not(:disabled) {
+	transform: translateY(-2px);
+	filter: brightness(1.08);
+	box-shadow: 0 18px 38px -14px rgba(124, 92, 255, 1);
+}
+
+.fmdb-form .fmdb-btn-primary:active:not(:disabled),
+.fmdb-form .fmdb-next-btn:active:not(:disabled) {
+	transform: translateY(0);
+}
+
+/* Shine sweep across the primary button on hover */
+.fmdb-form .fmdb-btn-primary::after,
+.fmdb-form .fmdb-next-btn::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: -60%;
+	width: 45%;
+	background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+	transform: skewX(-18deg);
+	pointer-events: none;
+}
+
+.fmdb-form .fmdb-btn-primary:hover:not(:disabled)::after,
+.fmdb-form .fmdb-next-btn:hover:not(:disabled)::after {
+	animation: fmdb-aurora-shine 0.75s ease-out;
+}
+
+@keyframes fmdb-aurora-shine {
+	to {
+		left: 115%;
+	}
+}
+
+.fmdb-form .fmdb-btn-secondary,
+.fmdb-form .fmdb-prev-btn {
+	border-color: var(--aur-line-strong);
+	background: rgba(255, 255, 255, 0.05);
+	color: var(--aur-ink);
+}
+
+.fmdb-form .fmdb-btn-secondary:hover:not(:disabled),
+.fmdb-form .fmdb-prev-btn:hover:not(:disabled) {
+	border-color: var(--aur-ink-dim);
+	background: rgba(255, 255, 255, 0.1);
+}
+
+/* A button is disabled while the form submits, and the submit button also is in
+   edit and preview: it must read as unavailable, not merely unclicked. */
+.fmdb-form .fmdb-btn:disabled {
+	background: rgba(255, 255, 255, 0.09);
+	border-color: var(--aur-line);
+	color: var(--aur-ink-dim);
+	box-shadow: none;
+	filter: none;
+	transform: none;
+	cursor: not-allowed;
+}
+
+.fmdb-form .fmdb-btn:disabled::after {
+	display: none;
+}
+
+/* Inline validation */
+.fmdb-form .fmdb-validation-error,
+.fmdb-form .fmdb-options-source-error {
+	display: block;
+	margin-top: 0.45rem;
+	color: var(--fmdb-validation-error-color);
+	font-size: 0.78rem;
+	font-weight: 500;
+}
+
+.fmdb-form .fmdb-form-control.fmdb-invalid {
+	border-color: var(--aur-danger);
+	box-shadow: 0 0 0 3px var(--fmdb-invalid-outline-color);
+}
+
+/* Extended inputs: rating, scale, switch, consent */
+.fmdb-form .fmdbext-rating-item,
+.fmdb-form .fmdbext-scale-item {
+	cursor: pointer;
+}
+
+.fmdb-form .fmdbext-scale-label {
+	border-radius: var(--fmdbext-chip-radius);
+	color: var(--aur-ink);
+	font-size: 0.85rem;
+	font-weight: 600;
+	transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.fmdb-form .fmdbext-scale-item:hover .fmdbext-scale-label {
+	background: var(--aur-field-hover);
+	transform: translateY(-1px);
+}
+
+.fmdb-form .fmdbext-end-labels {
+	color: var(--fmdbext-end-labels-color);
+	font-size: 0.75rem;
+}
+
+.fmdb-form .fmdbext-switch-track {
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.fmdb-form .fmdbext-switch-knob {
+	box-shadow: 0 2px 6px -2px rgba(0, 0, 0, 0.8);
+}
+
+.fmdb-form .fmdbext-switch-state,
+.fmdb-form .fmdbext-switch-text,
+.fmdb-form .fmdbext-switch-toggle-label {
+	color: var(--aur-ink);
+	font-size: 0.88rem;
+}
+
+.fmdb-form .fmdbext-switch-state-off {
+	color: var(--aur-ink-dim);
+}
+
+.fmdb-form .fmdbext-consent {
+	padding: 0.9rem 1rem;
+	border: 1px solid var(--aur-line);
+	border-radius: 12px;
+	background: rgba(255, 255, 255, 0.035);
+}
+
+.fmdb-form .fmdbext-consent-label,
+.fmdb-form .fmdbext-consent-statement {
+	color: var(--aur-ink);
+	font-size: 0.88rem;
+	letter-spacing: 0;
+	text-transform: none;
+}
+
+.fmdb-form .fmdbext-consent-terms-link {
+	color: var(--aur-cyan);
+	text-underline-offset: 2px;
+}
+
+.fmdb-form .fmdbext-edit-warning {
+	border-radius: 10px;
+	font-size: 0.8rem;
+}
+
+/* Authoring surfaces. Page Builder keeps its own boxes and buttons over the
+   card, so the only job here is to keep the dark theme readable in edit mode
+   and in jContent's scriptless previews (a div, not a form). */
+.fmdb-form[data-fmdb-edit-mode="true"],
+.fmdb-form[data-fmdb-cm-view="true"] {
+	animation: none;
+}
+
+.fmdb-form[data-fmdb-edit-mode="true"]::before,
+.fmdb-form[data-fmdb-cm-view="true"]::before {
+	animation: none;
+	opacity: 0.65;
+}
+
+.fmdb-form[data-fmdb-edit-mode="true"] .fmdb-logic-target,
+.fmdb-form[data-fmdb-cm-view="true"] .fmdb-logic-target {
+	color: var(--aur-ink);
+}
+
+/* Submission feedback. Outside the form, so it carries the palette itself. */
+.fmdb-message {
+	box-sizing: border-box;
+	width: min(100%, 640px);
+	margin: 1.5rem auto;
+	padding: 1.1rem 1.35rem;
+	border: 1px solid rgba(255, 255, 255, 0.14);
+	border-left: 4px solid #7c5cff;
+	border-radius: 16px;
+	background: linear-gradient(165deg, #131a33, #080b18);
+	box-shadow: 0 30px 70px -30px rgba(6, 8, 20, 0.85);
+	color: #eceffd;
+	font-family: "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+	font-size: 0.95rem;
+	line-height: 1.55;
+}
+
+.fmdb-message-success {
+	border-left-color: #22d3ee;
+}
+
+.fmdb-message-error {
+	border-left-color: #ff6b81;
+}
+
+.fmdb-message-maintenance {
+	border-left-color: #ffc861;
+}
+
+.fmdb-message .fmdb-message-content :is(h1, h2, h3) {
+	margin: 0 0 0.35rem;
+	font-size: 1.15rem;
+	font-weight: 650;
+}
+
+.fmdb-message .fmdb-message-content a {
+	color: #22d3ee;
+}
+
+/* Narrow screens: tighter card, stacked actions */
+@media (max-width: 640px) {
+	.fmdb-form {
+		margin: 1.5rem auto;
+		padding: 1.35rem;
+		border-radius: 18px;
+	}
+
+	.fmdb-form .fmdb-form-actions .fmdb-btn {
+		flex: 1 1 100%;
+	}
+
+	.fmdb-form .fmdb-steps-nav {
+		border-radius: 18px;
+	}
+}
+
+/* Motion is decoration here: none of it is needed to use the form */
+@media (prefers-reduced-motion: reduce) {
+	.fmdb-form::before {
+		animation: none;
+	}
+
+	.fmdb-form .fmdb-form-control,
+	.fmdb-form .fmdb-btn,
+	.fmdb-form .fmdb-group-item {
+		transition: none;
+	}
+
+	.fmdb-form .fmdb-btn-primary:hover:not(:disabled),
+	.fmdb-form .fmdb-next-btn:hover:not(:disabled) {
+		transform: none;
+	}
+
+	.fmdb-form .fmdb-btn-primary:hover:not(:disabled)::after,
+	.fmdb-form .fmdb-next-btn:hover:not(:disabled)::after {
+		animation: none;
+	}
+}
