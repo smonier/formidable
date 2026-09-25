@@ -68,7 +68,6 @@ export function getCreateOpportunityActionNode(data: CreateOpportunityActionData
 
 export interface MockOpportunity {
 	OppID: string;
-	[field: string]: unknown;
 	_updated?: boolean;
 	[field: string]: unknown;
 }
