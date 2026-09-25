@@ -101,7 +101,7 @@ save it.
 ```properties
 label=Efficy e-deal - production
 serverUrl=https://acme.efficytest.cloud
-appContext=MutuelleAssurance
+appContext=AcmeCRM
 apiVersion=1.0
 token=...tenant api token...
 # or, Docker-secret friendly, leave token empty and set:
@@ -122,7 +122,7 @@ referentialCacheTtlSeconds=300
 | Key | Default | Notes |
 | --- | --- | --- |
 | `serverUrl` | — | `https` on `efficy.com`, `efficy.cloud`, `efficytest.cloud` or an `extraAllowedHosts` suffix |
-| `appContext` | — | First path segment of the tenant (e.g. `MutuelleAssurance`) |
+| `appContext` | — | First path segment of the tenant (e.g. `AcmeCRM`) |
 | `token` / `tokenPath` | — | Sent verbatim in `Authorization` |
 | `objectType` | `Opportunity` | e-deal entity to create |
 | `fieldCatalog` | standard Opportunity fields | `sqlName|Label|type[|required]`; types `string`, `text`, `number`, `date`, `datetime`, `boolean`, `referential`, `referential-multi`, `reference` |

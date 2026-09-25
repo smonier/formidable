@@ -48,7 +48,7 @@ public @interface EfficyConnectionConfig {
     @AttributeDefinition(name = "Server URL", description = "Efficy server, e.g. https://acme.efficytest.cloud (https only).", type = AttributeType.STRING)
     String serverUrl() default "";
 
-    @AttributeDefinition(name = "Application context", description = "e-deal application context, the first path segment (e.g. MutuelleAssurance).", type = AttributeType.STRING)
+    @AttributeDefinition(name = "Application context", description = "e-deal application context, the first path segment (e.g. AcmeCRM).", type = AttributeType.STRING)
     String appContext() default "";
 
     @AttributeDefinition(name = "API version", type = AttributeType.STRING)

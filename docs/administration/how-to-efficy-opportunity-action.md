@@ -41,7 +41,7 @@ the Jahia process user (see the Salesforce how-to for the FileInstall read-only 
 ```properties
 label=Efficy e-deal - production
 serverUrl=https://acme.efficytest.cloud
-appContext=MutuelleAssurance
+appContext=AcmeCRM
 apiVersion=1.0
 token=...tenant api token...
 # or tokenPath=/run/secrets/efficy-token
