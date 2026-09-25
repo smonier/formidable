@@ -12,9 +12,8 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.Query;
-
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.FIELD_KEY_PROPERTY;
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.FORM_LOGIC_ELEMENT_MIXIN;
+import org.jahia.modules.formidable.engine.api.FmdbMixin;
+import org.jahia.modules.formidable.engine.api.FmdbProperty;
 
 /**
  * One-shot content cleanup: form elements created before the assignment listener
@@ -29,8 +28,9 @@ import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.FO
  * NOT on the previously installed module version. Re-running is a no-op once every
  * translation is clean.
  *
- * <p>Lifecycle: startup migration introduced in 0.4.0 (#215), to be removed in 0.5 — see
- * docs/upgrade-notes.md, "Startup migrations".
+ * <p>Lifecycle: startup migration introduced in 0.4.0 (#215), kept through 0.5.x so that a
+ * 0.3.x instance can still upgrade directly, to be removed in 0.6 with the other startup
+ * migrations — see docs/administration/upgrade-notes.md, "Startup migrations".
  */
 @Component(immediate = true)
 public class TranslationFieldKeyCleanup {
@@ -54,7 +54,7 @@ public class TranslationFieldKeyCleanup {
         // Scoped to editorial content: module-bundled nodes under /modules belong to
         // their module and must not be rewritten from here.
         Query query = session.getWorkspace().getQueryManager()
-                .createQuery("SELECT * FROM [" + FORM_LOGIC_ELEMENT_MIXIN + "]"
+                .createQuery("SELECT * FROM [" + FmdbMixin.FORM_LOGIC_ELEMENT + "]"
                         + " WHERE ISDESCENDANTNODE('/sites')", Query.JCR_SQL2);
         JCRNodeIteratorWrapper nodes = (JCRNodeIteratorWrapper) query.execute().getNodes();
 
@@ -97,8 +97,8 @@ public class TranslationFieldKeyCleanup {
         NodeIterator translations = node.getI18Ns();
         while (translations.hasNext()) {
             Node translation = translations.nextNode();
-            if (translation.hasProperty(FIELD_KEY_PROPERTY)) {
-                translation.getProperty(FIELD_KEY_PROPERTY).remove();
+            if (translation.hasProperty(FmdbProperty.FIELD_KEY)) {
+                translation.getProperty(FmdbProperty.FIELD_KEY).remove();
                 removed++;
             }
         }

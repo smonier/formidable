@@ -37,5 +37,11 @@
 	"fmdb_inputRange": {
 		"required": "Please select a value",
 		"unanswered": "No value selected yet"
+	},
+	"fmdb_actionList": {
+		"heading": "Actions on submission · {{count}}",
+		"inOrder": "Run in this order. Not shown to visitors.",
+		"notLive": "Not shown to visitors.",
+		"empty": "No action yet: submissions will be neither stored nor sent."
 	}
 }

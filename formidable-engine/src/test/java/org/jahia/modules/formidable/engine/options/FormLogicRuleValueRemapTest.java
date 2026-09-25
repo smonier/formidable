@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import javax.jcr.RepositoryException;
 import java.util.List;
 import java.util.Map;
+import org.jahia.modules.formidable.engine.api.FmdbMixin;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -55,7 +56,7 @@ class FormLogicRuleValueRemapTest {
         JCRSessionWrapper session = mock(JCRSessionWrapper.class);
 
         JCRNodeWrapper form = mock(JCRNodeWrapper.class);
-        when(form.isNodeType("fmdb:form")).thenReturn(true);
+        when(form.isNodeType(FmdbMixin.FORM_ROOT)).thenReturn(true);
 
         JCRNodeWrapper field = mock(JCRNodeWrapper.class);
         when(field.getIdentifier()).thenReturn("source-uuid");
@@ -98,7 +99,7 @@ class FormLogicRuleValueRemapTest {
     @Test
     void aRuleOnAnotherSourceIsLeftAlone() throws Exception {
         JCRNodeWrapper form = mock(JCRNodeWrapper.class);
-        when(form.isNodeType("fmdb:form")).thenReturn(true);
+        when(form.isNodeType(FmdbMixin.FORM_ROOT)).thenReturn(true);
 
         JCRNodeWrapper field = mock(JCRNodeWrapper.class);
         when(field.getIdentifier()).thenReturn("source-uuid");

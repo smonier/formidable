@@ -17,7 +17,7 @@ const SET_FR_OPTIONS = gql`
 	mutation setFrOptions($path: String!, $values: [String!]!) {
 		jcr {
 			mutateNode(pathOrId: $path) {
-				mutateProperty(name: "fmdb:options") {
+				mutateProperty(name: "options") {
 					setValues(language: "fr", values: $values)
 				}
 			}
@@ -31,7 +31,7 @@ const GET_FR_OPTIONS = gql`
 			nodeByPath(path: $path) {
 				uuid
 				workspace
-				property(name: "fmdb:options", language: "fr") {
+				property(name: "options", language: "fr") {
 					values
 				}
 			}
@@ -45,7 +45,7 @@ const GET_EN_OPTIONS = gql`
 			nodeByPath(path: $path) {
 				uuid
 				workspace
-				property(name: "fmdb:options", language: "en") {
+				property(name: "options", language: "en") {
 					values
 				}
 			}
@@ -107,7 +107,7 @@ const readFrOptions = (fieldPath: string) =>
  * The option VALUES of a manual choice field are its identity — submissions
  * store them, conditional logic matches them, the forged-value validation
  * checks them — so every language must share one set. The site's default
- * language is the authority: saving fmdb:options feeds EVERY site language the
+ * language is the authority: saving options feeds EVERY site language the
  * master's values, order and count, creating the translation subnode of a
  * language that has none. Each language keeps its own label for a value it
  * already carries, and an entry nobody translated is stored with an EMPTY

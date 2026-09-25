@@ -17,6 +17,7 @@ interface JcrChildNodeResponse {
 	name: string;
 	children?: {
 		nodes?: Array<{
+			name?: string;
 			properties?: JcrPropertyResponse[];
 		}>;
 	};

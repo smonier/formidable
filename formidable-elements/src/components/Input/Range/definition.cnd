@@ -22,7 +22,7 @@
 // Base fmdbmix:validationMessages only: user interaction can only fail 'required' (the
 // browser clamps the thumb into range, so rangeOverflow/stepMismatch are unreachable
 // client-side); forged out-of-range submissions are still rejected server-side.
-[fmdb:inputRange] > jnt:content, fmdbmix:element, fmdbmix:numberField, fmdbmix:validationMessages
+[fmdb:inputRange] > jnt:content, fmdbmix:element, fmdbmix:profileMappableField, fmdbmix:numberField, fmdbmix:validationMessages
  - helpText (string, richtext[ckeditor.toolbar='FormidableHelp',ckeditor.customConfig='$context/modules/formidable-engine/javascript/ckeditor/helpTextConfig.js']) i18n indexed=no
  - required (boolean) = false
  - defaultValue (double)

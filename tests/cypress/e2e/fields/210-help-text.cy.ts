@@ -158,11 +158,11 @@ describe('Form fields - 210 Help text', () => {
 
 				// Island props path: checkbox group help, translated in both languages
 				const checkboxNode = getCheckboxNode(CHECKBOX_WITH_RICH_HELP);
-				const checkboxChoices = checkboxNode.properties.find(p => p.name === 'fmdb:options');
+				const checkboxChoices = checkboxNode.properties.find(p => p.name === 'options');
 				checkboxNode.properties.push(
 					{name: 'jcr:title', value: 'Sujets de la newsletter', language: 'fr'},
 					{name: 'helpText', value: CHECKBOX_HELP_FR, language: 'fr'},
-					{name: 'fmdb:options', values: checkboxChoices?.values, language: 'fr'}
+					{name: 'options', values: checkboxChoices?.values, language: 'fr'}
 				);
 
 				// SSR path: text input help, translated in both languages

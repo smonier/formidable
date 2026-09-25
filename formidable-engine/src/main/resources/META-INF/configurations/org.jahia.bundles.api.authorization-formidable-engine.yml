@@ -7,3 +7,12 @@ formidable-submit:
   grants:
     - api: formidable-submit
       node: none
+formidable-field-action:
+  description: Can ask a Formidable form to check one field's value
+  metadata:
+    visible: false
+  auto_apply:
+    - origin: hosted
+  grants:
+    - api: formidable-field-action
+      node: none

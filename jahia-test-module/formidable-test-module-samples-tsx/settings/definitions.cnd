@@ -10,3 +10,17 @@
  extends = fmdb:fieldset
  itemtype = fmdbSampleStyle
  - customCssClassname (string) multiple indexed=no
+
+// Lets the contributor place a field's help text above the field (the built-in rendering),
+// below it, or in both places. Extends every built-in field type declaring a helpText (the
+// property is declared per concrete type, not on fmdbmix:element); the four optional types
+// of formidable-extended-inputs are left out, this module not depending on it. Honoured by
+// the text input rendering this module puts in place of Formidable's
+// (src/components/Input/Text/default.server.tsx, a default view of higher priority), the one
+// sample view. Demonstrates a third-party setting surfaced INSIDE the built-in
+// type's own editor fieldset, right under the field it qualifies, rather than in a section
+// of its own (settings/jahia-content-editor-forms/forms/fmdbsamplemix_helpTextPosition.json).
+[fmdbsamplemix:helpTextPosition] mixin
+ extends = fmdb:inputText, fmdb:inputEmail, fmdb:textarea, fmdb:inputNumber, fmdb:inputRange, fmdb:inputDate, fmdb:inputDatetimeLocal, fmdb:inputColor, fmdb:inputFile, fmdb:checkbox, fmdb:radio, fmdb:select
+ itemtype = content
+ - helpTextPosition (string, choicelist[resourceBundle]) = 'up' autocreated indexed=no < 'up', 'down', 'both'

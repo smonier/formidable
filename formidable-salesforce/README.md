@@ -12,8 +12,8 @@ Its HubSpot twin is [`formidable-hubspot`](../formidable-hubspot/README.md); bot
 architecture and the same authoring experience.
 
 Part of the CRM connector family with the two other modules: see
-[docs/crm-connector-actions.md](../docs/crm-connector-actions.md) for the shared architecture and
-the side-by-side comparison, and its [consolidated changelog](../docs/crm-connector-actions-changelog.md).
+[docs/administration/crm-connector-actions.md](../docs/administration/crm-connector-actions.md) for the shared architecture and
+the side-by-side comparison, and its [consolidated changelog](../docs/administration/crm-connector-actions-changelog.md).
 
 ## Contents
 
@@ -197,7 +197,7 @@ are skipped and logged. Uploaded files are not sent.
 Salesforce errors are parsed (`errorCode`, `fields[]`) and logged with the action path, never
 with submitted values. With the default policy the action throws a `FormActionException` with
 HTTP 502, which the pipeline surfaces to the visitor as its generic action failure code
-(`FMDB-008`, see `docs/error-codes.md`); earlier actions of the form (for instance Save to JCR)
+(`FMDB-008`, see `docs/administration/error-codes.md`); earlier actions of the form (for instance Save to JCR)
 have already run. Typical log lines:
 
 ```

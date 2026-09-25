@@ -12,11 +12,12 @@ const submission = (fieldValues: Array<{name: string; values: string[]}>): Submi
     origin: null,
     locale: 'en',
     referer: null,
+    timeZone: null,
     fieldValues,
     files: []
 });
 
-const formFields = (order: string[]): FormFields => ({labels: new Map(), order});
+const formFields = (order: string[]): FormFields => ({labels: new Map(), order, kinds: new Map()});
 
 const lastRow = (content: string): string => content.split('\n').at(-1)!;
 
@@ -61,6 +62,33 @@ describe('csv export', () => {
         expect(row).toContain(`'@SUM(A1)`);
         expect(row).toContain(`'\t=1+1`);
         expect(content).toContain(`"'\r=1+1"`);
+    });
+
+    it('names every column and lands each metadata value under its own header', () => {
+        // The header labels and the row values are two hand-maintained arrays that must stay
+        // index-aligned: asserted by position, with a zone on the fixture so the column is filled.
+        const content = csvFormat.buildContent(
+            [{...submission([{name: 'a', values: ['plain value']}]), origin: 'formidable', referer: 'https://example.org/page', timeZone: 'Europe/Paris'}],
+            t,
+            formFields(['a'])
+        );
+
+        const [header, row] = content.split('\n').map(line => line.split(','));
+        expect(header).toEqual([
+            'formResults.export.columns.id',
+            'formResults.export.columns.name',
+            'formResults.table.date',
+            'formResults.table.locale',
+            'formResults.detail.origin',
+            'formResults.detail.referer',
+            'formResults.detail.timeZone',
+            'formResults.detail.files',
+            'a'
+        ]);
+        expect(row[header.indexOf('formResults.detail.timeZone')]).toEqual('Europe/Paris');
+        expect(row[header.indexOf('formResults.detail.referer')]).toEqual('https://example.org/page');
+        expect(row[header.indexOf('formResults.detail.origin')]).toEqual('formidable');
+        expect(row[header.indexOf('a')]).toEqual('plain value');
     });
 
     it('leaves ordinary values untouched', () => {

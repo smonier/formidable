@@ -1,0 +1,36 @@
+{
+  "metadata": {
+    "id": "formidable-form-mapping_mysite_8f7e2a10-0000-4000-8000-000000000001",
+    "name": "Contact form",
+    "description": "Formidable auto mapping",
+    "scope": "mysite",
+    "systemTags": ["formMappingRule"]
+  },
+  "priority": -1,
+  "condition": {
+    "type": "booleanCondition",
+    "parameterValues": {
+      "operator": "and",
+      "subConditions": [
+        { "type": "formEventCondition", "parameterValues": { "formId": "8f7e2a10-0000-4000-8000-000000000001" } },
+        { "type": "booleanCondition", "parameterValues": { "operator": "or", "subConditions": [
+          { "type": "sourceEventPropertyCondition", "parameterValues": { "scope": "mysite" } }
+        ] } }
+      ]
+    }
+  },
+  "actions": [
+    { "type": "setPropertyAction", "parameterValues": {
+        "setPropertyName": "properties(age)", "setPropertyStrategy": "alwaysSet",
+        "setPropertyValueInteger": "eventProperty::flattenedProperties(fields)(age)" } },
+    { "type": "setPropertyAction", "parameterValues": {
+        "setPropertyName": "properties(firstName)", "setPropertyStrategy": "alwaysSet",
+        "setPropertyValue": "eventProperty::flattenedProperties(fields)(firstName)" } },
+    { "type": "setPropertyAction", "parameterValues": {
+        "setPropertyName": "properties(newsletter)", "setPropertyStrategy": "setIfMissing",
+        "setPropertyValueBoolean": "eventProperty::flattenedProperties(fields)(optin)" } },
+    { "type": "setPropertyAction", "parameterValues": {
+        "setPropertyName": "properties(interests)", "setPropertyStrategy": "setIfMissing",
+        "setPropertyValueMultiple": "eventProperty::flattenedProperties(fields)(topics)" } }
+  ]
+}

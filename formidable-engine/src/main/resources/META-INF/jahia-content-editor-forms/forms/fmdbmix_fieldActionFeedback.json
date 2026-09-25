@@ -1,0 +1,24 @@
+{
+	"nodeType": "fmdbmix:fieldActionFeedback",
+	"priority": 2.0,
+	"sections": [
+		{
+			"name": "configuration",
+			"labelKey": "fmdb.section.configuration",
+			"rank": 1.05,
+			"fieldSets": [
+				{
+					"name": "fmdbmix:fieldActionFeedback",
+					"rank": 0.0,
+					"isAlwaysActivated": true,
+					"fields": [
+						{ "name": "trigger", "rank": 1.0 },
+						{ "name": "severity", "rank": 2.0 },
+						{ "name": "whenUnavailable", "rank": 3.0 },
+						{ "name": "rejectionMessage", "rank": 4.0 }
+					]
+				}
+			]
+		}
+	]
+}

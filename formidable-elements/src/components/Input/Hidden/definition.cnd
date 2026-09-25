@@ -1,6 +1,6 @@
 // Hidden input component properties
 // Note: Hidden inputs are not displayed to users but included in form submission
 // They only support the 'value' attribute - no validation, placeholder, or other interactive properties
-[fmdb:inputHidden] > jnt:content, fmdbmix:element
+[fmdb:inputHidden] > jnt:content, fmdbmix:element, fmdbmix:profileMappableField
  - value (string) indexed=no
 

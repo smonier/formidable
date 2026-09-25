@@ -12,14 +12,18 @@ import javax.jcr.RepositoryException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.jahia.modules.formidable.engine.api.FmdbMixin;
+import org.jahia.modules.formidable.engine.api.FmdbNodeName;
+import org.jahia.modules.formidable.engine.api.FmdbNodeType;
+import org.jahia.modules.formidable.engine.api.FmdbProperty;
 
 @Component(
         service = ContentIntegrityCheck.class,
         immediate = true,
         property = {
-                ContentIntegrityCheck.ExecutionCondition.APPLY_ON_NT + "=" + AbstractFormidableIntegrityCheck.FMDB_LOGIC_ELEMENT,
+                ContentIntegrityCheck.ExecutionCondition.APPLY_ON_NT + "=" + FmdbMixin.FORM_LOGIC_ELEMENT,
                 ContentIntegrityCheck.ExecutionCondition.APPLY_ON_SUBTREES + "=/sites",
-                ContentIntegrityCheck.ExecutionCondition.APPLY_IF_HAS_PROP + "=" + AbstractFormidableIntegrityCheck.LOGICS_PROPERTY
+                ContentIntegrityCheck.ExecutionCondition.APPLY_IF_HAS_PROP + "=" + FmdbProperty.LOGICS
         }
 )
 public class FormLogicReferenceIntegrityCheck extends AbstractFormidableIntegrityCheck {
@@ -41,7 +45,7 @@ public class FormLogicReferenceIntegrityCheck extends AbstractFormidableIntegrit
                 // Every rule must have a non-blank logicId (used as the node name under logicsSrc/)
                 if (rule.logicId().isBlank()) {
                     ContentIntegrityError error = createPropertyRelatedError(node, INVALID_LOGIC_RULE)
-                            .addExtraInfo(EXTRA_INFO_PROPERTY_NAME, LOGICS_PROPERTY)
+                            .addExtraInfo(EXTRA_INFO_PROPERTY_NAME, FmdbProperty.LOGICS)
                             .addExtraInfo("rule-json", rule.rawJson(), true);
                     errors = trackError(errors, error);
                     continue;
@@ -53,8 +57,8 @@ public class FormLogicReferenceIntegrityCheck extends AbstractFormidableIntegrit
             }
 
             // Walk the logicsSrc/ children to find orphan entries (nodes with no matching JSON rule)
-            if (node.hasNode(LOGICS_SRC_NODE)) {
-                JCRNodeWrapper logicsSrc = node.getNode(LOGICS_SRC_NODE);
+            if (node.hasNode(FmdbNodeName.LOGICS_SRC)) {
+                JCRNodeWrapper logicsSrc = node.getNode(FmdbNodeName.LOGICS_SRC);
                 NodeIterator children = logicsSrc.getNodes();
                 while (children.hasNext()) {
                     JCRNodeWrapper child = (JCRNodeWrapper) children.nextNode();
@@ -101,7 +105,7 @@ public class FormLogicReferenceIntegrityCheck extends AbstractFormidableIntegrit
         }
 
         // Check that logicsSrc/<logicId> exists — every in-scope rule needs a matching JCR child
-        if (!targetNode.hasNode(LOGICS_SRC_NODE) || !targetNode.getNode(LOGICS_SRC_NODE).hasNode(rule.logicId())) {
+        if (!targetNode.hasNode(FmdbNodeName.LOGICS_SRC) || !targetNode.getNode(FmdbNodeName.LOGICS_SRC).hasNode(rule.logicId())) {
             ContentIntegrityError error = createPropertyRelatedError(targetNode, MISSING_LOGICSRC_ENTRY)
                     .addExtraInfo(EXTRA_INFO_LOGIC_ID, rule.logicId())
                     .addExtraInfo("source-node-id", rule.sourceNodeId(), true);
@@ -109,17 +113,17 @@ public class FormLogicReferenceIntegrityCheck extends AbstractFormidableIntegrit
         }
 
         // Verify the logicsSrc child has the expected node type
-        JCRNodeWrapper logicSrcNode = targetNode.getNode(LOGICS_SRC_NODE).getNode(rule.logicId());
-        if (!logicSrcNode.isNodeType(FMDB_LOGIC_SRC)) {
+        JCRNodeWrapper logicSrcNode = targetNode.getNode(FmdbNodeName.LOGICS_SRC).getNode(rule.logicId());
+        if (!logicSrcNode.isNodeType(FmdbNodeType.LOGIC_SRC)) {
             ContentIntegrityError error = createError(targetNode, INVALID_CHILD_NODE_TYPE)
-                    .addExtraInfo(EXTRA_INFO_CHILD_NAME, LOGICS_SRC_NODE + "/" + rule.logicId())
-                    .addExtraInfo(EXTRA_INFO_EXPECTED_NODE_TYPE, FMDB_LOGIC_SRC)
+                    .addExtraInfo(EXTRA_INFO_CHILD_NAME, FmdbNodeName.LOGICS_SRC + "/" + rule.logicId())
+                    .addExtraInfo(EXTRA_INFO_EXPECTED_NODE_TYPE, FmdbNodeType.LOGIC_SRC)
                     .addExtraInfo(EXTRA_INFO_ACTUAL_NODE_TYPE, logicSrcNode.getPrimaryNodeTypeName(), true);
             return trackError(errors, error);
         }
 
         // Ensure the JCR logicNodeSource reference stays within the owning form
-        JCRNodeWrapper actualSource = (JCRNodeWrapper) logicSrcNode.getProperty(LOGIC_NODE_SOURCE).getNode();
+        JCRNodeWrapper actualSource = (JCRNodeWrapper) logicSrcNode.getProperty(FmdbProperty.LOGIC_NODE_SOURCE).getNode();
         if (!isWithinForm(actualSource, formNode)) {
             ContentIntegrityError error = createPropertyRelatedError(targetNode, OUT_OF_SCOPE_LOGIC_SOURCE)
                     .addExtraInfo(EXTRA_INFO_LOGIC_ID, rule.logicId())
@@ -154,21 +158,21 @@ public class FormLogicReferenceIntegrityCheck extends AbstractFormidableIntegrit
         // Detect orphan: this logicsSrc child has no corresponding JSON rule
         if (!ruleIds.contains(child.getName())) {
             ContentIntegrityError error = createError(targetNode, ORPHAN_LOGICSRC_ENTRY)
-                    .addExtraInfo(EXTRA_INFO_CHILD_NAME, LOGICS_SRC_NODE + "/" + child.getName(), true);
+                    .addExtraInfo(EXTRA_INFO_CHILD_NAME, FmdbNodeName.LOGICS_SRC + "/" + child.getName(), true);
             errors = trackError(errors, error);
         }
 
         // Ensure we only inspect expected fmdb:logicSrc nodes (corruption can introduce wrong types)
-        if (!child.isNodeType(FMDB_LOGIC_SRC)) {
+        if (!child.isNodeType(FmdbNodeType.LOGIC_SRC)) {
             ContentIntegrityError error = createError(targetNode, INVALID_CHILD_NODE_TYPE)
-                    .addExtraInfo(EXTRA_INFO_CHILD_NAME, LOGICS_SRC_NODE + "/" + child.getName())
-                    .addExtraInfo(EXTRA_INFO_EXPECTED_NODE_TYPE, FMDB_LOGIC_SRC)
+                    .addExtraInfo(EXTRA_INFO_CHILD_NAME, FmdbNodeName.LOGICS_SRC + "/" + child.getName())
+                    .addExtraInfo(EXTRA_INFO_EXPECTED_NODE_TYPE, FmdbNodeType.LOGIC_SRC)
                     .addExtraInfo(EXTRA_INFO_ACTUAL_NODE_TYPE, child.getPrimaryNodeTypeName(), true);
             return trackError(errors, error);
         }
 
         // Ensure the logicNodeSource reference stays within the owning form subtree
-        JCRNodeWrapper sourceNode = (JCRNodeWrapper) child.getProperty(LOGIC_NODE_SOURCE).getNode();
+        JCRNodeWrapper sourceNode = (JCRNodeWrapper) child.getProperty(FmdbProperty.LOGIC_NODE_SOURCE).getNode();
         if (!isWithinForm(sourceNode, formNode)) {
             ContentIntegrityError error = createPropertyRelatedError(targetNode, OUT_OF_SCOPE_LOGIC_SOURCE)
                     .addExtraInfo(EXTRA_INFO_LOGIC_ID, child.getName())

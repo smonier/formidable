@@ -213,7 +213,7 @@ class FormidableOptionsSourceServiceTest {
         FormidableOptionsSourceService service = new FormidableOptionsSourceService();
         JCRNodeWrapper field = mock(JCRNodeWrapper.class);
         when(field.isNodeType("fmdbmix:categoryOptions")).thenReturn(true);
-        when(field.hasProperty("fmdb:optionsRootCategory")).thenReturn(false);
+        when(field.hasProperty("optionsRootCategory")).thenReturn(false);
         when(field.getPath()).thenReturn("/form/fields/tv");
 
         assertThrows(IllegalStateException.class, () -> service.resolveForField(field, "en"));
@@ -226,10 +226,10 @@ class FormidableOptionsSourceServiceTest {
         FormidableOptionsSourceService service = new FormidableOptionsSourceService();
         JCRNodeWrapper field = mock(JCRNodeWrapper.class);
         when(field.isNodeType("fmdbmix:categoryOptions")).thenReturn(true);
-        when(field.hasProperty("fmdb:optionsRootCategory")).thenReturn(true);
+        when(field.hasProperty("optionsRootCategory")).thenReturn(true);
         when(field.getPath()).thenReturn("/form/fields/tv");
         JCRPropertyWrapper property = mock(JCRPropertyWrapper.class);
-        when(field.getProperty("fmdb:optionsRootCategory")).thenReturn(property);
+        when(field.getProperty("optionsRootCategory")).thenReturn(property);
         when(property.getNode()).thenThrow(new javax.jcr.ItemNotFoundException("gone"));
 
         assertThrows(IllegalStateException.class, () -> service.resolveForField(field, "en"));
@@ -277,12 +277,12 @@ class FormidableOptionsSourceServiceTest {
 
         JCRNodeWrapper noRoot = mock(JCRNodeWrapper.class);
         when(noRoot.isNodeType("fmdbmix:contentOptions")).thenReturn(true);
-        when(noRoot.hasProperty("fmdb:optionsRootNode")).thenReturn(false);
+        when(noRoot.hasProperty("optionsRootNode")).thenReturn(false);
         when(noRoot.getPath()).thenReturn("/form/fields/agency");
         assertThrows(IllegalStateException.class, () -> service.resolveForField(noRoot, "en"));
 
         JCRNodeWrapper noType = contentField("/sites/site/agences", "acme:agency");
-        when(noType.hasProperty("fmdb:optionsNodeType")).thenReturn(false);
+        when(noType.hasProperty("optionsNodeType")).thenReturn(false);
         assertThrows(IllegalStateException.class, () -> service.resolveForField(noType, "en"));
 
         JCRNodeWrapper badType = contentField("/sites/site/agences", "not a type!");
@@ -455,14 +455,14 @@ class FormidableOptionsSourceServiceTest {
         JCRNodeWrapper field = mock(JCRNodeWrapper.class);
         when(field.isNodeType("fmdbmix:contentOptions")).thenReturn(true);
         when(field.getPath()).thenReturn("/form/fields/agency");
-        when(field.hasProperty("fmdb:optionsRootNode")).thenReturn(true);
+        when(field.hasProperty("optionsRootNode")).thenReturn(true);
         JCRPropertyWrapper rootProperty = mock(JCRPropertyWrapper.class);
         when(rootProperty.getNode()).thenReturn(root);
-        when(field.getProperty("fmdb:optionsRootNode")).thenReturn(rootProperty);
-        when(field.hasProperty("fmdb:optionsNodeType")).thenReturn(true);
+        when(field.getProperty("optionsRootNode")).thenReturn(rootProperty);
+        when(field.hasProperty("optionsNodeType")).thenReturn(true);
         JCRPropertyWrapper typeProperty = mock(JCRPropertyWrapper.class);
         when(typeProperty.getString()).thenReturn(nodeType);
-        when(field.getProperty("fmdb:optionsNodeType")).thenReturn(typeProperty);
+        when(field.getProperty("optionsNodeType")).thenReturn(typeProperty);
 
         when(field.getSession()).thenReturn(mock(org.jahia.services.content.JCRSessionWrapper.class));
         return field;
@@ -489,9 +489,9 @@ class FormidableOptionsSourceServiceTest {
     private static JCRNodeWrapper fieldWithRootCategory(JCRNodeWrapper root) throws Exception {
         JCRNodeWrapper field = mock(JCRNodeWrapper.class);
         when(field.isNodeType("fmdbmix:categoryOptions")).thenReturn(true);
-        when(field.hasProperty("fmdb:optionsRootCategory")).thenReturn(true);
+        when(field.hasProperty("optionsRootCategory")).thenReturn(true);
         JCRPropertyWrapper property = mock(JCRPropertyWrapper.class);
-        when(field.getProperty("fmdb:optionsRootCategory")).thenReturn(property);
+        when(field.getProperty("optionsRootCategory")).thenReturn(property);
         when(property.getNode()).thenReturn(root);
         return field;
     }

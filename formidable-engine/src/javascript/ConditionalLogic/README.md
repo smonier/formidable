@@ -4,7 +4,7 @@ This folder contains the custom Content Editor selector used to configure condit
 
 Related docs:
 
-- [`../../../docs/conditional-logic-field-resolution.md`](../../../docs/conditional-logic-field-resolution.md) for the repository-side persistence and source resolution model
+- [`../../../../docs/architecture/conditional-logic-field-resolution.md`](../../../../docs/architecture/conditional-logic-field-resolution.md) for the repository-side persistence and source resolution model
 
 ## Goal
 
@@ -101,7 +101,7 @@ Keeping them together made the main component harder to read and harder to evolv
 Eligibility is mixin-driven, not type-name driven. A field type becomes a logic
 source by carrying one of the engine's semantic value-kind mixins in its CND —
 including field types contributed by third-party modules (see
-`docs/how-to-extend-views-and-elements-from-third-party-module.md`):
+`docs/extension/how-to-extend-views-and-elements-from-third-party-module.md`):
 
 | Mixin | valueKind | Core types carrying it |
 |---|---|---|
@@ -215,7 +215,7 @@ For each rule, the repository also maintains:
 
 - during normal authoring, it updates or creates weakrefs from the JSON rule
 - after subtree duplication, it remaps colliding `fieldKey`s, removes out-of-scope weakrefs and tries to rebuild them
-- source resolution prefers `sourceFieldKey`, then `sourceNodeId`, then a valid existing weakref, then `sourceFieldName` (see `docs/conditional-logic-field-resolution.md`)
+- source resolution prefers `sourceFieldKey`, then `sourceNodeId`, then a valid existing weakref, then `sourceFieldName` (see `docs/architecture/conditional-logic-field-resolution.md`)
 
 `FormDuplicationCleanupListener` is the backend trigger for that duplication cleanup. It now covers:
 

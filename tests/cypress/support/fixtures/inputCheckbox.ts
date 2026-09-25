@@ -38,9 +38,9 @@ export function getCheckboxNode(data: CheckboxData = CHECKBOX_SINGLE): JahiaNode
 	if (data.title) properties.push({name: 'jcr:title', value: data.title, language: 'en'});
 	if (data.helpText) properties.push({name: 'helpText', value: data.helpText, language: 'en'});
 	if (data.required !== undefined) properties.push({name: 'required', value: String(data.required), type: 'BOOLEAN'});
-	properties.push({name: 'fmdb:optionsMode', value: 'manual'});
+	properties.push({name: 'optionsMode', value: 'manual'});
 	properties.push({
-		name: 'fmdb:options',
+		name: 'options',
 		values: data.choices.map(c => JSON.stringify({value: c.value, label: c.label, selected: c.selected ?? false})),
 		language: 'en'
 	});

@@ -18,6 +18,9 @@ export const FORMIDABLE_MODULE_IDS = [
  * Used as the parent path for creating form content nodes
  */
 export const CONTENT_PATH = `/sites/${FORMIDABLE_TEST_SITE.key}/contents`
+// Where the manual-testing playground puts its forms (cypress/playground/*.play.ts): a folder of their own, so
+// the contents root stays what the specs expect and the set is found at a glance in jContent.
+export const PLAYGROUND_FORMS_PATH = `${CONTENT_PATH}/forms/playground`
 export const SITE_HOME_PATH = `/sites/${FORMIDABLE_TEST_SITE.key}/home`
 
 /**
@@ -39,9 +42,9 @@ export const LOGIC_STATE_HEADER = 'X-Formidable-Logic-State'
  * The local calendar day shifted by offsetDays, as yyyy-MM-dd — the same clock
  * the browser evaluator reads (and the server's, in CI). Never toISOString,
  * which reads the UTC day and shifts around midnight for non-UTC runners.
- * Shared so every spec reasoning about "today" agrees on the same day.
+ * Shared so every spec reasoning about "today" agrees on the same day; no offset is today.
  */
-export const localDay = (offsetDays: number): string => {
+export const localDay = (offsetDays = 0): string => {
 	const date = new Date()
 	date.setDate(date.getDate() + offsetDays)
 	const month = String(date.getMonth() + 1).padStart(2, '0')

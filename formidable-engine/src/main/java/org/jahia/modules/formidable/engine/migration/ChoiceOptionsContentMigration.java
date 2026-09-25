@@ -19,9 +19,12 @@ import javax.jcr.query.Query;
 /**
  * One-shot content migration for choice fields (fmdbmix:choiceField): moves the
  * legacy per-type option properties ('options' on fmdb:select, 'choices' on
- * fmdb:radio / fmdb:checkbox) to the unified 'fmdb:options' property declared by
+ * fmdb:radio / fmdb:checkbox) to the unified 'options' property declared by
  * fmdbmix:manualOptions, and stamps the node with that mixin plus
- * fmdb:optionsMode='manual' so existing forms keep their exact behavior.
+ * optionsMode='manual' so existing forms keep their exact behavior. Since 0.5.0
+ * the unified property bears the legacy select name (#310): a 0.3 select's values
+ * are already in place and only need the mixin, the mode and a normalised
+ * multi-valued shape; a 0.3 radio or checkbox still moves 'choices'.
  *
  * Runs at module activation on BOTH workspaces (default and live) so published
  * forms keep rendering without a republish; the live pass goes through
@@ -32,8 +35,9 @@ import javax.jcr.query.Query;
  * change), so no version information survives it. Re-running is a no-op once no
  * legacy property remains.
  *
- * <p>Lifecycle: startup migration introduced in 0.4.0 (#193), to be removed in 0.5 — see
- * docs/upgrade-notes.md, "Startup migrations".
+ * <p>Lifecycle: startup migration introduced in 0.4.0 (#193), kept through 0.5.x so that a
+ * 0.3.x instance can still upgrade directly, to be removed in 0.6 with the other startup
+ * migrations — see docs/administration/upgrade-notes.md, "Startup migrations".
  */
 // Registered as its own service so components whose activation must wait for the
 // migration (ManualOptionsLanguageSyncListener) can express that ordering as a
@@ -53,59 +57,32 @@ public class ChoiceOptionsContentMigration extends ElementsRedeployRetriggeredMi
     // lists may still diverge, since a legacy translation could rename the stored keys
     // themselves. The marker limits the divergent-list handling to migrated content; the
     // language sync clears it once the lists converge.
-    private static final String MIGRATED_MARKER_MIXIN = "fmdbmix:migratedChoiceOptions";
-    private static final String OPTIONS_MODE_PROPERTY = "fmdb:optionsMode";
+    private static final String OPTIONS_MODE_PROPERTY = "optionsMode";
     private static final String OPTIONS_MODE_MANUAL = "manual";
-    private static final String UNIFIED_OPTIONS_PROPERTY = "fmdb:options";
-    private static final String[] LEGACY_PROPERTIES = {"choices", "options"};
-    private static final String TRANSLATION_NODES_PATTERN = "j:translation_*";
-
+    private static final String UNIFIED_OPTIONS_PROPERTY = "options";
+    /** The 0.3 radio / checkbox property; the 0.3 select already used the unified name. */
+    private static final String LEGACY_CHOICES_PROPERTY = "choices";
     /**
-     * True while this migration is writing on the current thread. JCR observation
-     * dispatches synchronously in the saving thread, so ManualOptionsLanguageSyncListener
-     * consults this to leave the migrated values verbatim: 0.3 allowed option values to
-     * diverge between languages, and re-aligning a migrated field on the default language
-     * would blank every non-default label. The activation-ordering reference the listener
-     * holds only covers the engine-activation run — on the engine-first upgrade path the
-     * work happens on the elements-redeploy run, when the listener is already registered.
+     * The four options modes of 0.4+: a node carrying any of them is current content, and
+     * an 'options' list found on its translations is either the unified property or the
+     * leftover of a manual list the contributor switched away from — the Content Editor
+     * removes a deactivated fieldset's mixin but keeps its properties. Only a node carrying
+     * none of them is a 0.3 select whose 'options' is legacy storage.
      */
-    private static final ThreadLocal<Boolean> MIGRATION_WRITE = ThreadLocal.withInitial(() -> Boolean.FALSE);
-
-    public static boolean isMigrationWrite() {
-        return MIGRATION_WRITE.get();
-    }
-
-    static void beginMigrationWrite() {
-        MIGRATION_WRITE.set(Boolean.TRUE);
-    }
-
-    static void endMigrationWrite() {
-        MIGRATION_WRITE.remove();
-    }
+    private static final String[] OPTIONS_MODE_MIXINS = {
+            MANUAL_OPTIONS_MIXIN, "fmdbmix:sourcedOptions", "fmdbmix:categoryOptions", "fmdbmix:contentOptions"
+    };
 
     @Activate
     public void activate() {
         run();
     }
 
+    // The migration-write mark ManualOptionsLanguageSyncListener consults (MigrationWrites)
+    // is set by migrateBothWorkspaces around both passes.
     @Override
     void run() {
-        beginMigrationWrite();
-        try {
-            migrateBothWorkspaces();
-        } finally {
-            endMigrationWrite();
-        }
-    }
-
-    private void migrateBothWorkspaces() {
-        for (String workspace : new String[]{"default", "live"}) {
-            try {
-                MigrationSessions.execute(workspace, session -> migrateWorkspace(session, workspace));
-            } catch (RepositoryException e) {
-                log.error("[ChoiceOptionsContentMigration] Migration failed in workspace '{}': {}", workspace, e.getMessage(), e);
-            }
-        }
+        migrateBothWorkspaces(this::migrateWorkspace);
     }
 
     /** @return the number of migrated fields */
@@ -150,25 +127,31 @@ public class ChoiceOptionsContentMigration extends ElementsRedeployRetriggeredMi
     boolean migrateNode(JCRSessionWrapper session, JCRNodeWrapper node) throws RepositoryException {
         boolean touched = false;
 
-        // Legacy properties were i18n: their values live on the j:translation_* subnodes,
+        // Legacy properties were i18n: their values live on the translation subnodes,
         // where residual definitions keep them readable even after the CND removal.
-        NodeIterator translations = node.getNodes(TRANSLATION_NODES_PATTERN);
+        boolean legacySelect = !hasAnyOptionsMode(node);
+        NodeIterator translations = node.getI18Ns();
         while (translations.hasNext()) {
             Node translation = translations.nextNode();
-            for (String legacyProperty : LEGACY_PROPERTIES) {
-                if (translation.hasProperty(legacyProperty)) {
-                    if (!touched) {
-                        session.checkout(node);
-                        touched = true;
-                    }
-                    moveProperty(translation.getProperty(legacyProperty), translation);
+            if (translation.hasProperty(LEGACY_CHOICES_PROPERTY)) {
+                if (!touched) {
+                    session.checkout(node);
+                    touched = true;
                 }
+                moveProperty(translation.getProperty(LEGACY_CHOICES_PROPERTY), translation);
+            } else if (legacySelect && translation.hasProperty(UNIFIED_OPTIONS_PROPERTY)) {
+                if (!touched) {
+                    session.checkout(node);
+                    touched = true;
+                }
+                // Same name, same place: only the shape may differ (0.3 could store one value).
+                normaliseProperty(translation.getProperty(UNIFIED_OPTIONS_PROPERTY), translation);
             }
         }
 
         if (touched) {
             node.addMixin(MANUAL_OPTIONS_MIXIN);
-            node.addMixin(MIGRATED_MARKER_MIXIN);
+            node.addMixin(MigrationMarker.MIGRATED_CHOICE_OPTIONS);
             node.setProperty(OPTIONS_MODE_PROPERTY, OPTIONS_MODE_MANUAL);
             log.info("[ChoiceOptionsContentMigration] Migrated '{}'", node.getPath());
         }
@@ -176,13 +159,27 @@ public class ChoiceOptionsContentMigration extends ElementsRedeployRetriggeredMi
         return touched;
     }
 
+    private static boolean hasAnyOptionsMode(JCRNodeWrapper node) throws RepositoryException {
+        for (String mixin : OPTIONS_MODE_MIXINS) {
+            if (node.isNodeType(mixin)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void moveProperty(Property legacy, Node translation) throws RepositoryException {
+        normaliseProperty(legacy, translation);
+        legacy.remove();
+    }
+
+    /** Writes the legacy values under the unified name, always as a multi-valued property. */
+    private void normaliseProperty(Property legacy, Node translation) throws RepositoryException {
         if (legacy.isMultiple()) {
             Value[] values = legacy.getValues();
             translation.setProperty(UNIFIED_OPTIONS_PROPERTY, values);
         } else {
             translation.setProperty(UNIFIED_OPTIONS_PROPERTY, new Value[]{legacy.getValue()});
         }
-        legacy.remove();
     }
 }

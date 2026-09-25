@@ -2,12 +2,12 @@ package org.jahia.modules.formidable.engine.servlet;
 
 /**
  * Error codes returned in JSON responses when a form submission fails.
- * See docs/error-codes.md for the full glossary.
+ * See docs/administration/error-codes.md for the full glossary.
  *
  * Clients receive only the code (e.g. "FMDB-006"); detailed reasons are
  * written to server logs only, never exposed to the caller.
  */
-enum ErrorCode {
+public enum ErrorCode {
 
     FMDB_001(415),  // Content-Type is not multipart/form-data
     FMDB_002(400),  // Missing required 'fid' URL parameter
@@ -23,6 +23,9 @@ enum ErrorCode {
     FMDB_012(500),  // Action list could not be resolved from the repository
     FMDB_013(400),  // Value submitted for a field provably hidden by conditional logic
     FMDB_014(503),  // Platform is in read-only mode and the form has repository-writing actions
+    FMDB_015(422),  // A field action refused the value of a field; the response names the field and carries the contributor's message
+    FMDB_016(429),  // The field-action pre-check endpoint rate limit was hit for this client
+    FMDB_017(422),  // One field carrying blocking field actions holds more distinct values than fieldActionMaxValuesPerField; the response names the field
     FMDB_500(500);  // Unexpected internal error
 
     /** HTTP status code associated with this error. */

@@ -1,3 +1,4 @@
+/* Class hooks and variables are a documented contract: docs/styling/ (class-hooks.md, css-variables.md). */
 /* Switch field — toggle and yes/no button pair modes */
 .fmdbext-switch-input {
   position: absolute;

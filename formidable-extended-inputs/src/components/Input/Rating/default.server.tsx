@@ -4,8 +4,8 @@ import {
   jahiaComponent,
 } from "@jahia/javascript-modules-library";
 import { useTranslation } from "react-i18next";
-import { type BaseValidationMessageProps, validationDataAttributes } from "formidable-shared";
-import { HelpText, helpTextId } from "formidable-shared";
+import { type BaseValidationMessageProps, validationDataAttributes } from "@jahia/formidable-library";
+import { HelpText, helpTextId } from "@jahia/formidable-library";
 import "~/design/edit-warning.css";
 import "./rating.css";
 
@@ -59,7 +59,9 @@ jahiaComponent(
     return (
       <>
         <AddResources type="css" resources={buildModuleFileUrl("dist/assets/style.css")} />
-        <fieldset className="fmdb-form-group fmdbext-rating" aria-describedby={helpId}>
+        {/* radiogroup: the explicit role a fieldset of radios needs to carry aria-readonly, which the
+            jExperience prefill sets when the author locks the field */}
+        <fieldset className="fmdb-form-group fmdbext-rating" role="radiogroup" aria-describedby={helpId}>
           {label && (
             <legend className="fmdb-group-legend">
               {label}

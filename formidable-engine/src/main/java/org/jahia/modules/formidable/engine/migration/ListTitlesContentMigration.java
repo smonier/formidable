@@ -47,8 +47,9 @@ import java.util.function.BiFunction;
  * activation, and again each time the elements module is (re)deployed — the second run
  * is the one that does the work on the engine-first upgrade path.
  *
- * <p>Lifecycle: startup migration introduced in 0.4.x (#231), to be removed in 0.5 — see
- * docs/upgrade-notes.md, "Startup migrations".
+ * <p>Lifecycle: startup migration introduced in 0.4.x (#231), kept through 0.5.x so that a
+ * 0.3.x instance can still upgrade directly, to be removed in 0.6 with the other startup
+ * migrations — see docs/administration/upgrade-notes.md, "Startup migrations".
  */
 @Component(service = {ListTitlesContentMigration.class, JahiaEventListener.class}, immediate = true)
 public class ListTitlesContentMigration extends ElementsRedeployRetriggeredMigration {
@@ -67,13 +68,7 @@ public class ListTitlesContentMigration extends ElementsRedeployRetriggeredMigra
 
     @Override
     void run() {
-        for (String workspace : new String[]{"default", "live"}) {
-            try {
-                MigrationSessions.execute(workspace, session -> migrateWorkspace(session, workspace));
-            } catch (RepositoryException e) {
-                log.error("[ListTitlesContentMigration] Migration failed in workspace '{}': {}", workspace, e.getMessage(), e);
-            }
-        }
+        migrateBothWorkspaces(this::migrateWorkspace);
     }
 
     /** @return the number of forms whose lists were given a title */

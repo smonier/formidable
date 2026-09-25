@@ -1,3 +1,4 @@
+/* Class hooks and variables are a documented contract: docs/styling/ (class-hooks.md, css-variables.md). */
 /* Authoring spacing (edit mode only). A multi-step form is authored flat, so three levels
    stack on one page: the field list, its steps (or fieldsets), their fields. The Page
    Builder boxes (coloured per level by the engine's box configs) and the mixin icons on the
@@ -19,4 +20,188 @@
 
 .fmdb-form[data-fmdb-edit-mode="true"] :is(.fmdb-form-group, .fmdb-fieldset) {
 	margin-block: var(--fmdb-zone-field-margin, 0.75rem);
+}
+
+/* Form actions zone (edit mode only). Rendered by the form inside the <form> element so a
+   business stylesheet's card keeps it, and ordered after the buttons: the visitor's flow
+   first, then what happens once the form is sent. The form becomes a flex column for that
+   ordering only while authoring; its children were stacked blocks already. Unlike the
+   spacing above, this zone IS drawn: it is authoring chrome, not the visitor's form, and
+   it must read as such — a business stylesheet does not style it. Every value is a
+   variable so a template set can tone it. */
+
+.fmdb-form[data-fmdb-edit-mode="true"] {
+	display: flex;
+	flex-direction: column;
+}
+
+/* The island wraps its server-rendered children (the field list AND the zone) in a
+   <jsm-children> element: dissolving that box while authoring makes them the form's own
+   flex items, so the zone alone can be ordered after the buttons. The Page Builder then
+   wraps the zone in its module element, which is the item to order (the zone itself,
+   should it ever render bare). If either wrapper changes, the zone merely stays where it
+   is rendered, between the fields and the buttons. */
+.fmdb-form[data-fmdb-edit-mode="true"] > jsm-children {
+	display: contents;
+}
+
+.fmdb-form[data-fmdb-edit-mode="true"] > jsm-children > :is(.fmdb-authoring-actions, :has(> .fmdb-authoring-actions)) {
+	order: 1;
+}
+
+/* The space above the zone sits on the buttons row, not on the zone: the Page Builder wraps
+   the zone in a flex item whose box would include the zone's own top margin, so its hover
+   and selection frame would start at the buttons and read as a wider selection. */
+.fmdb-form[data-fmdb-edit-mode="true"] .fmdb-form-actions {
+	margin-bottom: var(--fmdb-zone-actions-margin, 1rem);
+}
+
+.fmdb-authoring-actions {
+	box-sizing: border-box;
+	padding: var(--fmdb-zone-actions-padding, 0.75rem);
+	border: var(--fmdb-zone-actions-border, 1px dashed #b8bcc4);
+	border-radius: var(--fmdb-zone-actions-radius, 4px);
+	background: var(--fmdb-zone-actions-bg, #f4f5f7);
+	color: var(--fmdb-zone-actions-color, #374151);
+	font: var(--fmdb-zone-actions-font, 400 13px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif);
+	text-align: left;
+}
+
+/* jContent gives the create placeholder a 28px minimum height (its button sits on it) and a
+   10px bottom margin; the button is the last thing in the zone, so that margin only pads
+   the grey below it. */
+.fmdb-authoring-actions > [jahiatype="module"][type="placeholder"] {
+	margin-bottom: 0;
+}
+
+.fmdb-authoring-actions-header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.25rem 0.5rem;
+	margin-bottom: 0.5rem;
+}
+
+.fmdb-authoring-actions-title {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	white-space: nowrap;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.fmdb-authoring-actions-hint {
+	margin-left: auto;
+	font-size: 11px;
+	color: var(--fmdb-zone-actions-muted, #626977);
+}
+
+.fmdb-authoring-actions-glyph {
+	flex: none;
+	width: 16px;
+	height: 16px;
+}
+
+/* A form without any action discards its submissions: the one loud element of the zone. */
+.fmdb-authoring-actions-empty {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin: 0 0 0.5rem;
+	padding: 0.5rem 0.75rem;
+	border-left: 3px solid var(--fmdb-zone-actions-warning-border, #f59e0b);
+	background: var(--fmdb-zone-actions-warning-bg, #fff7ed);
+	color: var(--fmdb-zone-actions-warning-color, #9a3412);
+	font-size: 12px;
+}
+
+/* One compact card per action, numbered in execution order (the CSS counter follows the
+   DOM order, which the Page Builder reloads after a drag). Two lines: title and telling
+   parameter, then the type description smaller; every line clips with an ellipsis, the
+   description first, so ten actions stay ten short rows. */
+.fmdb-authoring-actions-list {
+	counter-reset: fmdb-action;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	/* An ordered list for assistive technology; the native numbering gives way to the counter. */
+	list-style: none;
+	margin: 0 0 0.5rem;
+	padding: 0;
+}
+
+.fmdb-authoring-actions-item {
+	margin: 0;
+	padding: 0;
+}
+
+.fmdb-authoring-action {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.5rem;
+	padding: 0.375rem 0.625rem;
+	border: 1px solid var(--fmdb-zone-actions-card-border, #e5e7eb);
+	border-radius: 3px;
+	background: var(--fmdb-zone-actions-card-bg, #ffffff);
+}
+
+.fmdb-authoring-action::before {
+	counter-increment: fmdb-action;
+	content: counter(fmdb-action);
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.25rem;
+	height: 1.25rem;
+	border-radius: 50%;
+	background: var(--fmdb-zone-actions-rank-bg, #e5e7eb);
+	color: var(--fmdb-zone-actions-rank-color, #374151);
+	font-size: 11px;
+	font-weight: 700;
+}
+
+.fmdb-authoring-action-icon {
+	flex: none;
+	width: 16px;
+	height: 16px;
+	margin-top: 2px;
+}
+
+.fmdb-authoring-action-body {
+	flex: 1;
+	min-width: 0;
+}
+
+.fmdb-authoring-action-line {
+	display: flex;
+	align-items: baseline;
+	gap: 0.5rem;
+	white-space: nowrap;
+}
+
+.fmdb-authoring-action-title {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	font-weight: 600;
+}
+
+.fmdb-authoring-action-detail {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	color: var(--fmdb-zone-actions-muted, #626977);
+}
+
+.fmdb-authoring-action-description {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 11px;
+	color: var(--fmdb-zone-actions-muted, #626977);
 }

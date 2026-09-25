@@ -68,7 +68,7 @@ When adding a new servlet, GraphQL operation, or filter:
 3. **If writing JCR with a system session:** document the prior permission check in a Javadoc comment on the method.
 4. **If the surface is public (guest-reachable):** do not rely on CSRF Guard alone. Use `origin: hosted` + captcha if the action has side effects.
 5. **If the surface is admin-only:** add `@RequirePermission` to the GraphQL field or inline `JCRTemplate` ACL check.
-6. **Document the intent.** A deliberate "this endpoint is public because X" must be in a Javadoc on the class or in `docs/security.md`. An undocumented gap is a finding even if intentional — the next maintainer cannot tell intent from accident.
+6. **Document the intent.** A deliberate "this endpoint is public because X" must be in a Javadoc on the class or in `docs/architecture/form-submission-flow.md` (the trust model and the security posture of the submission pipeline). An undocumented gap is a finding even if intentional — the next maintainer cannot tell intent from accident.
 
 ---
 

@@ -1,5 +1,5 @@
 // Email input component properties
-[fmdb:inputEmail] > jnt:content, fmdbmix:element, fmdbmix:emailField, fmdbmix:textField, fmdbmix:textValidationMessages
+[fmdb:inputEmail] > jnt:content, fmdbmix:element, fmdbmix:profileMappableField, fmdbmix:emailField, fmdbmix:textField, fmdbmix:textValidationMessages
  - helpText (string, richtext[ckeditor.toolbar='FormidableHelp',ckeditor.customConfig='$context/modules/formidable-engine/javascript/ckeditor/helpTextConfig.js']) i18n indexed=no
  - required (boolean) = false
  - multiple (boolean) = false

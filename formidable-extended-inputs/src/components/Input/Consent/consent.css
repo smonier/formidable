@@ -1,3 +1,4 @@
+/* Class hooks and variables are a documented contract: docs/styling/ (class-hooks.md, css-variables.md). */
 /* Consent field */
 .fmdbext-consent {
   display: flex;

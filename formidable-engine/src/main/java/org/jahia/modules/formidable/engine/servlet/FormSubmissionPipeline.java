@@ -1,10 +1,17 @@
 package org.jahia.modules.formidable.engine.servlet;
 
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.jahia.modules.formidable.engine.api.AcceptedSubmission;
+import org.jahia.modules.formidable.engine.api.FieldActionRequest;
 import org.jahia.modules.formidable.engine.api.FormAction;
+import org.jahia.modules.formidable.engine.actions.field.FieldActionMessage;
+import org.jahia.modules.formidable.engine.actions.field.FieldActionDispatcher;
+import org.jahia.modules.formidable.engine.actions.field.ResolvedFieldAction;
 import org.jahia.modules.formidable.engine.api.FormActionException;
-import org.jahia.modules.formidable.engine.actions.FormDataParser;
+import org.jahia.modules.formidable.engine.servlet.FormDataParser;
 import org.jahia.modules.formidable.engine.api.SubmittedFile;
+import org.jahia.modules.formidable.engine.api.FmdbMixin;
+import org.jahia.modules.formidable.engine.api.FmdbNodeName;
 import org.jahia.modules.formidable.engine.config.FormidableConfigService;
 import org.jahia.modules.formidable.engine.logic.ConditionalLogicEvaluator;
 import org.jahia.modules.formidable.engine.logic.LogicStateDeclaration;
@@ -21,20 +28,19 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.EnumSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.AUTHENTICATED_ONLY_FORM_MIXIN;
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.CAPTCHA_PROTECTED_FORM_MIXIN;
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.FORM_NODE_TYPE;
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.READ_ONLY_COMPATIBLE_ACTION_MIXIN;
 import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.WORKSPACE_LIVE;
 
 /**
@@ -55,13 +61,17 @@ import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.WO
  *   9.  parseMultipart           — first and only read of the stream; unknown fields discarded inline
  *   10. validateLogicCoherence   — reject values for fields provably hidden by conditional logic
  *   11. validateRequired         — post-parse check for required fields (catches absent fields)
+ *   11b. runFieldActions         — the blocking field actions run again server-side (FMDB-015 with messages)
  *   12. dispatchActions          — execute fmdb:actionList nodes in order
  */
 class FormSubmissionPipeline {
 
     private static final Logger log = LoggerFactory.getLogger(FormSubmissionPipeline.class);
 
-    private static final String ACTIONS_NODE = "actions";
+    /** The engine bundle's text for a field carrying more values than the step may judge, and its last-resort English. */
+    static final String TOO_MANY_VALUES_KEY = "fmdb_fieldActions.tooManyValues";
+    static final String TOO_MANY_VALUES_TEXT = "Too many answers were sent for this field to be checked. Please select fewer.";
+
     private static final String CAPTCHA_TOKEN_HEADER = "X-Formidable-Captcha-Token";
 
     /**
@@ -112,6 +122,11 @@ class FormSubmissionPipeline {
     private final MultipartParserAdapter multipartParser;
     private final CurrentUserSessionProvider currentUserSessionProvider;
     private final ReadOnlyStatusProvider readOnlyStatusProvider;
+    /**
+     * Runs the field actions at step 11b; {@code null} when the runtime is not there, and no field action runs. Handed
+     * over by the servlet through {@link #useFieldActions} rather than a constructor argument, as the response is.
+     */
+    private FieldActionDispatcher fieldActionDispatcher;
 
     // State accumulated as the pipeline progresses
     private String formId;
@@ -122,6 +137,7 @@ class FormSubmissionPipeline {
     private FormDataParser.ParseResult parsed;
     private ConditionalLogicEvaluator logicEvaluator;
     private List<ResolvedAction> resolvedActions;
+    private HttpServletResponse response;
 
     FormSubmissionPipeline(FormidableConfigService config, List<FormAction> formActions,
                            FormidableOptionsSourceService optionsSourceService,
@@ -153,6 +169,21 @@ class FormSubmissionPipeline {
         this.readOnlyStatusProvider = readOnlyStatusProvider;
     }
 
+    /** The field actions' dispatcher, from the runtime the servlet references; without it step 11b runs nothing. */
+    void useFieldActions(FieldActionDispatcher dispatcher) {
+        this.fieldActionDispatcher = dispatcher;
+    }
+
+    /**
+     * The response the field actions render against (a field action written as a view renders in the visitor's
+     * request and response). The servlet hands it over before {@link #run}; without it such an action is unavailable,
+     * which its contributor's setting then decides. A setter rather than a run argument: {@code run(req)} is the entry
+     * every fake pipeline of the tests overrides.
+     */
+    void useResponse(HttpServletResponse response) {
+        this.response = response;
+    }
+
     void run(HttpServletRequest req) throws SubmissionException {
         verifyMultipart(req);
         readRoutingParams(req);
@@ -165,7 +196,22 @@ class FormSubmissionPipeline {
         parseMultipart(req);
         validateLogicCoherence(req);
         validateRequired();
+        runFieldActions(req, response);
         dispatchActions(req);
+    }
+
+    /**
+     * What the pipeline accepted, for the response enrichers the servlet calls once {@link #run}
+     * returned: the live form node, its site, the locale and the validated parameters — declared,
+     * non-file fields only, files never leave the pipeline.
+     *
+     * @throws IllegalStateException before a run accepted a submission
+     */
+    AcceptedSubmission accepted() throws RepositoryException {
+        if (formNode == null || parsed == null) {
+            throw new IllegalStateException("the pipeline has not accepted a submission");
+        }
+        return new AcceptedSubmission(formNode, formNode.getResolveSite().getSiteKey(), locale, parsed.parameters());
     }
 
     // --- Steps ---
@@ -217,7 +263,7 @@ class FormSubmissionPipeline {
             // The identifier is caller-supplied: any readable live node resolves, but every
             // downstream step is written for a form. Reject other types with the same code
             // as a missing node, so the response does not disclose what the UUID points at.
-            if (!formNode.isNodeType(FORM_NODE_TYPE)) {
+            if (!formNode.isNodeType(FmdbMixin.FORM_ROOT)) {
                 throw new SubmissionException(ErrorCode.FMDB_004, "Not a form: " + formId);
             }
         } catch (RepositoryException e) {
@@ -249,7 +295,7 @@ class FormSubmissionPipeline {
     private void verifyAuthentication() throws SubmissionException {
         boolean requiresAuth;
         try {
-            requiresAuth = formNode.isNodeType(AUTHENTICATED_ONLY_FORM_MIXIN);
+            requiresAuth = formNode.isNodeType(FmdbMixin.AUTHENTICATED_ONLY_FORM);
         } catch (RepositoryException e) {
             throw new SubmissionException(ErrorCode.FMDB_500,
                     "Cannot verify authentication requirement for form: " + formId,
@@ -267,7 +313,7 @@ class FormSubmissionPipeline {
     private void verifyCaptcha(HttpServletRequest req) throws SubmissionException {
         boolean hasCaptcha;
         try {
-            hasCaptcha = formNode.isNodeType(CAPTCHA_PROTECTED_FORM_MIXIN);
+            hasCaptcha = formNode.isNodeType(FmdbMixin.CAPTCHA_PROTECTED_FORM);
         } catch (RepositoryException e) {
             throw new SubmissionException(ErrorCode.FMDB_500,
                     "Cannot verify CAPTCHA requirement for form: " + formId,
@@ -428,6 +474,134 @@ class FormSubmissionPipeline {
                 "Required field '" + fieldName + "' is missing or empty.");
     }
 
+    /**
+     * Step 11b — the field actions whose refusal blocks, run again server-side. The pre-check the browser asked
+     * for while the form was filled is a courtesy; this is the authority, and a browser that skipped the pre-check
+     * meets the same actions here — the shared verdict cache making the honest browser's second run free. A field
+     * the logic hides or the visitor left unanswered is skipped, as the required check skips it; a multi-valued
+     * field is judged answer by answer, repeats removed before anything counts or runs them. The first
+     * blocking refusal ends the submission with FMDB-015 and its message, which the response carries so that the
+     * browser anchors it on the field. Warning-level actions do not run here: they warned — so a field whose actions
+     * all warn is not judged at all, and nothing it carries is counted against the bound below. Without a dispatcher —
+     * the field-action runtime not bound, a state the submit servlet's mandatory reference rules out in production —
+     * the step warns that the checks did not run, which is not the same fact as a form without checks.
+     *
+     * <p>The work is decided before any of it is done: what will be judged is collected first, the bound is checked
+     * over the whole submission, and only then does an action run. A field over the bound therefore costs no provider
+     * call anywhere — a check in the loop would have billed whichever field the map happened to yield first.
+     * (docs/architecture/field-actions.md)</p>
+     */
+    private void runFieldActions(HttpServletRequest req, HttpServletResponse resp) throws SubmissionException {
+        if (fieldMetadata.fieldActions().isEmpty()) {
+            return;
+        }
+        if (fieldActionDispatcher == null) {
+            // The form's identifier is the caller's own parameter and never reaches a log line; the count says
+            // what was skipped without echoing anything the submitter wrote.
+            log.warn("[FormSubmissionPipeline] The field actions of {} field(s) did not run: no field-action runtime is bound. The submission goes on unchecked.",
+                    fieldMetadata.fieldActions().size());
+            return;
+        }
+        Map<String, List<String>> judged = fieldsToJudge();
+        verifyValueCount(judged);
+        for (Map.Entry<String, List<String>> entry : judged.entrySet()) {
+            String fieldName = entry.getKey();
+            List<ResolvedFieldAction> actions = fieldMetadata.fieldActions().get(fieldName);
+            for (String value : entry.getValue()) {
+                FieldActionDispatcher.Outcome outcome = fieldActionDispatcher.run(req, resp,
+                        new FieldActionRequest(formId, fieldName, value, locale),
+                        actions,
+                        EnumSet.allOf(ResolvedFieldAction.Trigger.class),
+                        true);
+                if (outcome.blocked()) {
+                    log.warn("[FormSubmissionPipeline] Field '{}' was refused by a field action.", fieldName);
+                    throw new SubmissionException(ErrorCode.FMDB_015,
+                            "Field '" + fieldName + "' was refused by a field action.", outcome.messages());
+                }
+            }
+        }
+    }
+
+    /**
+     * The values this step will judge, by field, in the order the metadata gives them: a field whose actions all
+     * warn is left out — {@code blockingOnly} would skip every one of them anyway — and so is a field the logic
+     * hides or the visitor left unanswered, as the required check leaves it out.
+     */
+    private Map<String, List<String>> fieldsToJudge() {
+        Map<String, List<String>> judged = new LinkedHashMap<>();
+        for (Map.Entry<String, List<ResolvedFieldAction>> entry : fieldMetadata.fieldActions().entrySet()) {
+            String fieldName = entry.getKey();
+            List<String> values = valuesToJudge(fieldName, entry.getValue());
+            if (!values.isEmpty()) {
+                judged.put(fieldName, values);
+            }
+        }
+        return judged;
+    }
+
+    /**
+     * The values of one field this step will judge: none when no action of the field blocks — {@code blockingOnly}
+     * would skip every one of them anyway — and none when the logic hides the field or the visitor left it blank.
+     */
+    private List<String> valuesToJudge(String fieldName, List<ResolvedFieldAction> actions) {
+        if (actions.stream().noneMatch(ResolvedFieldAction::blocking)) {
+            log.debug("[FormSubmissionPipeline] Skipping the field actions of '{}': none of them blocks", fieldName);
+            return List.of();
+        }
+        List<String> values = answeredValues(fieldName);
+        if (values.isEmpty() || logicEvaluator.isHidden(fieldName)) {
+            log.debug("[FormSubmissionPipeline] Skipping the field actions of '{}': unanswered or hidden", fieldName);
+            return List.of();
+        }
+        return values;
+    }
+
+    /**
+     * The bound on the work one submission may ask for. A field name can be submitted any number of times — the
+     * parser appends one entry per part and only the request size limits them — and each answer to judge may cost a
+     * provider call. What is counted is the list about to be judged, repeats already removed, so the bound and the
+     * work can never be counted differently. Over it the submission is refused whole, before anything runs, and the
+     * response names the field, for the page that will show it — no client reads that entry yet.
+     */
+    private void verifyValueCount(Map<String, List<String>> judged) throws SubmissionException {
+        int maxValues = config.getFieldActionSettings().maxValuesPerField();
+        for (Map.Entry<String, List<String>> entry : judged.entrySet()) {
+            int answers = entry.getValue().size();
+            if (answers > maxValues) {
+                String fieldName = entry.getKey();
+                log.warn("[FormSubmissionPipeline] Field '{}' carries {} answers to judge, over the {} allowed.",
+                        fieldName, answers, maxValues);
+                throw new SubmissionException(ErrorCode.FMDB_017,
+                        "Field '" + fieldName + "' carries " + answers + " answers to judge, over the "
+                                + maxValues + " allowed (fieldActionMaxValuesPerField).",
+                        List.of(new FieldActionMessage(FieldActionMessage.Level.ERROR,
+                                FieldActionDispatcher.bundleText(TOO_MANY_VALUES_KEY, locale, TOO_MANY_VALUES_TEXT),
+                                fieldName, null, null)));
+            }
+        }
+    }
+
+    /**
+     * The values of the field this step judges: the non-blank ones, in order, with the repeats of one answer kept
+     * once. A repeat is work with no result — the verdict cache keys on the trimmed value, so a second run would
+     * answer the same — and this is the list the bound counts, so what is counted and what is done are one thing.
+     * Answers that differ only by their edges are one answer here, and the value handed to an action is the one
+     * the browser sent, not a trimmed copy of it.
+     */
+    private List<String> answeredValues(String fieldName) {
+        List<String> values = parsed.parameters().get(fieldName);
+        if (values == null) {
+            return List.of();
+        }
+        Map<String, String> firstOfEachAnswer = new LinkedHashMap<>();
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                firstOfEachAnswer.putIfAbsent(value.trim(), value);
+            }
+        }
+        return List.copyOf(firstOfEachAnswer.values());
+    }
+
     private void dispatchActions(HttpServletRequest req) throws SubmissionException {
         List<ResolvedAction> actions = actions();
         List<SubmittedFile> submittedFiles = toSubmittedFiles(parsed.files());
@@ -538,11 +712,11 @@ class FormSubmissionPipeline {
         try {
             jcrTemplateProvider.get().doExecuteWithSystemSessionAsUser(null, WORKSPACE_LIVE, locale, systemSession -> {
                 JCRNodeWrapper systemFormNode = systemSession.getNodeByIdentifier(formId);
-                if (!systemFormNode.hasNode(ACTIONS_NODE)) {
+                if (!systemFormNode.hasNode(FmdbNodeName.ACTIONS)) {
                     return null;
                 }
 
-                JCRNodeWrapper actionList = systemFormNode.getNode(ACTIONS_NODE);
+                JCRNodeWrapper actionList = systemFormNode.getNode(FmdbNodeName.ACTIONS);
                 NodeIterator it = actionList.getNodes();
                 while (it.hasNext()) {
                     javax.jcr.Node child = it.nextNode();
@@ -551,7 +725,7 @@ class FormSubmissionPipeline {
                                 w.getIdentifier(),
                                 w.getPath(),
                                 w.getPrimaryNodeTypeName(),
-                                w.isNodeType(READ_ONLY_COMPATIBLE_ACTION_MIXIN)
+                                w.isNodeType(FmdbMixin.READ_ONLY_COMPATIBLE_ACTION)
                         ));
                     }
                 }

@@ -13,13 +13,13 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import org.jahia.modules.formidable.engine.api.FmdbNodeType;
+import org.jahia.modules.formidable.engine.api.FmdbProperty;
 
+import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.ACE_NODE_TYPE;
 import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.ACL_NODE;
 import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.ACL_NODE_TYPE;
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.ACE_NODE_TYPE;
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.FORM_RESULTS_NODE_TYPE;
 import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.INHERIT_PROPERTY;
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.PARENT_FORM_PROPERTY;
 import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.ROLES_PROPERTY;
 
 /**
@@ -137,9 +137,9 @@ public final class FormResultsAclSyncService {
         while (children.hasNext()) {
             javax.jcr.Node child = children.nextNode();
             if (child instanceof JCRNodeWrapper candidate
-                    && candidate.isNodeType(FORM_RESULTS_NODE_TYPE)
-                    && candidate.hasProperty(PARENT_FORM_PROPERTY)
-                    && formIdentifier.equals(candidate.getProperty(PARENT_FORM_PROPERTY).getString())) {
+                    && candidate.isNodeType(FmdbNodeType.FORM_RESULTS)
+                    && candidate.hasProperty(FmdbProperty.PARENT_FORM)
+                    && formIdentifier.equals(candidate.getProperty(FmdbProperty.PARENT_FORM).getString())) {
                 return candidate;
             }
         }

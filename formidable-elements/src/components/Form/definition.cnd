@@ -53,7 +53,7 @@
  + * (fmdbmix:formContent) = fmdbmix:formContent
  + * (fmdbmix:formStep) = fmdbmix:formStep
 
-[fmdb:form] > jnt:content, fmdbmix:component, jmix:visibleInContentTree, fmdbmix:buttons, fmdbmix:responses, fmdbmix:multiStep, fmdbmix:style, mix:title
+[fmdb:form] > jnt:content, fmdbmix:component, jmix:visibleInContentTree, fmdbmix:buttons, fmdbmix:responses, fmdbmix:multiStep, fmdbmix:style, mix:title, fmdbmix:formRoot
  orderable
  - intro (string, richtext) i18n indexed=no
  + fields (fmdb:fieldList) = fmdb:fieldList autocreated mandatory

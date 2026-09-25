@@ -2,21 +2,21 @@
 	"name": "fmdbmix:dateBounds",
 	"fields": [
 		{
-			"name": "fmdb:minBoundMode",
+			"name": "minBoundMode",
 			"valueConstraints": [
 				{
 					"value": {
 						"type": "String",
 						"value": "none"
 					},
-					"displayValueKey": "formidable-engine:fmdbmix_dateBounds.fmdb_minBoundMode.none"
+					"displayValueKey": "formidable-engine:fmdbmix_dateBounds.minBoundMode.none"
 				},
 				{
 					"value": {
 						"type": "String",
 						"value": "date"
 					},
-					"displayValueKey": "formidable-engine:fmdbmix_dateBounds.fmdb_minBoundMode.date",
+					"displayValueKey": "formidable-engine:fmdbmix_dateBounds.minBoundMode.date",
 					"propertyList": [
 						{
 							"name": "addMixin",
@@ -29,14 +29,14 @@
 						"type": "String",
 						"value": "today"
 					},
-					"displayValueKey": "formidable-engine:fmdbmix_dateBounds.fmdb_minBoundMode.today"
+					"displayValueKey": "formidable-engine:fmdbmix_dateBounds.minBoundMode.today"
 				},
 				{
 					"value": {
 						"type": "String",
 						"value": "relative"
 					},
-					"displayValueKey": "formidable-engine:fmdbmix_dateBounds.fmdb_minBoundMode.relative",
+					"displayValueKey": "formidable-engine:fmdbmix_dateBounds.minBoundMode.relative",
 					"propertyList": [
 						{
 							"name": "addMixin",
@@ -47,21 +47,21 @@
 			]
 		},
 		{
-			"name": "fmdb:maxBoundMode",
+			"name": "maxBoundMode",
 			"valueConstraints": [
 				{
 					"value": {
 						"type": "String",
 						"value": "none"
 					},
-					"displayValueKey": "formidable-engine:fmdbmix_dateBounds.fmdb_maxBoundMode.none"
+					"displayValueKey": "formidable-engine:fmdbmix_dateBounds.maxBoundMode.none"
 				},
 				{
 					"value": {
 						"type": "String",
 						"value": "date"
 					},
-					"displayValueKey": "formidable-engine:fmdbmix_dateBounds.fmdb_maxBoundMode.date",
+					"displayValueKey": "formidable-engine:fmdbmix_dateBounds.maxBoundMode.date",
 					"propertyList": [
 						{
 							"name": "addMixin",
@@ -74,14 +74,14 @@
 						"type": "String",
 						"value": "today"
 					},
-					"displayValueKey": "formidable-engine:fmdbmix_dateBounds.fmdb_maxBoundMode.today"
+					"displayValueKey": "formidable-engine:fmdbmix_dateBounds.maxBoundMode.today"
 				},
 				{
 					"value": {
 						"type": "String",
 						"value": "relative"
 					},
-					"displayValueKey": "formidable-engine:fmdbmix_dateBounds.fmdb_maxBoundMode.relative",
+					"displayValueKey": "formidable-engine:fmdbmix_dateBounds.maxBoundMode.relative",
 					"propertyList": [
 						{
 							"name": "addMixin",

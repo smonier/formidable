@@ -1,0 +1,21 @@
+{
+	"nodeType": "fmdbmix:jExperienceSensitiveField",
+	"priority": 2.0,
+	"sections": [
+		{
+			"name": "jexperience",
+			"labelKey": "fmdb.section.jexperience",
+			"rank": 1.15,
+			"fieldSets": [
+				{
+					"name": "fmdbmix:jExperienceSensitiveField",
+					"rank": -1.0,
+					"isAlwaysActivated": true,
+					"fields": [
+						{ "name": "jExperienceSensitive" }
+					]
+				}
+			]
+		}
+	]
+}

@@ -13,3 +13,54 @@ jobs:
     with:
       primary_release_branch: "main"
       job_container: "ghcr.io/jahia/jahia-docker-mvn-cache:17-jdk-resolute-mvn-loaded"
+
+  publish-npm:
+    name: Publish @jahia/formidable-library to npmjs.com
+    needs: release-module
+    runs-on: ubuntu-latest
+    # npm trusted publishing: the job exchanges its OIDC token for a short-lived publish token,
+    # so there is no npm token to store, and npm attaches a provenance attestation to the
+    # version (this repository is registered as the package's trusted publisher on npmjs.com).
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # The release job moved the tag onto the released commit, whose package.json files
+          # carry the release version (release-prepare profile of the root pom).
+          ref: ${{ github.event.release.tag_name }}
+      - uses: jdx/mise-action@v4
+      - run: yarn install --immutable
+      - run: yarn workspace @jahia/formidable-library build
+      - run: yarn workspace @jahia/formidable-library smoke
+      # A retried release keeps its Maven version, so the npm version is unchanged too. The same
+      # tarball already on npm is fine (nothing to do); a different one is a corrected release, which
+      # can only ship under a new version — fail loudly rather than report a publish that never happened.
+      - name: Publish, unless this exact tarball is already on npm
+        working-directory: packages/formidable
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          yarn pack --out /tmp/formidable.tgz
+          local_shasum=$(sha1sum /tmp/formidable.tgz | cut -d " " -f 1)
+          [ -n "$local_shasum" ] || { echo "::error::could not hash the packed tarball"; exit 1; }
+          # Three answers from the registry, told apart: the version exists (its shasum), it does not
+          # (E404), or the lookup itself failed — which must not be mistaken for "not published yet".
+          if remote_shasum=$(npm view "@jahia/formidable-library@$version" dist.shasum 2>/tmp/npm-view.err); then
+            :
+          elif grep -q "E404" /tmp/npm-view.err; then
+            remote_shasum=""
+          else
+            echo "::error::npm view @jahia/formidable-library@$version failed: $(cat /tmp/npm-view.err)"
+            exit 1
+          fi
+          if [ -z "$remote_shasum" ]; then
+            # --tolerate-republish stays as a belt: a retry that raced this check is a warning, not a red job
+            yarn npm publish --access public --provenance --tolerate-republish
+          elif [ "$remote_shasum" = "$local_shasum" ]; then
+            echo "@jahia/formidable-library@$version is already on npm with this exact content, nothing to publish"
+          else
+            echo "::error::@jahia/formidable-library@$version is already on npm with different content (npm $remote_shasum, this build $local_shasum): a corrected release needs a new version"
+            exit 1
+          fi

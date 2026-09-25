@@ -14,12 +14,9 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
-
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.FIELD_KEY_PROPERTY;
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.FORM_LOGIC_ELEMENT_MIXIN;
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.FORM_NODE_TYPE;
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.LOGICS_PROPERTY;
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.LOGICS_SRC_NODE;
+import org.jahia.modules.formidable.engine.api.FmdbMixin;
+import org.jahia.modules.formidable.engine.api.FmdbNodeName;
+import org.jahia.modules.formidable.engine.api.FmdbProperty;
 
 /**
  * Cleans up logic dependencies after a subtree duplication (copy/paste, import).
@@ -54,7 +51,7 @@ public class FormDuplicationCleanupListener extends DefaultEventListener {
 
     @Override
     public String[] getNodeTypes() {
-        return new String[]{FORM_NODE_TYPE, FORM_LOGIC_ELEMENT_MIXIN};
+        return new String[]{FmdbMixin.FORM_ROOT, FmdbMixin.FORM_LOGIC_ELEMENT};
     }
 
     @Override
@@ -87,7 +84,7 @@ public class FormDuplicationCleanupListener extends DefaultEventListener {
             return;
         }
 
-        JCRNodeWrapper formNode = node.isNodeType(FORM_NODE_TYPE)
+        JCRNodeWrapper formNode = node.isNodeType(FmdbMixin.FORM_ROOT)
                 ? node
                 : FormLogicSyncService.findFormAncestor(node);
 
@@ -98,7 +95,7 @@ public class FormDuplicationCleanupListener extends DefaultEventListener {
         // A copied subtree inside an existing form may collide with the
         // original's fieldKeys; remap them before the weakref cleanup so
         // key-based resolution binds the copy to its own internal sources.
-        boolean changed = !node.isNodeType(FORM_NODE_TYPE)
+        boolean changed = !node.isNodeType(FmdbMixin.FORM_ROOT)
                 && FormLogicSyncService.remapFieldKeysAfterCopy(node, formNode);
 
         changed |= FormLogicSyncService.cleanupAfterDuplication(formNode);
@@ -137,11 +134,11 @@ public class FormDuplicationCleanupListener extends DefaultEventListener {
     }
 
     static boolean shouldProcessNode(JCRNodeWrapper node) throws RepositoryException {
-        if (node.isNodeType(FORM_LOGIC_ELEMENT_MIXIN)) {
+        if (node.isNodeType(FmdbMixin.FORM_LOGIC_ELEMENT)) {
             return hasLogicContent(node);
         }
 
-        return node.isNodeType(FORM_NODE_TYPE) && containsLogicContent(node);
+        return node.isNodeType(FmdbMixin.FORM_ROOT) && containsLogicContent(node);
     }
 
     private static boolean containsLogicContent(JCRNodeWrapper node) throws RepositoryException {
@@ -163,8 +160,8 @@ public class FormDuplicationCleanupListener extends DefaultEventListener {
         // fieldKey counts as logic content: a copied element carrying one may collide
         // with the original's key even when it has no rule of its own (pure source copy).
         // Freshly created elements have no fieldKey yet, so authoring stays unaffected.
-        return node.hasProperty(LOGICS_PROPERTY)
-                || node.hasNode(LOGICS_SRC_NODE)
-                || node.hasProperty(FIELD_KEY_PROPERTY);
+        return node.hasProperty(FmdbProperty.LOGICS)
+                || node.hasNode(FmdbNodeName.LOGICS_SRC)
+                || node.hasProperty(FmdbProperty.FIELD_KEY);
     }
 }

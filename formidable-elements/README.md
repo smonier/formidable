@@ -42,7 +42,7 @@ If you don't use default configuration for the Docker container port and credent
 
 ## Documentation
 
-- [CND module ownership](../docs/cnd-module-ownership.md) — where JCR types and mixins belong, and how to choose between `formidable-elements` and `formidable-engine`
-- [Form submission flow](../docs/form-submission-flow.md) — the 12-step pipeline, validation, CSRF posture, error codes
-- [CAPTCHA server-side validation](../docs/captcha-server-side-validation.md) — provider verification endpoints and examples
+- [CND module ownership](../docs/architecture/cnd-module-ownership.md) — where JCR types and mixins belong, and how to choose between `formidable-elements` and `formidable-engine`
+- [Form submission flow](../docs/architecture/form-submission-flow.md) — the 12-step pipeline, validation, CSRF posture, error codes
+- [CAPTCHA server-side validation](../docs/administration/captcha-server-side-validation.md) — provider verification endpoints and examples
 - [Conditional logic editor and runtime notes](../formidable-engine/src/javascript/ConditionalLogic/README.md) — stored rule format, `logicsSrc` synchronization, and duplicate system-name caveats

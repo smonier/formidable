@@ -24,7 +24,7 @@ import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.WO
  *
  * <p>The default pass keeps observation on: the runtime listeners maintain the editorial
  * invariants there, and the one listener a migration must dodge already checks
- * {@link ChoiceOptionsContentMigration#isMigrationWrite()}.
+ * {@link MigrationWrites#isActive()}.
  *
  * <p>With observation off, the output-cache invalidation does not see the live changes
  * either: a live pass that rewrote anything flushes the output caches itself, cluster-wide,

@@ -12,7 +12,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
  *
  * <p>Authentication is a HubSpot <b>private app access token</b> (Bearer), which needs the
  * {@code crm.objects.contacts.read}, {@code crm.objects.contacts.write} and
- * {@code crm.schemas.contacts.read} scopes. See docs/how-to-hubspot-contact-action.md.
+ * {@code crm.schemas.contacts.read} scopes. See docs/administration/how-to-hubspot-contact-action.md.
  */
 @ObjectClassDefinition(
         name = "Formidable HubSpot connection",

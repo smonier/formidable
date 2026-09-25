@@ -30,7 +30,7 @@ const GET_SOURCE_CHOICES = gql`
 				parentNodeUuidOrPath: $parentPath,
 				primaryNodeType: "fmdb:select",
 				fieldNodeType: "fmdbmix:sourcedOptions",
-				fieldName: "fmdb:optionsSourceKey",
+				fieldName: "optionsSourceKey",
 				context: [],
 				uiLocale: $locale,
 				locale: $locale

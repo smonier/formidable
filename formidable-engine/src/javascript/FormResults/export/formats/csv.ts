@@ -57,6 +57,7 @@ const buildCsvContent = (
         t('formResults.table.locale'),
         t('formResults.detail.origin'),
         t('formResults.detail.referer'),
+        t('formResults.detail.timeZone'),
         t('formResults.detail.files'),
         ...fieldNames.map(name => {
             const label = formFieldLabels.get(name);
@@ -74,6 +75,7 @@ const buildCsvContent = (
             submission.locale ?? '',
             submission.origin ?? '',
             submission.referer ?? '',
+            submission.timeZone ?? '',
             formatFilesValue(submission),
             ...fieldNames.map(name => fieldValues.get(name) ?? '')
         ];

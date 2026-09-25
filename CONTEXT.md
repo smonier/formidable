@@ -8,7 +8,10 @@ Yarn monorepo + Maven multi-module. Root: `/formidable-modules/`.
 |---|---|
 | `formidable-elements/` | Jahia front-end module – form rendering (React SSR + client hydration) |
 | `formidable-engine/` | Jahia editor extension + Java/OSGi action pipeline |
-| `jahia-test-module/` | Java/JSP helper module for Cypress tests |
+| `formidable-extended-inputs/` | Optional field types (consent, switch, rating, scale) |
+| `formidable-jexperience-engine/` | jExperience integration (Java): profile mapping of fields, the mapping rule kept in sync with publication, the submission event sent by the browser through jExperience's tracker; prefill to come — `docs/architecture/jexperience-integration.md` |
+| `packages/formidable/` | npm package `@jahia/formidable-library` — the rendering contract the views import; `workspace:*` inside the monorepo (a version range would still resolve to the workspace, only `npm:` forces the registry), published at release |
+| `jahia-test-module/` | Test modules for Cypress: JSP template set, tsx template set, and the two third-party extension examples meant to be copied — `formidable-test-module-samples-tsx` (definitions, editor overrides, views) and `formidable-test-module-samples-java` (external `FormAction`, choicelist initializer, content-integrity checks) |
 | `tests/` | Cypress E2E suite (not a Maven module) |
 
 Toolchain: Java 17 (Temurin), Node LTS, Yarn 4, Maven 3 (see `mise.toml`).
@@ -83,7 +86,7 @@ Action engine types: `formidable-engine/src/main/resources/META-INF/definitions.
 
 ### Rules for a new field type
 
-1. Declare `[fmdb:myField] > jnt:content, fmdbmix:element` in its `definition.cnd`
+1. Declare `[fmdb:myField] > jnt:content, fmdbmix:element, fmdbmix:profileMappableField` in its `definition.cnd` — the marker lets the field be mapped to a jCustomer profile property (jExperience module); leave it out of a file field. Add the value-kind mixin matching what the field submits
 2. Create `default.server.tsx` with `jahiaComponent({ componentType: "view", nodeType: "fmdb:myField", name: "default" }, ...)`
 3. HTML `name` = `currentNode.getName()`; HTML `id` = `input-${currentNode.getIdentifier()}`
 
@@ -91,7 +94,7 @@ Action engine types: `formidable-engine/src/main/resources/META-INF/definitions.
 
 The structural mixins are split across the two modules — the engine owns the
 semantics it interprets, the elements module owns the authoring entry points
-(full ownership catalog: `docs/cnd-module-ownership.md`).
+(full ownership catalog: `docs/architecture/cnd-module-ownership.md`).
 
 ```
 fmdbmix:formElement (engine)   > mix:title, fmdbmix:formLogicElement, orderable
@@ -99,6 +102,8 @@ fmdbmix:formElement (engine)   > mix:title, fmdbmix:formLogicElement, orderable
                                    today (reserved elements-side extension point)
 fmdbmix:formContent (elements) ← non-field content embeddable in a form
 fmdbmix:formStep (engine)      > fmdbmix:formContainer — step marker
+fmdbmix:profileMappableField (engine) ← marker: the field can be mapped to a jCustomer profile property;
+                                   fmdbmix:jExperienceProfileMapping (formidable-jexperience-engine) extends it
 fmdbmix:component (elements)   ← makes a type visible/droppable in the editor
 ```
 
@@ -151,7 +156,7 @@ There is no provider derivation: everything provider-specific (verify URL, widge
 variable, native token field name) is explicit configuration. The only URL inspection is
 `ensureCaptchaExplicit` in `default.server.tsx`, which appends `render=explicit` for the
 script hosts that auto-render (Cloudflare, `google.com/recaptcha`, `recaptcha.net`). See
-`docs/captcha-server-side-validation.md`.
+`docs/administration/captcha-server-side-validation.md`.
 
 ---
 
@@ -179,13 +184,14 @@ submitActionUrl = /modules/formidable-engine/form-submit?fid={form uuid}&lang={l
 
 Submission is an OSGi HTTP-Whiteboard servlet — `FormSubmitServlet`, gated by the
 `formidable-submit` Security Filter scope (`origin: hosted`) — that delegates to
-`FormSubmissionPipeline`, a 12-step pipeline (see `docs/form-submission-flow.md`, the
+`FormSubmissionPipeline`, a 12-step pipeline plus step 11b, the field actions (see `docs/architecture/form-submission-flow.md`, the
 authoritative walkthrough). The pipeline resolves the form, validates everything
 (whitelist, types, constraints, logic coherence), THEN runs the form's `actions`
 children in order: for each action node, the OSGi `FormAction` service whose
 `getNodeType()` matches the node's primary type executes. On `FormActionException` the
 response carries the exception's HTTP status and an opaque `errorCode`; on success,
-`{"success": true}`.
+`{"success": true}` plus whatever the `SubmissionResponseEnricher` services add to the body
+(see `docs/extension/how-to-enrich-the-submission-response.md`).
 
 ### Java class layout
 
@@ -193,16 +199,26 @@ response carries the exception's HTTP status and an opaque `errorCode`; on succe
 org.jahia.modules.formidable.engine
 ├── api/                                 ← the EXPORTED SPI (Export-Package)
 │   ├── FormAction.java                  ← strategy interface (getNodeType + execute)
+│   ├── FieldAction.java, FieldActionRequest.java, FieldActionResult.java, FieldActionGateway.java
+│   │                                    ← the field-action SPI: one field's value judged server-side (docs/architecture/field-actions.md)
 │   ├── FormActionException.java         ← exception carrying an httpStatus
-│   └── SubmittedFile.java               ← a validated uploaded file
-├── servlet/
+│   ├── SubmittedFile.java               ← a validated uploaded file
+│   ├── ChoiceOptionsResolver.java       ← how many choices a choice field offers
+│   ├── AcceptedSubmission.java          ← what the pipeline accepted (form, site, locale, parameters)
+│   └── SubmissionResponseEnricher.java  ← adds entries to the 200 of an accepted submission
+├── servlet/                             ← the submission: its entry point, its pipeline, what reads the request
 │   ├── FormSubmitServlet.java           ← whiteboard entry point
-│   └── FormSubmissionPipeline.java      ← the 12 steps
-└── actions/
-    ├── FormDataParser.java, FieldValidator.java, FieldEscaper.java, …
-    ├── email/   SendEmailNotificationFormAction, SendEmailContentFormAction
-    ├── forward/ ForwardSubmissionFormAction
-    └── storage/ SaveToJcrFormAction
+│   ├── FormSubmissionPipeline.java      ← the 12 steps, plus 11b (runFieldActions)
+│   └── FormDataParser.java, FieldValidator.java, FormFieldMetadataCollector.java
+└── actions/                             ← one folder per kind, and what the two kinds share
+    ├── common/   ActionSummaryService (a type's label, tooltip and icon), FieldEscaper, TemplateInterpolator
+    ├── form/     ContentDispositionUtils
+    │   ├── email/   SendEmailNotificationFormAction, SendEmailContentFormAction
+    │   ├── forward/ ForwardSubmissionFormAction, HostnameResolutionService
+    │   └── storage/ SaveToJcrFormAction
+    └── field/    FieldActionDispatcher, FieldActionServlet (/field-action), FieldActionRuntime,
+                  FieldActionCollector, FieldActionGatewayImpl, VerdictCache, FieldActionsCache,
+                  RateLimiter, RenderServiceViewRenderer, ResolvedFieldAction…
 ```
 
 ### `FormAction` interface (the SPI third parties compile against)
@@ -235,7 +251,7 @@ FormActionException.serverError("message");   // HTTP 500
 Captcha is NOT an action (see the captcha section). The action types are
 `fmdb:emailNotificationAction`, `fmdb:emailContentAction`, `fmdb:forwardAction` and
 `fmdb:save2jcrAction` — all but save2jcr carry `fmdbmix:readOnlyCompatibleAction`
-(see `docs/upgrade-notes.md` and the read-only maintenance behaviour).
+(see `docs/administration/upgrade-notes.md` and the read-only maintenance behaviour).
 
 #### `fmdb:emailNotificationAction` → `SendEmailNotificationFormAction`
 
@@ -305,7 +321,7 @@ A field that depends on another field's value carries:
 The canonical business reference for which field a rule targets is the source field's
 `fieldKey` (stored in the rule as `sourceFieldKey`); `sourceNodeId` and the weakreference
 are technical shortcuts, `sourceFieldName` the legacy fallback. The authoritative
-walkthrough is `docs/conditional-logic-field-resolution.md`.
+walkthrough is `docs/architecture/conditional-logic-field-resolution.md`.
 
 ### JSON format in `logics`
 
@@ -332,7 +348,7 @@ walkthrough is `docs/conditional-logic-field-resolution.md`.
 ### Source resolution order (`FormLogicSourceResolver`, at SAVE time)
 
 Runs when a form is saved (the sync listeners), never at evaluation time — see
-`docs/conditional-logic-field-resolution.md` for the full order. In short: the
+`docs/architecture/conditional-logic-field-resolution.md` for the full order. In short: the
 `fieldKey` chain first (sourceNodeId if it carries the key, then the weakref, then the
 first matching field in document order), the legacy chain (sourceNodeId, weakref,
 sourceFieldName) for rules stored before `fieldKey` existed; the sync then backfills

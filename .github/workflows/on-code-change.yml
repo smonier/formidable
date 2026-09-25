@@ -28,6 +28,46 @@ jobs:
         with:
           node_version: 22
           auditci_level: critical
+      # The Cypress specs are type-checked here rather than after a forty-minute integration run (#280).
+      - uses: jdx/mise-action@v4
+      - name: Type-check the Cypress suite
+        working-directory: tests
+        run: |
+          yarn install --immutable
+          yarn typecheck
+      # The tarball yarn would publish must import under Node ESM through its exports map, with its
+      # types: scripts/smoke.mjs packs it, unpacks it and imports it by name (#308).
+      - name: Smoke-import the packed @jahia/formidable-library
+        run: |
+          yarn install --immutable
+          yarn workspace @jahia/formidable-library build
+          yarn workspace @jahia/formidable-library smoke
+      # The package was renamed before its first publish (#321): a reference to the old name points at
+      # a package that never exists on the registry, and nothing type-checks a Markdown file. The gate
+      # reads the tracked files (yarn.lock included) and skips only this workflow, whose pattern would
+      # match itself.
+      - name: No reference to the pre-rename package name
+        run: |
+          # git grep answers three things: 0 found, 1 nothing found, other = it could not search (a broken
+          # pattern exits 128) — told apart, so the guard never goes green on a tree it never searched.
+          status=0
+          git grep -I -n -E '@jahia/formidable([^-[:alnum:]_]|$)' -- . ':!.github/workflows/on-code-change.yml' || status=$?
+          case $status in
+            0) echo "::error::the npm package is @jahia/formidable-library"; exit 1 ;;
+            1) ;;
+            *) echo "::error::the name guard itself failed (git grep exited $status)"; exit 1 ;;
+          esac
+      # A CND prefix is global to the platform: two modules binding one prefix to different URIs
+      # means the types of one of them never register, and only the integration run says so (#326).
+      - name: Check the CND namespace prefixes
+        run: node scripts/check-cnd-namespaces.mjs
+
+      - name: Check the documentation links
+        run: node scripts/check-doc-links.mjs
+      # One spelling for every name the engine declares: the CND and the exported constants agree, no other
+      # main source copies a name, and no source imports a holder statically (docs/architecture/cnd-module-ownership.md).
+      - name: Check the node type names
+        run: node scripts/check-nodetype-names.mjs
 
   build:
     name: Build Module
@@ -46,6 +86,17 @@ jobs:
           nexus_username: ${{ secrets.NEXUS_USERNAME }}
           nexus_password: ${{ secrets.NEXUS_PASSWORD }}
           module_id: formidable
+      # The jExperience integration's Import-Package ranges promise jExperience 3.4+, and the module compiles against
+      # 4.2.1: recompiling it against jexperience.floor.version is what fails on a call that exists only on the 4.x line,
+      # which the ranges would otherwise let through to a NoSuchMethodError in a customer's log. The build above ran
+      # `mvn clean install`, so the engine it depends on is in the local repository: one module compiles here, no
+      # second reactor build. The floor's POM chain comes from the enterprise repository the profile declares, behind
+      # the same credentials as the build.
+      - name: Compile the jExperience integration against the floor of its OSGi ranges
+        env:
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+        run: mvn -s .github/maven.settings.xml -B -pl formidable-jexperience-engine -P jexperience-floor -DskipTests test-compile
 
   sonar-analysis:
     name: Sonar Analysis

@@ -8,10 +8,9 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import org.jahia.modules.formidable.engine.api.FmdbMixin;
 
 import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.FIELDS_NODE;
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.FORM_ELEMENT_MIXIN;
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.FORM_STEP_MIXIN;
 
 final class FormSourceFieldIndex {
 
@@ -67,7 +66,7 @@ final class FormSourceFieldIndex {
                 return false;
             }
 
-            if (child.isNodeType(FORM_ELEMENT_MIXIN) || child.isNodeType(FORM_STEP_MIXIN)) {
+            if (child.isNodeType(FmdbMixin.FORM_ELEMENT) || child.isNodeType(FmdbMixin.FORM_STEP)) {
                 firstFieldByName.putIfAbsent(child.getName(), child);
                 String fieldKey = FieldKeys.get(child);
                 if (fieldKey != null) {

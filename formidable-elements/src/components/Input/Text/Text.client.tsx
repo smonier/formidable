@@ -1,5 +1,5 @@
 import type {ComponentProps} from "react";
-import {useMask} from "~/hooks/useMask";
+import {useMask} from "@jahia/formidable-library";
 
 interface MaskedTextInputProps {
 	mask: string;

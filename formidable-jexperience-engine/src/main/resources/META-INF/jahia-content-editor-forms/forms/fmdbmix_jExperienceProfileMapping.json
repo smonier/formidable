@@ -1,0 +1,23 @@
+{
+	"nodeType": "fmdbmix:jExperienceProfileMapping",
+	"priority": 2.0,
+	"sections": [
+		{
+			"name": "jexperience",
+			"labelKey": "fmdb.section.jexperience",
+			"rank": 1.15,
+			"fieldSets": [
+				{
+					"name": "fmdbmix:jExperienceProfileMapping",
+					"rank": 0.0,
+					"fields": [
+						{ "name": "jExperienceProfileProperty" },
+						{ "name": "jExperienceSetStrategy" },
+						{ "name": "jExperiencePrefill" },
+						{ "name": "jExperiencePrefillThen" }
+					]
+				}
+			]
+		}
+	]
+}

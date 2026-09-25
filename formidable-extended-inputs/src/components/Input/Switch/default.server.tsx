@@ -4,8 +4,8 @@ import {
   jahiaComponent,
 } from "@jahia/javascript-modules-library";
 import { useTranslation } from "react-i18next";
-import { type BaseValidationMessageProps, validationDataAttributes } from "formidable-shared";
-import { HelpText, helpTextId } from "formidable-shared";
+import { type BaseValidationMessageProps, validationDataAttributes } from "@jahia/formidable-library";
+import { HelpText, helpTextId } from "@jahia/formidable-library";
 import "./switch.css";
 
 interface SwitchProps extends BaseValidationMessageProps {
@@ -55,9 +55,12 @@ jahiaComponent(
         <>
           <AddResources type="css" resources={buildModuleFileUrl("dist/assets/style.css")} />
           {/* aria-label fallback: without a title the fieldset has no legend, and the
-              group would otherwise have no accessible name */}
+              group would otherwise have no accessible name. radiogroup: the explicit role
+              a fieldset of radios needs to carry aria-readonly, which the jExperience
+              prefill sets when the author locks the field */}
           <fieldset
             className="fmdb-form-group fmdbext-switch"
+            role="radiogroup"
             aria-describedby={helpId}
             aria-label={label ? undefined : inputName}
           >

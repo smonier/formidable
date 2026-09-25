@@ -968,6 +968,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@jahia/formidable-library@workspace:*, @jahia/formidable-library@workspace:packages/formidable":
+  version: 0.0.0-use.local
+  resolution: "@jahia/formidable-library@workspace:packages/formidable"
+  dependencies:
+    "@types/react": "npm:^19.1.2"
+    "@types/react-dom": "npm:~19.2.0"
+    eslint: "npm:^9.39.2"
+    jsdom: "npm:^26.0.0"
+    prettier: "npm:^3.7.4"
+    react: "npm:^19.1.0"
+    react-dom: "npm:19.2.4"
+    typescript: "npm:^5.9.3"
+    vitest: "npm:^3.2.4"
+  peerDependencies:
+    react: ^19.1.0
+  languageName: unknown
+  linkType: soft
+
 "@jahia/javascript-modules-library@npm:^1.2.0":
   version: 1.2.0
   resolution: "@jahia/javascript-modules-library@npm:1.2.0"
@@ -1660,6 +1678,15 @@ __metadata:
   version: 15.7.15
   resolution: "@types/prop-types@npm:15.7.15"
   checksum: 10c0/b59aad1ad19bf1733cf524fd4e618196c6c7690f48ee70a327eb450a42aab8e8a063fbe59ca0a5701aebe2d92d582292c0fb845ea57474f6a15f6994b0e260b2
+  languageName: node
+  linkType: hard
+
+"@types/react-dom@npm:~19.2.0":
+  version: 19.2.7
+  resolution: "@types/react-dom@npm:19.2.7"
+  peerDependencies:
+    "@types/react": ^19.2.0
+  checksum: 10c0/226ab7e2b62114125e2276b3dcc3a25060177a673f8abadb7e31f395003de72ad68075c6edc5f51b02dd1e47443920ee030239c474c47fad075ded7410836909
   languageName: node
   linkType: hard
 
@@ -3848,12 +3875,12 @@ __metadata:
     "@eslint-react/eslint-plugin": "npm:^1.49.0"
     "@eslint/compat": "npm:^1.2.9"
     "@eslint/js": "npm:^9.26.0"
+    "@jahia/formidable-library": "workspace:*"
     "@jahia/javascript-modules-library": "npm:^1.2.0"
     "@jahia/vite-plugin": "npm:^1.2.0"
     "@types/react": "npm:^19.1.2"
     clsx: "npm:^2.1.1"
     eslint: "npm:^9.26.0"
-    formidable-shared: "workspace:*"
     globals: "npm:^16.0.0"
     i18next: "npm:^25.5.3"
     jsdom: "npm:^26.0.0"
@@ -3899,12 +3926,12 @@ __metadata:
     "@eslint-react/eslint-plugin": "npm:^1.49.0"
     "@eslint/compat": "npm:^1.2.9"
     "@eslint/js": "npm:^9.26.0"
+    "@jahia/formidable-library": "workspace:*"
     "@jahia/javascript-modules-library": "npm:^1.2.0"
     "@jahia/vite-plugin": "npm:^1.2.0"
     "@types/react": "npm:^19.1.2"
     clsx: "npm:^2.1.1"
     eslint: "npm:^9.26.0"
-    formidable-shared: "workspace:*"
     globals: "npm:^16.0.0"
     i18next: "npm:^25.5.3"
     prettier: "npm:^3.5.3"
@@ -3964,15 +3991,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"formidable-shared@workspace:*, formidable-shared@workspace:packages/formidable-shared":
-  version: 0.0.0-use.local
-  resolution: "formidable-shared@workspace:packages/formidable-shared"
-  dependencies:
-    "@types/react": "npm:^19.1.2"
-    react: "npm:^19.1.0"
-  languageName: unknown
-  linkType: soft
-
 "formidable-test-module-samples-tsx@workspace:jahia-test-module/formidable-test-module-samples-tsx":
   version: 0.0.0-use.local
   resolution: "formidable-test-module-samples-tsx@workspace:jahia-test-module/formidable-test-module-samples-tsx"
@@ -3980,6 +3998,7 @@ __metadata:
     "@eslint-react/eslint-plugin": "npm:^1.49.0"
     "@eslint/compat": "npm:^1.2.9"
     "@eslint/js": "npm:^9.26.0"
+    "@jahia/formidable-library": "workspace:*"
     "@jahia/javascript-modules-library": "npm:^1.2.0"
     "@jahia/vite-plugin": "npm:^1.2.0"
     "@types/react": "npm:^19.1.2"
@@ -4025,6 +4044,7 @@ __metadata:
     "@eslint-react/eslint-plugin": "npm:^2.3.13"
     "@eslint/compat": "npm:^2.0.0"
     "@eslint/js": "npm:^9.39.2"
+    "@types/react": "npm:^19.1.2"
     eslint: "npm:^9.39.2"
     eslint-plugin-cypress: "npm:^5.2.0"
     globals: "npm:^16.5.0"
@@ -6287,6 +6307,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-dom@npm:19.2.4":
+  version: 19.2.4
+  resolution: "react-dom@npm:19.2.4"
+  dependencies:
+    scheduler: "npm:^0.27.0"
+  peerDependencies:
+    react: ^19.2.4
+  checksum: 10c0/f0c63f1794dedb154136d4d0f59af00b41907f4859571c155940296808f4b94bf9c0c20633db75b5b2112ec13d8d7dd4f9bf57362ed48782f317b11d05a44f35
+  languageName: node
+  linkType: hard
+
 "react-dom@npm:^18.3.1":
   version: 18.3.1
   resolution: "react-dom@npm:18.3.1"
@@ -6655,6 +6686,13 @@ __metadata:
   dependencies:
     loose-envify: "npm:^1.1.0"
   checksum: 10c0/26383305e249651d4c58e6705d5f8425f153211aef95f15161c151f7b8de885f24751b377e4a0b3dd42cce09aad3f87a61dab7636859c0d89b7daf1a1e2a5c78
+  languageName: node
+  linkType: hard
+
+"scheduler@npm:^0.27.0":
+  version: 0.27.0
+  resolution: "scheduler@npm:0.27.0"
+  checksum: 10c0/4f03048cb05a3c8fddc45813052251eca00688f413a3cee236d984a161da28db28ba71bd11e7a3dd02f7af84ab28d39fb311431d3b3772fed557945beb00c452
   languageName: node
   linkType: hard
 

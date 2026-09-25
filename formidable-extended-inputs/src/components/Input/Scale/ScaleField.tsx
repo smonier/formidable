@@ -1,7 +1,7 @@
 import { AddResources, buildModuleFileUrl } from "@jahia/javascript-modules-library";
 import { useTranslation } from "react-i18next";
-import { validationDataAttributes, type BaseValidationMessageProps } from "formidable-shared";
-import { HelpText, helpTextId } from "formidable-shared";
+import { validationDataAttributes, type BaseValidationMessageProps } from "@jahia/formidable-library";
+import { HelpText, helpTextId } from "@jahia/formidable-library";
 import "~/design/edit-warning.css";
 import "./scale.css";
 
@@ -76,7 +76,9 @@ export default function ScaleField({ props, inputName, nodeId, editMode, forced 
   return (
     <>
       <AddResources type="css" resources={buildModuleFileUrl("dist/assets/style.css")} />
-      <fieldset className="fmdb-form-group fmdbext-scale" aria-describedby={helpId}>
+      {/* radiogroup: the explicit role a fieldset of radios needs to carry aria-readonly, which the
+          jExperience prefill sets when the author locks the field */}
+      <fieldset className="fmdb-form-group fmdbext-scale" role="radiogroup" aria-describedby={helpId}>
         {label && (
           <legend className="fmdb-group-legend">
             {label}

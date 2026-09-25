@@ -43,4 +43,4 @@ Release notes for the whole repository are assembled by [chachalog](../.chachalo
 
 ### Documentation
 
-* `README.md` and `docs/how-to-efficy-opportunity-action.md`.
+* `README.md` and `docs/administration/how-to-efficy-opportunity-action.md`.

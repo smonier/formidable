@@ -1,7 +1,10 @@
 // Select component properties
-[fmdb:select] > jnt:content, fmdbmix:element, fmdbmix:choiceField, fmdbmix:validationMessages
+[fmdb:select] > jnt:content, fmdbmix:element, fmdbmix:profileMappableField, fmdbmix:choiceField, fmdbmix:validationMessages
  - helpText (string, richtext[ckeditor.toolbar='FormidableHelp',ckeditor.customConfig='$context/modules/formidable-engine/javascript/ckeditor/helpTextConfig.js']) i18n indexed=no
- - fmdb:optionsEmptyLabel (string) i18n indexed=no
+ - optionsEmptyLabel (string) i18n indexed=no
+ // DEPRECATED since 0.5, removed in 0.6: the 0.4.0 spelling, kept hidden so that a 0.4 export still
+ // imports; MixinPropertyNamesMigration copies it into optionsEmptyLabel at startup (#310).
+ - fmdb:optionsEmptyLabel (string) i18n hidden indexed=no
  - size (long)
  - required (boolean) = false
  - multiple (boolean) = false

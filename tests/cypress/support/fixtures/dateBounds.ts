@@ -21,21 +21,21 @@ export function pushBoundModeProperties(
 	if ((minMode === 'relative' && !data.minRelative) || (maxMode === 'relative' && !data.maxRelative)) {
 		throw new Error('A relative bound mode requires its minRelative/maxRelative offset');
 	}
-	if (minMode) properties.push({name: 'fmdb:minBoundMode', value: minMode});
-	if (maxMode) properties.push({name: 'fmdb:maxBoundMode', value: maxMode});
+	if (minMode) properties.push({name: 'minBoundMode', value: minMode});
+	if (maxMode) properties.push({name: 'maxBoundMode', value: maxMode});
 	if (minMode === 'date') mixins.push(`fmdbmix:fixedMin${flavor}`);
 	if (maxMode === 'date') mixins.push(`fmdbmix:fixedMax${flavor}`);
 	if (minMode === 'date' && data.min) properties.push({name: 'min', value: data.min, type: 'DATE'});
 	if (maxMode === 'date' && data.max) properties.push({name: 'max', value: data.max, type: 'DATE'});
 	if (minMode === 'relative' && data.minRelative) {
 		mixins.push(`fmdbmix:relativeMin${flavor}`);
-		properties.push({name: 'fmdb:minRelativeAmount', value: String(data.minRelative.amount), type: 'LONG'});
-		properties.push({name: 'fmdb:minRelativeUnit', value: data.minRelative.unit});
+		properties.push({name: 'minRelativeAmount', value: String(data.minRelative.amount), type: 'LONG'});
+		properties.push({name: 'minRelativeUnit', value: data.minRelative.unit});
 	}
 
 	if (maxMode === 'relative' && data.maxRelative) {
 		mixins.push(`fmdbmix:relativeMax${flavor}`);
-		properties.push({name: 'fmdb:maxRelativeAmount', value: String(data.maxRelative.amount), type: 'LONG'});
-		properties.push({name: 'fmdb:maxRelativeUnit', value: data.maxRelative.unit});
+		properties.push({name: 'maxRelativeAmount', value: String(data.maxRelative.amount), type: 'LONG'});
+		properties.push({name: 'maxRelativeUnit', value: data.maxRelative.unit});
 	}
 }

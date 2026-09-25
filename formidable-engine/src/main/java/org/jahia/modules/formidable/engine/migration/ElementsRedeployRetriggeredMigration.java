@@ -1,10 +1,12 @@
 package org.jahia.modules.formidable.engine.migration;
 
+import org.jahia.services.content.JCRSessionWrapper;
 import org.jahia.services.observation.JahiaEventListener;
 import org.jahia.services.templates.JahiaTemplateManagerService.TemplatePackageRedeployedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.RepositoryException;
 import java.util.EventObject;
 
 /**
@@ -19,10 +21,17 @@ import java.util.EventObject;
  * <p>Concrete migrations keep their own {@code @Component} declaration and must
  * expose {@link JahiaEventListener} as a service interface to receive the event.
  *
- * <p>Lifecycle: to be removed in 0.5 with the migrations it retriggers — see
- * docs/upgrade-notes.md, "Startup migrations".
+ * <p>Lifecycle: to be removed with the last migration it retriggers (0.6, with
+ * {@link MixinPropertyNamesMigration}) — see docs/administration/upgrade-notes.md,
+ * "Startup migrations".
  */
 abstract class ElementsRedeployRetriggeredMigration implements JahiaEventListener<EventObject> {
+
+    /** One workspace pass of a migration; returns the number of migrated nodes. */
+    @FunctionalInterface
+    interface WorkspacePass {
+        int migrate(JCRSessionWrapper session, String workspace) throws RepositoryException;
+    }
 
     static final String ELEMENTS_MODULE_ID = "formidable-elements";
 
@@ -47,4 +56,27 @@ abstract class ElementsRedeployRetriggeredMigration implements JahiaEventListene
 
     /** Runs the whole migration; keyed on content state, so re-running is a no-op. */
     abstract void run();
+
+    /**
+     * Runs one pass per workspace, default then live, each in the session
+     * {@link MigrationSessions} provides (the live one a system session, so that Jahia does
+     * not mistake the rewrite for user-generated content). A failure in one workspace is
+     * logged and never blocks the other. The thread is marked as a migration write
+     * throughout ({@link MigrationWrites}), so the listeners reacting to contributor saves
+     * leave these writes alone — the default pass keeps JCR observation on.
+     */
+    void migrateBothWorkspaces(WorkspacePass pass) {
+        MigrationWrites.begin();
+        try {
+            for (String workspace : new String[]{"default", "live"}) {
+                try {
+                    MigrationSessions.execute(workspace, session -> pass.migrate(session, workspace));
+                } catch (RepositoryException e) {
+                    log.error("[{}] Migration failed in workspace '{}': {}", getClass().getSimpleName(), workspace, e.getMessage(), e);
+                }
+            }
+        } finally {
+            MigrationWrites.end();
+        }
+    }
 }

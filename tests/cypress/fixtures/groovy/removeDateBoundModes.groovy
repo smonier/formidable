@@ -2,7 +2,7 @@ import org.jahia.services.content.JCRObservationManager
 import org.jahia.services.content.JCRSessionFactory
 
 // Simulates a field stored before the bound modes existed by removing the
-// fmdb:minBoundMode / fmdb:maxBoundMode properties while keeping the fixed
+// minBoundMode / maxBoundMode properties while keeping the fixed
 // values. NOTE: this is the closest state the JCR API can produce — a genuine
 // 0.3 node also lacks the fixed-bound mixins, but that shape is not
 // reproducible (a raw write without an applicable definition is rejected, and
@@ -19,7 +19,7 @@ def report = []
     }
 
     def node = session.getNode(fieldPath)
-    ["fmdb:minBoundMode", "fmdb:maxBoundMode"].each { property ->
+    ["minBoundMode", "maxBoundMode"].each { property ->
         if (node.hasProperty(property)) {
             node.getProperty(property).remove()
         }

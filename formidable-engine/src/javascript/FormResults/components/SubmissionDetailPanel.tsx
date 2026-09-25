@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {Button, Close, Download, File, FilePdf, FileVideo, Paper, Separator, Typography, Visibility} from '@jahia/moonstone';
 import {useTranslation} from 'react-i18next';
-import {formatDate, type FormFields, type SubmissionRow, type SubmissionFile} from '../FormResults.utils';
+import {formatDate, formatFieldValue, type FormFields, type SubmissionRow, type SubmissionFile} from '../FormResults.utils';
 import {FilePreviewDialog} from './FilePreviewDialog';
 
 interface SubmissionDetailPanelProps {
@@ -44,7 +44,8 @@ export const SubmissionDetailPanel = ({submission, formFields, onClose}: Submiss
         {label: t('formResults.detail.created'), value: formatDate(submission.created)},
         {label: t('formResults.detail.origin'), value: submission.origin},
         {label: t('formResults.detail.locale'), value: submission.locale},
-        {label: t('formResults.detail.referer'), value: submission.referer}
+        {label: t('formResults.detail.referer'), value: submission.referer},
+        {label: t('formResults.detail.timeZone'), value: submission.timeZone}
     ].filter(item => item.value);
 
     return (
@@ -120,7 +121,7 @@ export const SubmissionDetailPanel = ({submission, formFields, onClose}: Submiss
                                             )}
                                         </div>
                                         <Typography variant="body" style={{wordBreak: 'break-all'}}>
-                                            {field.values.join(', ')}
+                                            {field.values.map(value => formatFieldValue(value, formFields.kinds.get(field.name), submission.timeZone)).join(', ')}
                                         </Typography>
                                     </React.Fragment>
                                 );

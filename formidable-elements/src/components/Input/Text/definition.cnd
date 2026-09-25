@@ -14,7 +14,7 @@
  - dirname (boolean) = false
  - size (long)
 
-[fmdb:inputText] > jnt:content, fmdbmix:element, fmdbmix:textField, fmdbmix:textValidationMessages
+[fmdb:inputText] > jnt:content, fmdbmix:element, fmdbmix:profileMappableField, fmdbmix:textField, fmdbmix:textValidationMessages
  - helpText (string, richtext[ckeditor.toolbar='FormidableHelp',ckeditor.customConfig='$context/modules/formidable-engine/javascript/ckeditor/helpTextConfig.js']) i18n indexed=no
  - required (boolean) = false
  - placeholder (string) i18n indexed=no

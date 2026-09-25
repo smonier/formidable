@@ -12,7 +12,10 @@
 // One-shot marker stamped on a SITE node by ElementsSiteReactivation after it re-enabled
 // formidable-elements there (0.3 -> 0.4 module-identity healing): a marked site is never
 // touched again, so an administrator's later deliberate deactivation sticks.
-// Lifecycle: to be removed in 0.5 with the reactivation itself.
+// Lifecycle: kept through 0.5.x (a 0.3.x instance may still upgrade directly). The reactivation code
+// leaves in 0.6 but this declaration OUTLIVES it: every healed site still carries the marker, and a
+// declaration dropped while nodes carry it is flagged by nothing — see docs/administration/upgrade-notes.md,
+// "Startup migrations", for the two ways out.
 [fmdbmix:elementsReactivated] mixin
 
 // One-shot marker stamped on a CHOICE FIELD by ChoiceOptionsContentMigration: this
@@ -21,7 +24,8 @@
 // identity. It licenses the divergent-list heuristics (positional label carry-over,
 // conditional-rule value remap) that must NEVER run on native 0.4 content, and is
 // removed the first time the field's languages realign — after which value-keying is
-// authoritative again. Lifecycle: to be removed in 0.5 with the migration.
+// authoritative again. Lifecycle: kept through 0.5.x; the migration leaves in 0.6, this declaration
+// only once no field still carries the marker (see docs/administration/upgrade-notes.md).
 [fmdbmix:migratedChoiceOptions] mixin
 
 // Logic-aware structural mixins and helper content types used by the engine to
@@ -32,7 +36,7 @@
 [fmdb:logicList] > nt:base, jmix:lockable, mix:lastModified, jmix:lastPublished, mix:versionable, jmix:observable, jmix:workflow, jmix:list
  + * (fmdb:logicSrc) = fmdb:logicSrc
 
-// Conditional-logic storage (see docs/conditional-logic-field-resolution.md):
+// Conditional-logic storage (see docs/architecture/conditional-logic-field-resolution.md):
 // logics is the authoring format, logicsSrc the technical storage, and its
 // per-rule logicNodeSource weakreference the repository-native source pointer
 // used by server-side metadata collection and runtime enrichment.
@@ -42,7 +46,7 @@
  // JCR UUID (changes on import/copy), the node name (changes on rename) and the visible
  // label. Assigned server-side on creation and used as the persisted source reference
  // (sourceFieldKey) in conditional logic rules — see the "Field identity: fieldKey"
- // section of docs/conditional-logic-field-resolution.md.
+ // section of docs/architecture/conditional-logic-field-resolution.md.
  - fieldKey (string) hidden indexed=no
  + logicsSrc (fmdb:logicList) = fmdb:logicList hidden
 
@@ -58,6 +62,18 @@
 [fmdbmix:formElement] > mix:title, fmdbmix:formLogicElement mixin
 orderable
 
+// Marks the root of a form: the node the submission pipeline resolves, the ACL sync follows and
+// the results reference. It is the entry point of the whole tree, which is why the engine reads
+// this rather than fmdb:form — the concrete type formidable-elements declares.
+//
+// A SUPERTYPE, never an assigned mixin. fmdb:form names it in its own declaration and nothing
+// writes it into jcr:mixinTypes, which is the form a third-party form type must follow too:
+// declare "> fmdbmix:formRoot", do not addMixin it. The distinction is what keeps the JCR
+// observation filters working — an event carries its node's PRIMARY type and Jackrabbit matches a
+// listener's node types with isDerivedFrom, so a supertype counts, while a mixin an author never
+// applied would not be there to match.
+[fmdbmix:formRoot] mixin
+
 // Classification mixins used by the engine to interpret form field semantics
 // without coupling to concrete field node type names from formidable-elements.
 [fmdbmix:captchaProtectedForm] mixin
@@ -70,6 +86,47 @@ orderable
 // maintenance windows. Worst case an unaffected form is over-blocked; a submission is
 // never lost to a mid-pipeline repository rejection.
 [fmdbmix:readOnlyCompatibleAction] mixin
+
+// --- Field actions (docs/architecture/field-actions.md) ---
+
+// Marker: what the node IS. A field action the engine runs against ONE field's candidate value,
+// at the visitor's request while the form is being filled and again when the submission is
+// parsed, before any form action runs. Concrete field-action types take it as a supertype,
+// whatever module declares them, exactly as action types take fmdbmix:formAction. A field
+// action answers a verdict; it never writes.
+[fmdbmix:fieldAction] mixin
+
+// What the contributor sets on every field action, whatever its type — attached through the
+// marker with `extends`, the way the options fieldsets extend fmdbmix:optionsSource, so a
+// third-party type gets it with nothing to opt into: the message the visitor reads when the
+// value is refused (${value} interpolation, escaped server-side), when to ask (blur for a cheap
+// check, submit for a paid one), whether a refusal blocks the submission or only warns, and what
+// an unanswered check means (accept — a provider outage never blocks visitors — or reject, for a
+// form that must not pass unchecked). The engine reads all four, hence owns the mixin and its
+// Content Editor override. A node saved outside the editor may lack the mixin: the engine then
+// uses the defaults.
+[fmdbmix:fieldActionFeedback] > jmix:templateMixin mixin
+ extends = fmdbmix:fieldAction
+ - rejectionMessage (string, richtext[ckeditor.toolbar='FormidableHelp',ckeditor.customConfig='$context/modules/formidable-engine/javascript/ckeditor/helpTextConfig.js']) = resourceBundle('fmdbmix_fieldActionFeedback.rejectionMessage.default') autocreated i18n indexed=no
+ - trigger (string, choicelist[resourceBundle]) = 'blur' autocreated indexed=no < 'blur', 'submit'
+ - severity (string, choicelist[resourceBundle]) = 'block' autocreated indexed=no < 'block', 'warn'
+ - whenUnavailable (string, choicelist[resourceBundle]) = 'accept' autocreated indexed=no < 'accept', 'reject'
+
+// The per-field list, fmdb:actionList in miniature. Orderable: the first blocking refusal wins,
+// so the contributor puts the cheap check before the paid one.
+[fmdb:fieldActionList] > jnt:content, jmix:list, mix:title, jmix:systemNameReadonly
+ orderable
+ - jcr:title (string) = resourceBundle('fmdb_fieldActionList') autocreated i18n
+ + * (fmdbmix:fieldAction) = fmdbmix:fieldAction version
+
+// The switch in the field's own editor, offered on every submit-capable field type through the marker,
+// third-party included. On, it adds the mixin, which autocreates the list; off, it removes both.
+// No `> jmix:dynamicFieldset`: that supertype extends jmix:templateMixin, which the Content Editor
+// renders without an enable switch, and a fieldset with no switch and no property of its own is not
+// rendered at all. `extends` alone makes it dynamic. See docs/architecture/field-actions.md.
+[fmdbmix:fieldActions] mixin
+ extends = fmdbmix:formElement
+ + actions (fmdb:fieldActionList) = fmdb:fieldActionList autocreated
 // Options-source contract for choice fields: the base mixin carries the mode
 // switch, and each jmix:dynamicFieldset mixin carries the properties of one mode.
 // The Content Editor activates the fieldset matching the chosen mode through the
@@ -77,9 +134,13 @@ orderable
 // The default 'manual' auto-activates the manual fieldset on creation, so typing
 // options by hand stays the out-of-the-box experience.
 [fmdbmix:optionsSource] mixin
- - fmdb:optionsMode (string, choicelist) = 'manual' indexed=no
+ - optionsMode (string, choicelist) = 'manual' indexed=no
+ // DEPRECATED since 0.5, removed in 0.6: the 0.4.0 spelling of the property below, kept hidden so
+ // that a 0.4 export still imports; MixinPropertyNamesMigration copies it into the unprefixed name
+ // at startup. Same for every "- fmdb:" property of this file. Nothing reads it but the migration.
+ - fmdb:optionsMode (string) hidden indexed=no
 
-// fmdb:options is deliberately NOT mandatory: options are authored in the
+// options is deliberately NOT mandatory: options are authored in the
 // site's default language only (the language sync then feeds every other
 // language at save), while a mandatory i18n property is validated in EVERY
 // language a contributor merely visits — in the Content Editor, opening
@@ -88,34 +149,54 @@ orderable
 // ManualOptionsLanguageSync, not by a per-language JCR constraint.
 [fmdbmix:manualOptions] > jmix:dynamicFieldset mixin
  extends = fmdbmix:optionsSource
- - fmdb:options (string) i18n multiple indexed=no
+ - options (string) i18n multiple indexed=no
+ // DEPRECATED since 0.5, removed in 0.6 (see fmdbmix:optionsSource above)
+ - fmdb:options (string) i18n multiple hidden indexed=no
 
 [fmdbmix:sourcedOptions] > jmix:dynamicFieldset mixin
  extends = fmdbmix:optionsSource
- - fmdb:optionsSourceKey (string, choicelist[formidableOptionsSources]) mandatory indexed=no
+ - optionsSourceKey (string, choicelist[formidableOptionsSources]) indexed=no
+ // DEPRECATED since 0.5, removed in 0.6 (see fmdbmix:optionsSource above)
+ - fmdb:optionsSourceKey (string) hidden indexed=no
 
 [fmdbmix:categoryOptions] > jmix:dynamicFieldset mixin
  extends = fmdbmix:optionsSource
- - fmdb:optionsRootCategory (weakreference, picker[type='category']) mandatory < 'jnt:category'
+ - optionsRootCategory (weakreference, picker[type='category']) < 'jnt:category'
+ // DEPRECATED since 0.5, removed in 0.6 (see fmdbmix:optionsSource above)
+ - fmdb:optionsRootCategory (weakreference) hidden
 
 [fmdbmix:contentOptions] > jmix:dynamicFieldset mixin
  extends = fmdbmix:optionsSource
- - fmdb:optionsRootNode (weakreference, picker[type='editorial']) mandatory
- - fmdb:optionsNodeType (string, choicelist[formidableContentTypes,dependentProperties='fmdb:optionsRootNode']) mandatory indexed=no
+ - optionsRootNode (weakreference, picker[type='editorial'])
+ - optionsNodeType (string, choicelist[formidableContentTypes,dependentProperties='optionsRootNode']) indexed=no
+ // DEPRECATED since 0.5, removed in 0.6 (see fmdbmix:optionsSource above)
+ - fmdb:optionsRootNode (weakreference) hidden
+ - fmdb:optionsNodeType (string) hidden indexed=no
 
-// Date-bound contract for date and datetime fields: each bound is a mode switch.
-// Every dynamic-fieldset property below is mandatory: once a mode is chosen its
-// value must be provided — the mixin only exists while the mode is selected, so
-// the constraint applies exactly then (same rule as the options-source contract).
+// Date-bound contract for date and datetime fields: each bound is a mode switch
 // (no bound, a fixed date, or the submission day), and the fixed mode's calendar
 // lives in a jmix:dynamicFieldset mixin the Content Editor activates through the
 // addMixin wiring declared in the fieldset JSON overrides (formidable-elements).
 // Modes are exclusive by construction: a bound is either fixed or relative to the
 // submission day, never an ambiguous combination of both. Two flavors only because
 // the calendar widget differs (date-only picker vs date and time).
+// The fixed dates are mandatory: once a mode is chosen its value must be provided —
+// the mixin only exists while the mode is selected, so the constraint applies exactly
+// then. The relative offsets and the four options-source settings above (source key,
+// root category, root node, node type) are required by the editor only for this release
+// (fieldset JSON overrides in formidable-elements), for two reasons: a JCR-level mandatory
+// on the renamed name would reject a node that still carries only its 0.4 prefixed value —
+// exactly what a 0.4.0 export brings in — before MixinPropertyNamesMigration renames it;
+// and Jahia's DefinitionsBundleChecker rates a mandatory property ADDED to a deployed type
+// as a MAJOR change and cancels the module deployment, which would block the very upgrade
+// from 0.4.0 (seen on a real 0.4.0 instance). The flags come back in 0.6 with the removal
+// of the prefixed definitions (#310).
 [fmdbmix:dateBounds] mixin
- - fmdb:minBoundMode (string, choicelist) = 'none' indexed=no
- - fmdb:maxBoundMode (string, choicelist) = 'none' indexed=no
+ - minBoundMode (string, choicelist) = 'none' indexed=no
+ - maxBoundMode (string, choicelist) = 'none' indexed=no
+ // DEPRECATED since 0.5, removed in 0.6 (see fmdbmix:optionsSource above)
+ - fmdb:minBoundMode (string) hidden indexed=no
+ - fmdb:maxBoundMode (string) hidden indexed=no
 
 [fmdbmix:fixedMinDate] > jmix:dynamicFieldset mixin
  extends = fmdbmix:dateBounds
@@ -131,17 +212,26 @@ orderable
 // the property names are shared so the runtime reads one set.
 [fmdbmix:relativeMinDate] > jmix:dynamicFieldset mixin
  extends = fmdbmix:dateBounds
- - fmdb:minRelativeAmount (long) = 0 mandatory indexed=no
- - fmdb:minRelativeUnit (string, choicelist) = 'days' mandatory indexed=no
+ - minRelativeAmount (long) = 0 indexed=no
+ - minRelativeUnit (string, choicelist) = 'days' indexed=no
+ // DEPRECATED since 0.5, removed in 0.6 (see fmdbmix:optionsSource above)
+ - fmdb:minRelativeAmount (long) hidden indexed=no
+ - fmdb:minRelativeUnit (string) hidden indexed=no
 
 [fmdbmix:relativeMaxDate] > jmix:dynamicFieldset mixin
  extends = fmdbmix:dateBounds
- - fmdb:maxRelativeAmount (long) = 0 mandatory indexed=no
- - fmdb:maxRelativeUnit (string, choicelist) = 'days' mandatory indexed=no
+ - maxRelativeAmount (long) = 0 indexed=no
+ - maxRelativeUnit (string, choicelist) = 'days' indexed=no
+ // DEPRECATED since 0.5, removed in 0.6 (see fmdbmix:optionsSource above)
+ - fmdb:maxRelativeAmount (long) hidden indexed=no
+ - fmdb:maxRelativeUnit (string) hidden indexed=no
 
 [fmdbmix:datetimeBounds] mixin
- - fmdb:minBoundMode (string, choicelist) = 'none' indexed=no
- - fmdb:maxBoundMode (string, choicelist) = 'none' indexed=no
+ - minBoundMode (string, choicelist) = 'none' indexed=no
+ - maxBoundMode (string, choicelist) = 'none' indexed=no
+ // DEPRECATED since 0.5, removed in 0.6 (see fmdbmix:optionsSource above)
+ - fmdb:minBoundMode (string) hidden indexed=no
+ - fmdb:maxBoundMode (string) hidden indexed=no
 
 [fmdbmix:fixedMinDatetime] > jmix:dynamicFieldset mixin
  extends = fmdbmix:datetimeBounds
@@ -153,15 +243,27 @@ orderable
 
 [fmdbmix:relativeMinDatetime] > jmix:dynamicFieldset mixin
  extends = fmdbmix:datetimeBounds
- - fmdb:minRelativeAmount (long) = 0 mandatory indexed=no
- - fmdb:minRelativeUnit (string, choicelist) = 'days' mandatory indexed=no
+ - minRelativeAmount (long) = 0 indexed=no
+ - minRelativeUnit (string, choicelist) = 'days' indexed=no
+ // DEPRECATED since 0.5, removed in 0.6 (see fmdbmix:optionsSource above)
+ - fmdb:minRelativeAmount (long) hidden indexed=no
+ - fmdb:minRelativeUnit (string) hidden indexed=no
 
 [fmdbmix:relativeMaxDatetime] > jmix:dynamicFieldset mixin
  extends = fmdbmix:datetimeBounds
- - fmdb:maxRelativeAmount (long) = 0 mandatory indexed=no
- - fmdb:maxRelativeUnit (string, choicelist) = 'days' mandatory indexed=no
+ - maxRelativeAmount (long) = 0 indexed=no
+ - maxRelativeUnit (string, choicelist) = 'days' indexed=no
+ // DEPRECATED since 0.5, removed in 0.6 (see fmdbmix:optionsSource above)
+ - fmdb:maxRelativeAmount (long) hidden indexed=no
+ - fmdb:maxRelativeUnit (string) hidden indexed=no
 
 [fmdbmix:choiceField] > fmdbmix:optionsSource mixin
+// A choice field whose cardinality is its number of choices, not a "multiple" property: the view
+// draws one input per choice, so one choice submits one value and several submit a list. The
+// built-in checkbox is that field; the select and the email input take their cardinality from the
+// "multiple" property instead, and a choice field carrying neither is single-valued.
+// A supertype as fmdbmix:formRoot is: a field type declares "> fmdbmix:cardinalityFromChoices".
+[fmdbmix:cardinalityFromChoices] mixin
 // Semantic value-kind mixins: a field type carrying one becomes eligible as a
 // conditional-logic source with the operators of that kind (number: comparisons,
 // boolean: is true / is false, text: filled / empty / equals / contains).
@@ -174,6 +276,12 @@ orderable
 [fmdbmix:dateField] mixin
 [fmdbmix:datetimeLocalField] mixin
 [fmdbmix:colorField] mixin
+
+// Marker for profile mapping: a field type carrying it can take part in a jExperience
+// profile mapping. The jExperience module attaches its property mixin to this single
+// marker (extends), never to a list of field types, so a third-party field opts in from
+// its own CND exactly as it opts into a value kind. Files are not mappable; hidden inputs are.
+[fmdbmix:profileMappableField] mixin
 
 // Sends a notification email after a successful form submission.
 // Subject and body support ${fieldName} interpolation from the submitted form data.
@@ -233,5 +341,6 @@ orderable
  - origin (string) mandatory indexed=no
  - locale (string) indexed=no
  - referer (string) indexed=no
+ - timeZone (string) indexed=no
  + data (fmdb:submissionData) = fmdb:submissionData autocreated
  + files (jnt:folder) = jnt:folder

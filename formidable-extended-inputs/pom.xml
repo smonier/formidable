@@ -22,6 +22,7 @@
              turns into the bundle's Jahia-Depends header at install time. The pom property
              is only read by the maven-bundle-plugin of the JAVA modules (packaging pom here,
              so it never ran) — a value kept in both places would only drift. -->
+        <sonar.sources>src,package.json,pom.xml</sonar.sources>
     </properties>
     <repositories>
         <repository>

@@ -1,0 +1,22 @@
+{
+	"nodeType": "fmdbsamplemix:helpTextPosition",
+	"priority": 2.0,
+	"sections": [
+		{
+			"name": "content",
+			"fieldSets": [
+				{
+					"name": "<main>",
+					"fields": [
+						{ "name": "helpTextPosition", "rank": 1.4 }
+					]
+				},
+				{
+					"name": "fmdbsamplemix:helpTextPosition",
+					"isAlwaysActivated": true,
+					"hide": true
+				}
+			]
+		}
+	]
+}

@@ -7,6 +7,10 @@ import {JahiaNode, NodeProperty} from './types';
 
 interface CreateFormNodeOptions {
 	actions?: JahiaNode[];
+	/** Properties of the 'fields' list node (e.g. an explicit jcr:title per language); empty = CND defaults. */
+	fieldListProperties?: NodeProperty[];
+	/** Properties of the 'actions' list node; only created when actions are given. */
+	actionListProperties?: NodeProperty[];
 	/**
 	 * How to publish and wait. Defaults to publishAndWaitJobEnding (job scheduler based); a
 	 * fixture may pass another strategy, e.g. one polling the live workspace when the
@@ -14,6 +18,8 @@ interface CreateFormNodeOptions {
 	 */
 	publish?: (path: string, languages?: string[]) => void;
 	mixins?: string[];
+	/** Parent of the form node; the site's contents folder by default. */
+	parentPath?: string;
 	properties?: NodeProperty[];
 	pageProperties?: NodeProperty[];
 	publishLanguages?: string[];
@@ -32,6 +38,8 @@ export interface LiveFormPageInfo {
 export interface LiveFormSubmissionInfo {
 	name: string;
 	path: string;
+	/** The submitter's time zone as stored, null when the submission recorded none. */
+	timeZone: string | null;
 }
 
 interface LatestSubmissionQueryResponse {
@@ -43,6 +51,7 @@ interface LatestSubmissionQueryResponse {
 						name: string;
 						path: string;
 						created: {value: string};
+						timeZone?: {value?: string | null} | null;
 					}>;
 				};
 			};
@@ -61,18 +70,23 @@ interface AddNodeResponse {
 	};
 }
 
-const buildFormChildren = (formElements: JahiaNode[], actions: JahiaNode[] = []): JahiaNode[] => ([
+const buildFormChildren = (
+	formElements: JahiaNode[],
+	actions: JahiaNode[] = [],
+	fieldListProperties: NodeProperty[] = [],
+	actionListProperties: NodeProperty[] = []
+): JahiaNode[] => ([
 	{
 		name: 'fields',
 		primaryNodeType: 'fmdb:fieldList',
-		properties: [],
+		properties: fieldListProperties,
 		children: formElements
 	},
 	...(actions.length > 0
 		? [{
 			name: 'actions',
 			primaryNodeType: 'fmdb:actionList',
-			properties: [],
+			properties: actionListProperties,
 			children: actions
 		}]
 		: [])
@@ -85,7 +99,7 @@ export const createFormNode = (
 	options: CreateFormNodeOptions = {}
 ) => {
 	return addNode({
-		parentPathOrId: CONTENT_PATH,
+		parentPathOrId: options.parentPath ?? CONTENT_PATH,
 		name: formName,
 		primaryNodeType: 'fmdb:form',
 		mixins: options.mixins || [],
@@ -93,7 +107,7 @@ export const createFormNode = (
 			{name: 'jcr:title', value: formTitle, language: 'en'},
 			...(options.properties || [])
 		],
-		children: buildFormChildren(formElements, options.actions)
+		children: buildFormChildren(formElements, options.actions, options.fieldListProperties, options.actionListProperties)
 	});
 };
 
@@ -105,7 +119,7 @@ export const createPublishedLiveFormPage = (
 	pageTitle: string = formTitle,
 	options: CreateFormNodeOptions = {}
 ): Cypress.Chainable<LiveFormPageInfo> => {
-	const formPath = `${CONTENT_PATH}/${formName}`;
+	const formPath = `${options.parentPath ?? CONTENT_PATH}/${formName}`;
 	const pagePath = `${SITE_HOME_PATH}/${pageName}`;
 	const livePath = `home/${pageName}.html`;
 	const referencePath = `${pagePath}/pagecontent/${formName}-reference`;
@@ -287,6 +301,7 @@ export const getLatestLiveFormSubmission = (formName: string): Cypress.Chainable
 									name
 									path
 									created: property(name: "jcr:created") {value}
+									timeZone: property(name: "timeZone") {value}
 								}
 							}
 						}
@@ -309,6 +324,6 @@ export const getLatestLiveFormSubmission = (formName: string): Cypress.Chainable
 			throw new Error(`No form submissions found under ${submissionsRootPath}`);
 		}
 
-		return cy.wrap({name: submission.name, path: submission.path}, {log: false});
+		return cy.wrap({name: submission.name, path: submission.path, timeZone: submission.timeZone?.value ?? null}, {log: false});
 	});
 };

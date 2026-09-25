@@ -25,6 +25,7 @@ export interface FormServerProps {
 // Props passed to the Form Island (client-side)
 export interface FormProps extends Omit<FormServerProps, 'destination'> {
 	formId: string;
+	formTitle?: string;
 	locale: string;
 	stepLabels?: string[];
 	stepIds?: string[];

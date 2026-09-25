@@ -13,8 +13,7 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.FORM_LOGIC_ELEMENT_MIXIN;
+import org.jahia.modules.formidable.engine.api.FmdbMixin;
 
 /**
  * Assigns a fieldKey to every newly created form element (field, fieldset, step).
@@ -44,7 +43,7 @@ public class FieldKeyAssignmentListener extends DefaultEventListener {
             return false;
         }
 
-        if (!node.isNodeType(FORM_LOGIC_ELEMENT_MIXIN)) {
+        if (!node.isNodeType(FmdbMixin.FORM_LOGIC_ELEMENT)) {
             return false;
         }
 
@@ -64,7 +63,7 @@ public class FieldKeyAssignmentListener extends DefaultEventListener {
 
     @Override
     public String[] getNodeTypes() {
-        return new String[]{FORM_LOGIC_ELEMENT_MIXIN};
+        return new String[]{FmdbMixin.FORM_LOGIC_ELEMENT};
     }
 
     @Override

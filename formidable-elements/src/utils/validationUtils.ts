@@ -47,6 +47,16 @@ const getGroupedInputs = (
 	);
 };
 
+/**
+ * A form's own id, never the control that shadows it. `HTMLFormElement` is `[LegacyOverrideBuiltIns]`:
+ * a control whose name matches an IDL attribute takes that property over, and a field's name is the
+ * contributor's system name — so a field named `id` turns `form.id` into an `HTMLInputElement`, which
+ * is truthy and has no `replace`. A control named `id` cannot shadow the attribute read;
+ * `getAttribute` itself could, which is accepted — no label leads a contributor to that name.
+ */
+export const formIdOf = (form: HTMLFormElement | null | undefined): string =>
+	form?.getAttribute('id') ?? '';
+
 const sanitizeIdPart = (value: string): string => {
 	const sanitized = value.replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
 	return sanitized || 'field';
@@ -54,7 +64,8 @@ const sanitizeIdPart = (value: string): string => {
 
 const buildErrorId = (input: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement): string => {
 	if (input instanceof HTMLInputElement && (input.type === 'radio' || input.type === 'checkbox') && input.name) {
-		const formPrefix = input.form?.id ? `${sanitizeIdPart(input.form.id)}-` : '';
+		const formId = formIdOf(input.form);
+		const formPrefix = formId ? `${sanitizeIdPart(formId)}-` : '';
 		return `fmdb-validation-error-${formPrefix}${sanitizeIdPart(input.type)}-${sanitizeIdPart(input.name)}`;
 	}
 

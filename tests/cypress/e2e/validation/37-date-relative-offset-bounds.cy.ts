@@ -82,7 +82,7 @@ describe('Validation - 37 Date bounds at an offset from the submission day', () 
 		// beyond any timezone widening, whatever clock the runner sits on.
 		postDirectMultipartSubmission({
 			formId,
-			fields: {birthDate: localDay()},
+			fields: {birthDate: localDay(0)},
 			headers: withSameOriginHeaders()
 		}).then(response => expectErrorResponse(response, 400, 'FMDB-010'));
 

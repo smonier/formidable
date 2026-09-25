@@ -1,25 +1,38 @@
 package org.jahia.modules.formidable.engine.config;
 
 import org.json.JSONObject;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Collection;
+import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -57,12 +70,45 @@ public class FormidableConfigService {
      * An admin-declared options source for choice fields: a curated Jahia choicelist
      * initializer exposed to contributors under a stable id.
      *
-     * @param id             stored in JCR ({@code fmdb:optionsSourceKey})
+     * @param id             stored in JCR ({@code optionsSourceKey})
      * @param label          shown in the source picker
      * @param initializerKey key of the Jahia choicelist initializer to evaluate
      * @param param          optional initializer parameter (empty when absent)
      */
     public record OptionsSource(String id, String label, String initializerKey, String param) {}
+
+    /**
+     * An external service a field action may call through the {@code FieldActionGateway}, from
+     * {@code fieldActionProviders=id|Label|https://base-url|Credential-Header-Name|credential}.
+     *
+     * @param id               stored in JCR on the field-action node
+     * @param label            shown in the provider picker of the editor
+     * @param baseUri          the HTTPS base the gateway appends a relative path to
+     * @param credentialHeader the header carrying the credential, empty when the provider needs none
+     * @param credential       the secret; never logged, never returned to a caller — {@link #toString()} hides it
+     */
+    public record FieldActionProvider(String id, String label, URI baseUri, String credentialHeader, String credential) {
+        @Override
+        public String toString() {
+            return "FieldActionProvider[id=" + id + ", baseUri=" + baseUri + ", credentialHeader=" + credentialHeader
+                    + ", credential=" + (credential == null || credential.isEmpty() ? "none" : "***") + "]";
+        }
+    }
+
+    /**
+     * Everything the field actions read from the configuration, in one piece: the providers and the HTTP client that
+     * reaches them, and the three guards of the pre-check endpoint (verdict cache, rate limit, value length).
+     */
+    public record FieldActionSettings(
+            Map<String, FieldActionProvider> providers,
+            Duration httpConnectTimeout,
+            Duration httpRequestTimeout,
+            HttpClient httpClient,
+            Duration verdictCacheTtl,
+            int rateLimitPerMinute,
+            int maxValueLength,
+            int maxValuesPerField
+    ) {}
 
     private record ConfigSnapshot(
             String captchaSiteKey,
@@ -84,15 +130,148 @@ public class FormidableConfigService {
             Map<String, ForwardTarget> forwardTargets,
             Map<String, OptionsSource> optionsSources,
             Duration optionsSourcesCacheTtl,
-            int optionsQueryMaxResults
+            int optionsQueryMaxResults,
+            FieldActionSettings fieldActions
     ) {}
 
     private static final Logger log = LoggerFactory.getLogger(FormidableConfigService.class);
 
+    static final String PID = "org.jahia.modules.formidable";
+    /** How the multi-line configuration values are split: one entry per line, either line ending. */
+    private static final String LINE_BREAKS = "[\n\r]+";
+
     private final AtomicReference<ConfigSnapshot> config = new AtomicReference<>();
+
+    /** The raw configuration properties last received, to spot the deployed file taking over. */
+    private final AtomicReference<Map<String, Object>> lastProperties = new AtomicReference<>();
+
+    private final AtomicReference<ConfigurationAdmin> configurationAdmin = new AtomicReference<>();
+
+    /**
+     * Settings the deployed configuration file replaced, still waiting to be written back (see
+     * {@link #writeBack}), with the file's values observed at the transition: a retry only
+     * rewrites the settings that still hold that value, so an edit made before the retry (file,
+     * provisioning API, console) is left alone.
+     *
+     * @param settings the legacy values to write, by setting name
+     * @param baseline the file-backed values those settings had when the file took over
+     * @param failedAttempts the write-backs that did not go through so far, capped by {@link #MAX_WRITE_BACK_ATTEMPTS}
+     */
+    private record PendingCarryOver(Map<String, Object> settings, Map<String, Object> baseline, int failedAttempts) {
+        PendingCarryOver failedOnceMore() {
+            return new PendingCarryOver(settings, baseline, failedAttempts + 1);
+        }
+    }
+
+    /**
+     * How many write-backs may fail before the file is declared authoritative as it stands. A
+     * pending write-back keeps the pre-transition snapshot in force, which is the point — but an
+     * update that keeps failing (a persistence directory full or read-only) would otherwise keep
+     * every later edit of the file from ever applying, until a restart. Three attempts: the
+     * transition, a ConfigurationAdmin binding late, one more callback.
+     */
+    static final int MAX_WRITE_BACK_ATTEMPTS = 3;
+
+    /** A configuration file created within this window of the first activation was copied on this start. */
+    private static final Duration FRESH_FILE_WINDOW = Duration.ofMinutes(2);
+
+    /** Null when nothing is pending; kept until the write succeeds, nothing is left to write, or the attempts run out. */
+    private final AtomicReference<PendingCarryOver> pendingCarryOver = new AtomicReference<>();
+
+    /** The configuration last received, to activate it once a pending write-back is over without a merged callback. */
+    private final AtomicReference<FormidableConfig> lastConfig = new AtomicReference<>();
+
+    /** What a write-back attempt did; PENDING is the only outcome that keeps the pre-transition snapshot in force. */
+    private enum WriteBack { WRITTEN, NOTHING_LEFT, GIVEN_UP, PENDING }
+
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, unbind = "unsetConfigurationAdmin")
+    public void setConfigurationAdmin(ConfigurationAdmin configurationAdmin) {
+        this.configurationAdmin.set(configurationAdmin);
+        PendingCarryOver pending = pendingCarryOver.get();
+        if (pending != null && isOverWithoutMergedCallback(writeBack(pending)) && lastConfig.get() != null) {
+            activate(lastConfig.get());
+        }
+    }
+
+    /**
+     * A write-back over with no merged callback to come — nothing left to carry (every pending
+     * setting was edited since), or the attempts ran out — leaves the file authoritative as it
+     * stands; a written one is followed by its own callback, which brings the merged configuration.
+     */
+    private static boolean isOverWithoutMergedCallback(WriteBack result) {
+        return result == WriteBack.NOTHING_LEFT || result == WriteBack.GIVEN_UP;
+    }
+
+    public void unsetConfigurationAdmin(ConfigurationAdmin configurationAdmin) {
+        this.configurationAdmin.compareAndSet(configurationAdmin, null);
+    }
 
     @Activate
     @Modified
+    public void configure(FormidableConfig osgiConfig, Map<String, Object> properties) {
+        lastConfig.set(osgiConfig);
+        Map<String, Object> previous = lastProperties.getAndSet(new HashMap<>(properties));
+        if (previous == null) {
+            reportFreshFileOnFirstActivation(properties);
+        }
+        Map<String, Object> carried = LegacyConfigurationCarryOver.settingsToCarryOver(previous, properties);
+        if (!carried.isEmpty()) {
+            // The deployed file just replaced settings made without it. The snapshot in use still
+            // holds those settings: it stays in force, rather than the file's defaults, until the
+            // write-back's own callback brings the merged configuration — so a stricter upload
+            // policy or a forward target never lapses in between.
+            if (config.get() == null) {
+                activate(osgiConfig);
+            }
+            writeBack(new PendingCarryOver(carried, new HashMap<>(properties), 0));
+            return;
+        }
+        PendingCarryOver pending = pendingCarryOver.get();
+        if (pending == null) {
+            activate(osgiConfig);
+            return;
+        }
+        // A write-back is still pending, so this callback does not carry the legacy values yet:
+        // retry it, and keep the pre-transition snapshot in force — unless the write-back is over
+        // with no merged callback to come, in which case the file is authoritative as it stands.
+        if (isOverWithoutMergedCallback(writeBack(pending))) {
+            activate(osgiConfig);
+        }
+    }
+
+    /**
+     * The one case the carry-over cannot see: the deployed file was copied on this very start and
+     * fileinstall loaded it before this component activated, so the first configuration received
+     * already comes from the file — byte-identical to a fresh install, whatever ConfigAdmin held
+     * a moment earlier. Settings made without a file (the Felix console) are then gone without a
+     * trace; this warning is the trace. A fresh install gets it once, harmlessly, and so does a
+     * restart right after a carry-over or an edit of the file — the modification time cannot tell
+     * them apart, which is why the message claims no more than "created or last changed".
+     */
+    private void reportFreshFileOnFirstActivation(Map<String, Object> properties) {
+        Object fileName = properties.get(LegacyConfigurationCarryOver.FILEINSTALL_FILENAME);
+        if (fileName == null) {
+            return;
+        }
+        try {
+            Path file = Path.of(URI.create(String.valueOf(fileName)));
+            // The modification time: a file just copied has one, so has a file fileinstall just
+            // wrote a carry-over into — hence a claim no stronger than "created or last changed".
+            Instant changed = Files.getLastModifiedTime(file).toInstant();
+            if (Duration.between(changed, Instant.now()).abs().compareTo(FRESH_FILE_WINDOW) < 0) {
+                log.warn("[FormidableConfigService] The configuration file {} was created or last changed moments ago. "
+                        + "If this instance was configured without a configuration file (the Felix console) before this "
+                        + "start, those settings are not in it: check the file and re-enter them there.", file);
+            }
+        } catch (IOException | RuntimeException e) {
+            log.debug("[FormidableConfigService] Could not tell when the configuration file {} was last changed", fileName, e);
+        }
+    }
+
+    /**
+     * Reads the configuration into the snapshot every getter serves. The lifecycle entry
+     * point is {@link #configure}; this is public for the tests.
+     */
     public void activate(FormidableConfig osgiConfig) {
         String captchaSiteKey = osgiConfig.captchaSiteKey();
         String captchaSecretKey = osgiConfig.captchaSecretKey();
@@ -178,6 +357,8 @@ public class FormidableConfigService {
                 ? osgiConfig.optionsQueryMaxResults()
                 : FormidableConfig.DEFAULT_OPTIONS_QUERY_MAX_RESULTS;
 
+        FieldActionSettings fieldActions = readFieldActionSettings(osgiConfig);
+
         ConfigSnapshot snapshot = new ConfigSnapshot(
                 captchaSiteKey,
                 captchaSecretKey,
@@ -198,7 +379,8 @@ public class FormidableConfigService {
                 forwardTargets,
                 optionsSources,
                 optionsSourcesCacheTtl,
-                optionsQueryMaxResults
+                optionsQueryMaxResults,
+                fieldActions
         );
 
         this.config.set(snapshot);
@@ -219,6 +401,120 @@ public class FormidableConfigService {
         log.info("FormidableConfigService options sources: {} declared, cacheTtl={}s",
                 snapshot.optionsSources().size(),
                 snapshot.optionsSourcesCacheTtl().toSeconds());
+        log.info("FormidableConfigService field actions: {} provider(s), connectTimeout={}s, requestTimeout={}s, verdictCacheTtl={}s, preCheckRateLimit={}/min, maxValueLength={}",
+                fieldActions.providers().size(),
+                fieldActions.httpConnectTimeout().toSeconds(),
+                fieldActions.httpRequestTimeout().toSeconds(),
+                fieldActions.verdictCacheTtl().toSeconds(),
+                fieldActions.rateLimitPerMinute(),
+                fieldActions.maxValueLength());
+    }
+
+    /**
+     * Everything the field actions read, guarded like the rest: a non-positive TTL disables the verdict cache,
+     * a non-positive rate limit disables the pre-check endpoint, a non-positive length falls back to the default.
+     */
+    private static FieldActionSettings readFieldActionSettings(FormidableConfig osgiConfig) {
+        Duration connectTimeout = readTimeoutSeconds(
+                "fieldActionHttpConnectTimeoutSeconds",
+                osgiConfig.fieldActionHttpConnectTimeoutSeconds(),
+                FormidableConfig.DEFAULT_HTTP_CONNECT_TIMEOUT_SECONDS
+        );
+        Duration requestTimeout = readTimeoutSeconds(
+                "fieldActionHttpRequestTimeoutSeconds",
+                osgiConfig.fieldActionHttpRequestTimeoutSeconds(),
+                FormidableConfig.DEFAULT_HTTP_REQUEST_TIMEOUT_SECONDS
+        );
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(connectTimeout)
+                .build();
+        Duration verdictCacheTtl = Duration.ofSeconds(Math.max(0L, osgiConfig.fieldActionVerdictCacheTtlSeconds()));
+        int rateLimitPerMinute = Math.max(0, osgiConfig.fieldActionRateLimitPerMinute());
+        int maxValuesPerField = osgiConfig.fieldActionMaxValuesPerField() > 0
+                ? osgiConfig.fieldActionMaxValuesPerField()
+                : FormidableConfig.DEFAULT_FIELD_ACTION_MAX_VALUES_PER_FIELD;
+        int maxValueLength = osgiConfig.fieldActionMaxValueLength() > 0
+                ? osgiConfig.fieldActionMaxValueLength()
+                : FormidableConfig.DEFAULT_FIELD_ACTION_MAX_VALUE_LENGTH;
+        return new FieldActionSettings(
+                Collections.unmodifiableMap(parseFieldActionProviders(osgiConfig.fieldActionProviders())),
+                connectTimeout,
+                requestTimeout,
+                httpClient,
+                verdictCacheTtl,
+                rateLimitPerMinute,
+                maxValueLength,
+                maxValuesPerField
+        );
+    }
+
+    /**
+     * Parses {@code fieldActionProviders}: one {@code id|Label|https://base-url|Credential-Header-Name|credential}
+     * per line, the last two optional together. The base URL obeys the forward targets' rule — HTTPS, a host, no
+     * embedded credentials. A malformed entry is logged without its credential and skipped; the first occurrence
+     * of a duplicate id wins.
+     */
+    private static Map<String, FieldActionProvider> parseFieldActionProviders(String raw) {
+        Map<String, FieldActionProvider> result = new LinkedHashMap<>();
+        if (raw == null || raw.isBlank()) {
+            return result;
+        }
+        for (String entry : raw.split(LINE_BREAKS)) {
+            String trimmed = entry.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            parseFieldActionProviderEntry(trimmed).ifPresent(provider -> {
+                if (result.putIfAbsent(provider.id(), provider) != null) {
+                    log.warn("[FormidableConfigService] Duplicate fieldActionProviders id '{}', keeping first occurrence.", provider.id());
+                }
+            });
+        }
+        return result;
+    }
+
+    private static Optional<FieldActionProvider> parseFieldActionProviderEntry(String entry) {
+        String[] parts = entry.split("\\|", 5);
+        if (parts.length < 3) {
+            if (log.isWarnEnabled()) {
+                log.warn("[FormidableConfigService] Skipping malformed fieldActionProviders entry (expected id|Label|https://base-url|Header|credential): '{}'",
+                        redactProviderEntry(parts));
+            }
+            return Optional.empty();
+        }
+        String id = parts[0].trim();
+        String label = parts[1].trim();
+        String url = parts[2].trim();
+        String header = parts.length > 3 ? parts[3].trim() : "";
+        String credential = parts.length > 4 ? parts[4].trim() : "";
+        if (id.isEmpty() || url.isEmpty()) {
+            if (log.isWarnEnabled()) {
+                log.warn("[FormidableConfigService] Skipping fieldActionProviders entry with an empty id or base URL: '{}'", redactProviderEntry(parts));
+            }
+            return Optional.empty();
+        }
+        if (header.isEmpty() != credential.isEmpty()) {
+            log.warn("[FormidableConfigService] Skipping fieldActionProviders entry '{}': a credential needs its header name, and a header name its credential.", id);
+            return Optional.empty();
+        }
+        URI uri;
+        try {
+            uri = new URI(url);
+        } catch (URISyntaxException e) {
+            log.warn("[FormidableConfigService] Skipping fieldActionProviders entry '{}': malformed URI '{}'", id, url);
+            return Optional.empty();
+        }
+        String reason = getUnsupportedForwardTargetUriReason(uri, false);
+        if (reason != null) {
+            log.warn("[FormidableConfigService] Skipping fieldActionProviders entry '{}': {}", id, reason);
+            return Optional.empty();
+        }
+        return Optional.of(new FieldActionProvider(id, label.isEmpty() ? id : label, uri, header, credential));
+    }
+
+    /** An entry as a log line may show it: its first three parts, never a credential. */
+    private static String redactProviderEntry(String[] parts) {
+        return String.join("|", Arrays.copyOf(parts, Math.min(parts.length, 3)));
     }
 
     /**
@@ -231,7 +527,7 @@ public class FormidableConfigService {
         if (raw == null || raw.isBlank()) {
             return result;
         }
-        for (String entry : raw.split("[\n\r]+")) {
+        for (String entry : raw.split(LINE_BREAKS)) {
             String trimmed = entry.trim();
             if (!trimmed.isEmpty()) {
                 parseOptionsSourceEntry(trimmed, result);
@@ -278,7 +574,7 @@ public class FormidableConfigService {
         if (raw == null || raw.isBlank()) {
             return result;
         }
-        String[] entries = raw.split("[\n\r]+");
+        String[] entries = raw.split(LINE_BREAKS);
         for (String entry : entries) {
             String trimmed = entry.trim();
             if (!trimmed.isEmpty()) {
@@ -503,7 +799,7 @@ public class FormidableConfigService {
     /**
      * Resolves an options source by its stable id.
      *
-     * @param id the value stored in the JCR {@code fmdb:optionsSourceKey} property
+     * @param id the value stored in the JCR {@code optionsSourceKey} property
      * @return the configured options source, or empty if the id is unknown
      */
     public Optional<OptionsSource> resolveOptionsSource(String id) {
@@ -534,6 +830,19 @@ public class FormidableConfigService {
         return target != null ? Optional.of(target) : Optional.empty();
     }
 
+    /** What the field actions read from the configuration — providers, HTTP client, the pre-check endpoint's guards. */
+    public FieldActionSettings getFieldActionSettings() {
+        return currentConfig().fieldActions();
+    }
+
+    /** The configured provider of that id, for the gateway and the editor's provider list. */
+    public Optional<FieldActionProvider> resolveFieldActionProvider(String id) {
+        if (id == null) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(currentConfig().fieldActions().providers().get(id));
+    }
+
     private static String encode(String value) {
         return URLEncoder.encode(value == null ? "" : value, StandardCharsets.UTF_8);
     }
@@ -549,6 +858,92 @@ public class FormidableConfigService {
                 && snapshot.captchaScriptUrl() != null && !snapshot.captchaScriptUrl().isBlank()
                 && snapshot.captchaWidgetVar() != null && !snapshot.captchaWidgetVar().isBlank()
                 && snapshot.captchaTokenField() != null && !snapshot.captchaTokenField().isBlank();
+    }
+
+    /**
+     * Writes the settings the deployed configuration file replaced back into the configuration
+     * (see {@link LegacyConfigurationCarryOver}); fileinstall then persists the update into the
+     * file, and the next {@link #configure} sees a configuration that already carries them.
+     * The settings stay pending until the write succeeds: the optional ConfigurationAdmin may
+     * not be bound yet, and a failed update must not consume the one transition that makes the
+     * legacy values eligible — up to {@link #MAX_WRITE_BACK_ATTEMPTS} failures, after which the
+     * file is declared authoritative as it stands and an error names what to re-enter, rather
+     * than keeping every later edit of the file from applying. A setting whose file value moved
+     * since the transition was edited by an administrator in the meantime and is left alone; the
+     * write itself replaces the whole dictionary, so an edit landing in the very instant of the
+     * write would be overwritten — the configuration's change counter tells when that happened,
+     * and a warning says so. Values never reach the logs (the settings include the CAPTCHA
+     * secret), only their names do. Limit: fileinstall loads the file one to two seconds after
+     * Jahia copies it at bundle resolution, so the previous settings are seen only when this
+     * component activates before that — usual on a running server, not guaranteed; the miss is
+     * reported by {@link #reportFreshFileOnFirstActivation}.
+     */
+    private WriteBack writeBack(PendingCarryOver pending) {
+        pendingCarryOver.set(pending);
+        Set<String> names = pending.settings().keySet();
+        ConfigurationAdmin admin = configurationAdmin.get();
+        if (admin == null) {
+            log.warn("[FormidableConfigService] The deployed configuration file replaced settings made without it; "
+                    + "ConfigurationAdmin is not available yet, the write-back of {} waits for it", names);
+            return failed(pending);
+        }
+        try {
+            Configuration configuration = admin.getConfiguration(PID, "?");
+            long changesBefore = configuration.getChangeCount();
+            // The dictionary returned is the caller's private copy (Configuration#getProperties):
+            // edited in place, then written back. Null means the configuration holds nothing yet,
+            // so there is no file-backed configuration to carry the settings into.
+            Dictionary<String, Object> updated = configuration.getProperties();
+            if (updated == null) {
+                log.warn("[FormidableConfigService] The deployed configuration file replaced settings made without it, "
+                        + "but the configuration holds no properties yet; the write-back of {} waits", names);
+                return failed(pending);
+            }
+            // Written as strings: a value typed by the Felix console (a Long, a Boolean) would
+            // otherwise be persisted in fileinstall's typed syntax (L"5"), which a .cfg file
+            // does not know — the metatype coerces the string back to the attribute's type.
+            Map<String, Object> stillDefault = new LinkedHashMap<>();
+            pending.settings().forEach((name, legacyValue) -> {
+                if (Objects.equals(LegacyConfigurationCarryOver.asText(pending.baseline().get(name)),
+                        LegacyConfigurationCarryOver.asText(updated.get(name)))) {
+                    stillDefault.put(name, LegacyConfigurationCarryOver.asStrings(legacyValue));
+                }
+            });
+            if (stillDefault.isEmpty()) {
+                pendingCarryOver.compareAndSet(pending, null);
+                log.info("[FormidableConfigService] Nothing left to carry over: {} were edited since the file took over", names);
+                return WriteBack.NOTHING_LEFT;
+            }
+            stillDefault.forEach(updated::put);
+            configuration.update(updated);
+            pendingCarryOver.compareAndSet(pending, null);
+            log.warn("[FormidableConfigService] The deployed configuration file replaced settings made without it; "
+                    + "carried over into the file: {}", stillDefault.keySet());
+            if (configuration.getChangeCount() > changesBefore + 1) {
+                log.warn("[FormidableConfigService] The configuration changed while {} were being carried over; "
+                        + "an edit made in that instant may have been overwritten: check the file", stillDefault.keySet());
+            }
+            return WriteBack.WRITTEN;
+        } catch (IOException e) {
+            log.error("[FormidableConfigService] Could not carry {} over into the configuration file", names, e);
+            return failed(pending);
+        }
+    }
+
+    /** Records a failed attempt; the settings stay pending until the attempts run out, then the file rules. */
+    private WriteBack failed(PendingCarryOver pending) {
+        PendingCarryOver next = pending.failedOnceMore();
+        if (next.failedAttempts() < MAX_WRITE_BACK_ATTEMPTS) {
+            pendingCarryOver.compareAndSet(pending, next);
+            log.warn("[FormidableConfigService] The write-back of {} will be retried ({} of {} attempts made)",
+                    pending.settings().keySet(), next.failedAttempts(), MAX_WRITE_BACK_ATTEMPTS);
+            return WriteBack.PENDING;
+        }
+        pendingCarryOver.compareAndSet(pending, null);
+        log.error("[FormidableConfigService] Gave up carrying {} over into the configuration file after {} attempts; "
+                + "the file's values are in force from now on — re-enter these settings in the file",
+                pending.settings().keySet(), MAX_WRITE_BACK_ATTEMPTS);
+        return WriteBack.GIVEN_UP;
     }
 
     private ConfigSnapshot currentConfig() {

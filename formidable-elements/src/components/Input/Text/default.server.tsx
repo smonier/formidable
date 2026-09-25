@@ -1,8 +1,13 @@
 import {Island, jahiaComponent} from "@jahia/javascript-modules-library";
-import {type TextValidationMessageProps, validationDataAttributes} from "formidable-shared";
-import {HelpText, helpTextId} from "formidable-shared";
+import {
+	applyMask,
+	HelpText,
+	helpTextId,
+	maskToPattern,
+	type TextValidationMessageProps,
+	validationDataAttributes
+} from "@jahia/formidable-library";
 import MaskedTextInput from "./Text.client";
-import {applyMask, maskToPattern} from "~/utils/mask";
 
 interface InputTextProps extends TextValidationMessageProps {
 	"jcr:title"?: string;

@@ -9,11 +9,11 @@
 					"name": "<main>",
 					"fields": [
 						{
-							"name": "fmdb:optionsMode",
+							"name": "optionsMode",
 							"rank": 1.5
 						},
 						{
-							"name": "fmdb:optionsEmptyLabel",
+							"name": "optionsEmptyLabel",
 							"rank": 1.6
 						}
 					]

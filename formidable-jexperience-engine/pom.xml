@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>formidable</artifactId>
+        <groupId>org.jahia.modules</groupId>
+        <version>0.5.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>formidable-jexperience-engine</artifactId>
+    <name>Formidable jExperience Engine</name>
+    <packaging>bundle</packaging>
+    <description>The jExperience integration of Formidable forms: profile mapping of the fields, the mapping rule kept in sync with publication, the submission event sent by the browser through jExperience's tracker, and later the prefill (docs/architecture/jexperience-integration.md)</description>
+    <properties>
+        <!-- The marker mixin and the response SPI come from the engine, fmdb:form (the type the publication
+             listener and the render filter apply to) from the elements, ContextServerService from jExperience. -->
+        <jahia-depends>formidable-engine,formidable-elements,jexperience</jahia-depends>
+        <sonar.sources>src,pom.xml</sonar.sources>
+        <!-- Jahia EE refuses an org.jahia.modules bundle without a valid Jahia-Signature. Computed with keymaker
+             (java -jar keymaker-cli.jar pom -f pom.xml -s); the CI's update-signature job keeps it current. -->
+        <jahia-module-signature>MCwCFFS8L/8Dgf0DjASs0Va+xTAHPSSYAhQ7IE66CiaGPqKwGXw2BTiZnQ335Q==</jahia-module-signature>
+        <!-- 4.2.1 is the compile-time API; the OSGi imports below stay open from 3.4 to any 4.x — every member this
+             module calls has the same signature down the whole 3.x line (docs/architecture/dependency-decisions.md),
+             and the jexperience-floor profile below recompiles against the floor so that a 4.x-only call cannot slip
+             in. The 4.2.1 artifact lives in Nexus' internal group (jahia-internal in .github/maven.settings.xml and
+             in a developer's settings); the floor's, in the enterprise group the profile declares. -->
+        <jexperience.version>4.2.1</jexperience.version>
+        <!-- The oldest jExperience the Import-Package ranges admit: what the jexperience-floor profile compiles against. -->
+        <jexperience.floor.version>3.4.0</jexperience.floor.version>
+    </properties>
+    <!-- jExperience is not in Nexus' public group: this repository needs the credentials of the
+         matching <server id="jahia-internal"> of the builder's settings.xml (.github/maven.settings.xml has it). -->
+    <repositories>
+        <repository>
+            <id>jahia-internal</id>
+            <name>Jahia Internal Repository</name>
+            <url>https://devtools.jahia.com/nexus/content/groups/internal</url>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+    <dependencies>
+        <!-- The engine's exported api only: ChoiceOptionsResolver, which counts a field's choices as the view
+             does, plus AcceptedSubmission and SubmissionResponseEnricher, the response SPI implemented here. -->
+        <dependency>
+            <groupId>org.jahia.modules</groupId>
+            <artifactId>formidable-engine</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jahia.server</groupId>
+            <artifactId>jahia-impl</artifactId>
+            <scope>provided</scope>
+            <exclusions>
+                <!-- Prevent transitive Jahia core dependencies from being used in lieu of explicit declarations. -->
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.jahia.modules</groupId>
+            <artifactId>jexperience</artifactId>
+            <version>${jexperience.version}</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>javax.jcr</groupId>
+            <artifactId>jcr</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!-- Referenced by the signatures of the JCR wrappers the tests mock (JCRNodeWrapper reaches
+             org.apache.commons.lang.mutable): without it Mockito cannot build the mock type. -->
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!-- FrameworkUtil, for the module's own version in the client script's URL: a browser holding the
+             previous script must fetch the new one after an upgrade. The framework is always there at runtime. -->
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.core</artifactId>
+            <version>${osgi.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.cmpn</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.annotation</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!-- The golden-rule test parses the expected JSON with org.json, the engine's own JSON library. -->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <!-- Process OSGi Declarative Services annotations -->
+                        <_dsannotations>*</_dsannotations>
+                        <!-- Nothing is exported: no module consumes these types, and an exported package is a
+                             compatibility promise (docs/architecture/dependency-decisions.md). The response SPI this
+                             module implements belongs to the engine, which calls it, and is exported there. -->
+                        <Export-Package>!*</Export-Package>
+                        <!-- jExperience exports its admin package at the module version and embeds the Unomi API of
+                             the jCustomer it pairs with: 3.4.0 exports admin 3.4.0 + Unomi API 2.1.0, 3.5 to 3.9
+                             embed 2.5.0, 4.2.1 exports admin 4.2.1 + Unomi API 3.0.0. Every member this module calls
+                             has the same JVM descriptor in all of them — ContextServerService's five members,
+                             PropertyType's, Item's, MetadataItem's and Metadata's accessors, read with javap on the
+                             jars — so [3.4,5) and [2.1,4) let the one bundle resolve on the 3.x line from 3.4 and on
+                             4.x, and a 4.x upgrade still resolves without a rebuild. The jexperience-floor profile
+                             below holds the floor; the CI compiles it on every change. -->
+                        <Import-Package>
+                            org.jahia.modules.formidable.engine.api;version="[0.5,1)",
+                            org.jahia.modules.jexperience.admin;version="[3.4,5)",
+                            org.apache.unomi.api;version="[2.1,4)",
+                            org.jahia.services.content,
+                            org.jahia.services.content.nodetypes,
+                            org.jahia.services.content.nodetypes.initializers,
+                            org.jahia.utils.i18n,
+                            *
+                        </Import-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <release>17</release>
+                </configuration>
+            </plugin>
+            <!-- Keeps the declared dependency surface explicit, as formidable-engine does. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <configuration>
+                    <failOnWarning>true</failOnWarning>
+                    <ignoredUnusedDeclaredDependencies>
+                        <!-- Used through annotations or by the test runtime, not by direct imports. -->
+                        <ignoredUnusedDeclaredDependency>org.osgi:osgi.annotation</ignoredUnusedDeclaredDependency>
+                        <ignoredUnusedDeclaredDependency>commons-lang:commons-lang</ignoredUnusedDeclaredDependency>
+                        <ignoredUnusedDeclaredDependency>org.junit.jupiter:junit-jupiter-engine</ignoredUnusedDeclaredDependency>
+                        <!-- Inherited from the Jahia modules parent and unused by this module (the servlet API only
+                             reaches the CI resolution, as 3.0.1). -->
+                        <ignoredUnusedDeclaredDependency>javax.servlet:javax.servlet-api</ignoredUnusedDeclaredDependency>
+                        <ignoredUnusedDeclaredDependency>org.springframework:spring-webmvc</ignoredUnusedDeclaredDependency>
+                        <ignoredUnusedDeclaredDependency>javax.servlet:jstl</ignoredUnusedDeclaredDependency>
+                        <ignoredUnusedDeclaredDependency>org.jahia.server:jahia-taglib</ignoredUnusedDeclaredDependency>
+                    </ignoredUnusedDeclaredDependencies>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>analyze-only</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <profiles>
+        <!-- The gate behind the Import-Package ranges. The module compiles against 4.2.1 alone, so a call to a member
+             that exists only on the 4.x line (ContextServerStatus.isNotInError(), the UnomiClusterInfo class…) would
+             build green, resolve on a 3.x — the version satisfies the range — and fail as a NoSuchMethodError in a
+             customer's log, as far from the build as a failure gets. This profile recompiles the module and its tests
+             against the floor of the ranges instead; the CI runs it on every change (on-code-change.yml, "Build
+             Module"). Locally: mvn -pl formidable-jexperience-engine -am -P jexperience-floor -DskipTests test-compile -->
+        <profile>
+            <id>jexperience-floor</id>
+            <properties>
+                <jexperience.version>${jexperience.floor.version}</jexperience.version>
+            </properties>
+            <!-- The floor's jar is on Nexus' public group, but not the parent pom Maven reads its descriptor
+                 through (jexperience-parent): both are on the enterprise group, behind the same credentials the
+                 build already carries — server id jahia-enterprise in .github/maven.settings.xml and in a
+                 developer's settings. -->
+            <repositories>
+                <repository>
+                    <id>jahia-enterprise</id>
+                    <name>Jahia Enterprise Repository</name>
+                    <url>https://devtools.jahia.com/nexus/content/groups/enterprise</url>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
+</project>

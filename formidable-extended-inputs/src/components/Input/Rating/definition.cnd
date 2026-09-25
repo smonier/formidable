@@ -1,7 +1,7 @@
 // Rating component - accessible radio group rendered as a row of icons (stars, hearts, thumbs) or number chips.
 // Submitted/stored value is a plain number (1..maxValue). No half-steps by design (issue #158).
 // fmdbmix:numberField makes the field a conditional-logic source with numeric operators.
-[fmdbext:rating] > jnt:content, fmdbmix:element, fmdbmix:numberField, fmdbmix:validationMessages
+[fmdbext:rating] > jnt:content, fmdbmix:element, fmdbmix:profileMappableField, fmdbmix:numberField, fmdbmix:validationMessages
  - helpText (string, richtext[ckeditor.toolbar='FormidableHelp',ckeditor.customConfig='$context/modules/formidable-engine/javascript/ckeditor/helpTextConfig.js']) i18n indexed=no
  - icon (string, choicelist[resourceBundle]) = 'star' autocreated indexed=no < 'star', 'heart', 'thumb', 'number'
  // minValue is fixed at 1 by design and hidden from contributors: it only feeds the

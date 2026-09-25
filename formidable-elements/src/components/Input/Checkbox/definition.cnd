@@ -1,4 +1,4 @@
 // Checkbox component - unified field: single checkbox if 1 choice, checkbox group if > 1
-[fmdb:checkbox] > jnt:content, fmdbmix:element, fmdbmix:choiceField, fmdbmix:validationMessages
+[fmdb:checkbox] > jnt:content, fmdbmix:element, fmdbmix:profileMappableField, fmdbmix:choiceField, fmdbmix:validationMessages, fmdbmix:cardinalityFromChoices
  - helpText (string, richtext[ckeditor.toolbar='FormidableHelp',ckeditor.customConfig='$context/modules/formidable-engine/javascript/ckeditor/helpTextConfig.js']) i18n indexed=no
  - required (boolean) = false

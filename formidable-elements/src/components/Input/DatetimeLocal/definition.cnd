@@ -3,7 +3,7 @@
 // of min/max is a mode — none, a fixed datetime (fmdbmix:fixedMinDatetime/
 // fixedMaxDatetime dynamic fieldsets carrying the picker), or the submission day,
 // resolved at render/validation time. Modes are exclusive, so no combination rule.
-[fmdb:inputDatetimeLocal] > jnt:content, fmdbmix:element, fmdbmix:datetimeLocalField, fmdbmix:datetimeBounds, fmdbmix:rangeValidationMessages
+[fmdb:inputDatetimeLocal] > jnt:content, fmdbmix:element, fmdbmix:profileMappableField, fmdbmix:datetimeLocalField, fmdbmix:datetimeBounds, fmdbmix:rangeValidationMessages
  - helpText (string, richtext[ckeditor.toolbar='FormidableHelp',ckeditor.customConfig='$context/modules/formidable-engine/javascript/ckeditor/helpTextConfig.js']) i18n indexed=no
  - required (boolean) = false
  - defaultValue (date)

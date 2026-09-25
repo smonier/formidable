@@ -15,10 +15,13 @@ Yarn 4 workspaces + Maven multi-module. Toolchain: Java 17 (Temurin), Node LTS, 
 |---|---|---|
 | `formidable-elements/` | Front-end — form rendering (React 19 SSR + client hydration via Islands) | Vite, `@jahia/vite-plugin`, TypeScript |
 | `formidable-engine/` | Java/OSGi action pipeline + editor extensions (custom selectors, form results panel) | Maven bundle, `@jahia/vite-federation-plugin` (Module Federation, React 18) |
+| `formidable-extended-inputs/` | Optional field types (consent, switch, rating, scale) | Vite, TypeScript |
+| `formidable-jexperience-engine/` | jExperience integration: the profile mapping of fields (editor section fed by jCustomer's profile properties), the mapping rule kept in sync with publication, the submission event sent by the browser through jExperience's tracker; later the prefill — see `docs/architecture/jexperience-integration.md` | Maven bundle, depends on `formidable-engine` and `jexperience` |
+| `packages/formidable/` | The npm package `@jahia/formidable-library`: the rendering contract (help text, validation attributes, input mask) every view is built on. Consumed as `workspace:*` inside the monorepo (a plain version range would still resolve to the workspace), published to npm by the release workflow | TypeScript (tsc, nodenext), vitest |
 | `formidable-salesforce/` | Optional "Create Salesforce Lead" action (JWT bearer, REST) + `SalesforceLeadMapping` selector + `formidableSalesforce` GraphQL extension | Maven bundle, `@jahia/vite-federation-plugin` (React 18) |
 | `formidable-hubspot/` | Optional "Create HubSpot Contact" action (private app token, CRM v3) + `HubspotContactMapping` selector + `formidableHubspot` GraphQL extension; mirrors formidable-salesforce | Maven bundle, `@jahia/vite-federation-plugin` (React 18) |
 | `formidable-efficy/` | Optional "Create Efficy Opportunity" action (e-deal base_data API, token auth, field catalog + referentials) + `EfficyOpportunityMapping` selector + `formidableEfficy` GraphQL extension | Maven bundle, `@jahia/vite-federation-plugin` (React 18) |
-| `jahia-test-module/` | Java/JSP helper module for Cypress tests | Maven |
+| `jahia-test-module/` | Test modules for Cypress: a JSP template set (Java), a tsx template set, and the two third-party extension examples: `formidable-test-module-samples-tsx` (definitions, editor overrides, views — copyable, its README says what to change) and `formidable-test-module-samples-java` (an external `FormAction`, a choicelist initializer, content-integrity checks) | Maven, Vite |
 | `tests/` | Cypress E2E suite (not a Maven module) | Cypress 14, `@jahia/cypress` |
 
 ### Key Documentation
@@ -67,7 +70,7 @@ CND locations:
 - **Component-specific types**: `formidable-elements/src/components/<ComponentName>/definition.cnd`
 - **Action & engine types** (actions, submissions, results, logic): `formidable-engine/src/main/resources/META-INF/definitions.cnd`
 
-See `docs/cnd-module-ownership.md` for the decision framework.
+See `docs/architecture/cnd-module-ownership.md` for the decision framework.
 
 ### Component File Layout
 
@@ -101,10 +104,18 @@ The `<Island>` is the SSR-to-client hydration boundary. **Props must be serialis
 
 ### Action Pipeline (Java)
 
-The public API for custom actions lives in `formidable-engine/src/main/java/org/jahia/modules/formidable/engine/api/`:
+The public API — custom actions, the submission response, the names of the content model — lives in `formidable-engine/src/main/java/org/jahia/modules/formidable/engine/api/`:
 - `FormAction.java` — strategy interface (`getNodeType()` + `execute()`)
 - `FormActionException.java` — exception with HTTP status (`badRequest()`, `serverError()`)
 - `SubmittedFile.java` — file upload abstraction
+- `ChoiceOptionsResolver.java` — how many choices a choice field offers, counted as the views render it
+- `SubmissionResponseEnricher.java` + `AcceptedSubmission.java` — entries a module of its own adds to the JSON body of an accepted submission
+- `FmdbNodeType.java` — the primary types the engine's CND declares (logic storage, built-in actions, submission storage)
+- `FmdbMixin.java` — every mixin it declares, the extension surface a third-party type opts into
+- `FmdbProperty.java` — the properties another module reads on that content
+- `FmdbNodeName.java` — the child node names another module walks on that content
+
+The four name holders are used qualified (`FmdbMixin.TEXT_FIELD`), never statically imported — the class states the kind, the constant the thing (`docs/architecture/cnd-module-ownership.md`, "Naming these types from Java").
 
 Built-in actions: `SaveToJcrFormAction`, `SendEmailNotificationFormAction`, `SendEmailContentFormAction`, `ForwardSubmissionFormAction` (four — captcha is not an action: it is a mixin plus OSGi config, verified by the pipeline before the actions run).
 
@@ -112,8 +123,9 @@ Built-in actions: `SaveToJcrFormAction`, `SendEmailNotificationFormAction`, `Sen
 
 1. Create `formidable-elements/src/components/Input/MyField/definition.cnd`:
    ```cnd
-   [fmdb:myField] > jnt:content, fmdbmix:element
+   [fmdb:myField] > jnt:content, fmdbmix:element, fmdbmix:profileMappableField
    ```
+   `fmdbmix:profileMappableField` (engine marker) lets an author map the field to a jCustomer profile property when the jExperience module is deployed — declare it on every field whose value a profile could hold (never on a file field). Add the value-kind mixin (`fmdbmix:textField`, `fmdbmix:numberField`…) that matches what the field submits.
 2. Create `default.server.tsx` with `jahiaComponent({ componentType: "view", nodeType: "fmdb:myField", name: "default" }, ...)`
 3. HTML `name` = `currentNode.getName()`; HTML `id` = `input-${currentNode.getIdentifier()}`
 
@@ -127,7 +139,7 @@ Built-in actions: `SaveToJcrFormAction`, `SendEmailNotificationFormAction`, `Sen
 3. Read config from `actionNode` properties, not from hardcoded values
 4. If the action never writes to the repository, also extend `fmdbmix:readOnlyCompatibleAction`;
    otherwise its forms are blocked (FMDB-014) while the platform is in read-only maintenance
-   (see `docs/how-to-create-form-action.md`)
+   (see `docs/extension/how-to-create-form-action.md`)
 
 ## Developer Commands
 

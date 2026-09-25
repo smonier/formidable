@@ -18,7 +18,7 @@ import {useFormidableSite} from './support';
 const AGENCIES_ROOT_PATH = `${CONTENT_PATH}/agencies`;
 
 // The dependent type list, exactly as the editor re-resolves it when the root
-// changes (jcontent dependent-properties mechanism on fmdb:optionsNodeType).
+// changes (jcontent dependent-properties mechanism on optionsNodeType).
 const GET_CONTENT_TYPES = gql`
 	query getContentTypes($fieldPath: String, $parentPath: String!, $context: [InputContextEntryInput]!, $locale: String!) {
 		forms {
@@ -27,7 +27,7 @@ const GET_CONTENT_TYPES = gql`
 				parentNodeUuidOrPath: $parentPath,
 				primaryNodeType: "fmdb:select",
 				fieldNodeType: "fmdbmix:contentOptions",
-				fieldName: "fmdb:optionsNodeType",
+				fieldName: "optionsNodeType",
 				context: $context,
 				uiLocale: $locale,
 				locale: $locale
@@ -111,8 +111,8 @@ describe('Form fields - 220 Choice options from contents', () => {
 					fieldPath,
 					parentPath,
 					context: [
-						{key: 'dependentProperties', value: ['fmdb:optionsRootNode']},
-						{key: 'fmdb:optionsRootNode', value: [agenciesRootUuid]}
+						{key: 'dependentProperties', value: ['optionsRootNode']},
+						{key: 'optionsRootNode', value: [agenciesRootUuid]}
 					],
 					locale: 'en'
 				}
@@ -150,8 +150,8 @@ describe('Form fields - 220 Choice options from contents', () => {
 			variables: {
 				parentPath: CONTENT_PATH,
 				context: [
-					{key: 'dependentProperties', value: ['fmdb:optionsRootNode']},
-					{key: 'fmdb:optionsRootNode', value: [agenciesRootUuid]}
+					{key: 'dependentProperties', value: ['optionsRootNode']},
+					{key: 'optionsRootNode', value: [agenciesRootUuid]}
 				],
 				locale: 'en'
 			}
@@ -172,8 +172,8 @@ describe('Form fields - 220 Choice options from contents', () => {
 			variables: {
 				parentPath: CONTENT_PATH,
 				context: [
-					{key: 'dependentProperties', value: ['fmdb:optionsRootNode']},
-					{key: 'fmdb:optionsRootNode', value: [agenciesRootUuid]}
+					{key: 'dependentProperties', value: ['optionsRootNode']},
+					{key: 'optionsRootNode', value: [agenciesRootUuid]}
 				],
 				locale: 'en'
 			}

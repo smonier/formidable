@@ -63,6 +63,9 @@ export const GET_SUBMISSIONS = gql`
                     referer: property(name: "referer") {
                         value
                     }
+                    timeZone: property(name: "timeZone") {
+                        value
+                    }
                     data: children(names: ["data"]) {
                         nodes {
                             ...JcrNodeIdentity
@@ -146,6 +149,8 @@ export const GET_FORM_FIELD_LABELS = gql`
                             nodes {
                                 name
                                 displayName(language: $language)
+                                isDate: isNodeType(type: {types: ["fmdbmix:dateField"]})
+                                isDatetime: isNodeType(type: {types: ["fmdbmix:datetimeLocalField"]})
                             }
                         }
                     }

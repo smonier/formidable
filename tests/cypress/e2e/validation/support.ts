@@ -2,14 +2,9 @@ import {createSite, deleteSite, enableModule} from '@jahia/cypress';
 import {FORMIDABLE_MODULE_IDS} from '../../support/constants';
 import {FORMIDABLE_TEST_SITE} from '../../support/fixtures';
 
-/** The browser-local calendar day, the same way a hydrated date input resolves it. */
-export const localDay = (offsetDays = 0): string => {
-	const day = new Date();
-	day.setDate(day.getDate() + offsetDays);
-	const month = String(day.getMonth() + 1).padStart(2, '0');
-	const date = String(day.getDate()).padStart(2, '0');
-	return `${day.getFullYear()}-${month}-${date}`;
-};
+// One "today" for the whole suite: the helper lives in support/constants, re-exported here for
+// the validation specs that import it from their own support module.
+export {localDay} from '../../support/constants';
 
 export const useFormidableSite = () => {
 	before(() => {

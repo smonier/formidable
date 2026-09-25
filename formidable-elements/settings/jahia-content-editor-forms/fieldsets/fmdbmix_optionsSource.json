@@ -2,14 +2,14 @@
 	"name": "fmdbmix:optionsSource",
 	"fields": [
 		{
-			"name": "fmdb:optionsMode",
+			"name": "optionsMode",
 			"valueConstraints": [
 				{
 					"value": {
 						"type": "String",
 						"value": "manual"
 					},
-					"displayValueKey": "formidable-engine:fmdbmix_optionsSource.fmdb_optionsMode.manual",
+					"displayValueKey": "formidable-engine:fmdbmix_optionsSource.optionsMode.manual",
 					"propertyList": [
 						{
 							"name": "addMixin",
@@ -22,7 +22,7 @@
 						"type": "String",
 						"value": "sourced"
 					},
-					"displayValueKey": "formidable-engine:fmdbmix_optionsSource.fmdb_optionsMode.sourced",
+					"displayValueKey": "formidable-engine:fmdbmix_optionsSource.optionsMode.sourced",
 					"propertyList": [
 						{
 							"name": "addMixin",
@@ -35,7 +35,7 @@
 						"type": "String",
 						"value": "category"
 					},
-					"displayValueKey": "formidable-engine:fmdbmix_optionsSource.fmdb_optionsMode.category",
+					"displayValueKey": "formidable-engine:fmdbmix_optionsSource.optionsMode.category",
 					"propertyList": [
 						{
 							"name": "addMixin",
@@ -48,7 +48,7 @@
 						"type": "String",
 						"value": "content"
 					},
-					"displayValueKey": "formidable-engine:fmdbmix_optionsSource.fmdb_optionsMode.content",
+					"displayValueKey": "formidable-engine:fmdbmix_optionsSource.optionsMode.content",
 					"propertyList": [
 						{
 							"name": "addMixin",

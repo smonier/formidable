@@ -1,0 +1,13 @@
+{
+	"name": "fmdbmix:contentOptions",
+	"fields": [
+		{
+			"name": "optionsRootNode",
+			"mandatory": true
+		},
+		{
+			"name": "optionsNodeType",
+			"mandatory": true
+		}
+	]
+}

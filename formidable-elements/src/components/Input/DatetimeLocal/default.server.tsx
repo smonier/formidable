@@ -1,6 +1,6 @@
 import {Island, jahiaComponent} from "@jahia/javascript-modules-library";
-import {type RangeValidationMessageProps, validationDataAttributes} from "formidable-shared";
-import {HelpText, helpTextId} from "formidable-shared";
+import {type RangeValidationMessageProps, validationDataAttributes} from "@jahia/formidable-library";
+import {HelpText, helpTextId} from "@jahia/formidable-library";
 import TodayBoundedInput from "../Date/TodayBoundedInput.client";
 import {resolveDateBounds} from "../Date/bounds";
 
@@ -8,12 +8,12 @@ interface InputDatetimeLocalProps extends RangeValidationMessageProps {
 	"jcr:title"?: string;
 	helpText?: string;
 	defaultValue?: string;
-	"fmdb:minBoundMode"?: string;
-	"fmdb:maxBoundMode"?: string;
-	"fmdb:minRelativeAmount"?: number;
-	"fmdb:minRelativeUnit"?: string;
-	"fmdb:maxRelativeAmount"?: number;
-	"fmdb:maxRelativeUnit"?: string;
+	"minBoundMode"?: string;
+	"maxBoundMode"?: string;
+	"minRelativeAmount"?: number;
+	"minRelativeUnit"?: string;
+	"maxRelativeAmount"?: number;
+	"maxRelativeUnit"?: string;
 	min?: string;
 	max?: string;
 	step?: number;
@@ -52,12 +52,12 @@ jahiaComponent(
 			"jcr:title": label,
 			helpText,
 			defaultValue,
-			"fmdb:minBoundMode": minBoundMode,
-			"fmdb:maxBoundMode": maxBoundMode,
-			"fmdb:minRelativeAmount": minRelativeAmount,
-			"fmdb:minRelativeUnit": minRelativeUnit,
-			"fmdb:maxRelativeAmount": maxRelativeAmount,
-			"fmdb:maxRelativeUnit": maxRelativeUnit,
+			minBoundMode,
+			maxBoundMode,
+			minRelativeAmount,
+			minRelativeUnit,
+			maxRelativeAmount,
+			maxRelativeUnit,
 			min,
 			max,
 			step,

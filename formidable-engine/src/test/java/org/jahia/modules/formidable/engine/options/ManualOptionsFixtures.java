@@ -18,7 +18,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * The i18n storage of a manual-options field, mocked: a field node whose
- * j:translation_* subnodes carry fmdb:options. Shared by everything that reads that
+ * j:translation_* subnodes carry options. Shared by everything that reads that
  * storage — the save-time re-alignment and the display-time read — so both are
  * exercised against the same shape.
  */
@@ -109,7 +109,7 @@ final class ManualOptionsFixtures {
         when(translation.getProperty("jcr:language")).thenReturn(languageProperty);
 
         if (options.length == 0) {
-            when(translation.hasProperty("fmdb:options")).thenReturn(false);
+            when(translation.hasProperty("options")).thenReturn(false);
             return translation;
         }
 
@@ -122,8 +122,8 @@ final class ManualOptionsFixtures {
 
         Property optionsProperty = mock(Property.class);
         when(optionsProperty.getValues()).thenReturn(values);
-        when(translation.hasProperty("fmdb:options")).thenReturn(true);
-        when(translation.getProperty("fmdb:options")).thenReturn(optionsProperty);
+        when(translation.hasProperty("options")).thenReturn(true);
+        when(translation.getProperty("options")).thenReturn(optionsProperty);
         return translation;
     }
 }

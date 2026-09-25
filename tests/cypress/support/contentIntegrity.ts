@@ -232,7 +232,9 @@ const getChecksToRun = (
 
 	return cy.apollo({
 		query: GET_CONTENT_INTEGRITY_CHECKS
-	}).then((response: IntegrityChecksResponse) => {
+	}).then(result => {
+		// cy.apollo yields the raw Apollo result: read as this query's shape.
+		const response = result as unknown as IntegrityChecksResponse;
 		const graphqlErrors = formatGraphQLErrors(response.errors);
 		if (graphqlErrors) {
 			throw new Error(`GraphQL error while loading content-integrity checks:\n${graphqlErrors}`);
@@ -248,11 +250,11 @@ const getChecksToRun = (
 			.filter(Boolean);
 
 		if (enabledChecks.length > 0) {
-			return enabledChecks;
+			return cy.wrap(enabledChecks, {log: false});
 		}
 
 		if (availableChecks.length > 0) {
-			return availableChecks;
+			return cy.wrap(availableChecks, {log: false});
 		}
 
 		if (attempt >= maxPollAttempts) {
@@ -271,7 +273,8 @@ const getChecksToRun = (
 const getScanState = (id: string): Cypress.Chainable<IntegrityScanInfo> => cy.apollo({
 	query: GET_CONTENT_INTEGRITY_SCAN,
 	variables: {id}
-}).then((response: ScanStateResponse) => {
+}).then(result => {
+	const response = result as unknown as ScanStateResponse;
 	const graphqlErrors = formatGraphQLErrors(response.errors);
 	if (graphqlErrors) {
 		throw new Error(`GraphQL error while loading content-integrity scan '${id}':\n${graphqlErrors}`);
@@ -294,7 +297,7 @@ const waitForScanCompletion = (
 	const normalizedStatus = normalizeScanStatus(scan.status);
 
 	if (normalizedStatus === 'finished') {
-		return scan;
+		return cy.wrap(scan, {log: false});
 	}
 
 	if (TERMINAL_FAILURE_STATUSES.has(normalizedStatus)) {
@@ -324,7 +327,8 @@ const getScanResults = (id: string, pageSize: number): Cypress.Chainable<Integri
 		offset: 0,
 		pageSize
 	}
-}).then((response: ScanResultsResponse) => {
+}).then(result => {
+	const response = result as unknown as ScanResultsResponse;
 	const graphqlErrors = formatGraphQLErrors(response.errors);
 	if (graphqlErrors) {
 		throw new Error(`GraphQL error while loading content-integrity results '${id}':\n${graphqlErrors}`);
@@ -360,7 +364,8 @@ export const runContentIntegrityScan = ({
 			checksToRun: resolvedChecksToRun,
 			uploadResults: true
 		}
-	})).then((response: StartScanResponse) => {
+	})).then(result => {
+		const response = result as unknown as StartScanResponse;
 		const graphqlErrors = formatGraphQLErrors(response.errors);
 		if (graphqlErrors) {
 			throw new Error(`GraphQL error while starting content-integrity scan for '${startNode}':\n${graphqlErrors}`);
@@ -375,11 +380,12 @@ export const runContentIntegrityScan = ({
 	}).then(scan => {
 		if (!scan.resultsID) {
 			if (hasCleanScanLogs(scan.logs)) {
-				return {
+				// Wrapped: the other branch yields a chain, and one .then() must yield one kind of subject.
+				return cy.wrap({
 					errorCount: 0,
 					totalErrorCount: 0,
 					errors: []
-				} satisfies IntegrityScanResults;
+				} satisfies IntegrityScanResults, {log: false});
 			}
 
 			throw new Error(

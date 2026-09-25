@@ -1,5 +1,39 @@
 <jnt = 'http://www.jahia.org/jahia/nt/1.0'>
+<fmdb = 'http://www.jahia.org/jahia/fmdb/nt/1.0'>
 <fmdbmix = 'http://www.jahia.org/jahia/fmdb/mix/1.0'>
 <fmdbsample = 'http://www.jahia.org/jahia/fmdbsample/nt/1.0'>
+<fmdbsamplemix = 'http://www.jahia.org/jahia/fmdb/sample/mix/1.0'>
 
 [fmdbsample:logSubmissionAction] > jnt:content, fmdbmix:formAction, mix:title
+
+// The opt-in of the sample response enricher: only a form carrying this mixin gets the sample block
+// in the JSON body of an accepted submission. An enricher is asked for every submission of the
+// platform, so gating on something the author set is what keeps a module's key out of every other
+// form's response — the part of the sample worth copying into a real module.
+//
+// No `extends`, deliberately: this is a test module, and a mixin extending fmdb:form would offer
+// itself in the editor of every form of every site the module is deployed on. The Cypress spec adds
+// it to its own fixtures; a real module would extend the type it means to offer it on.
+//
+// The fmdbsamplemix prefix is the one the tsx samples module already declares, with its URI: a
+// prefix is global to the platform, so binding it to a URI of this module's own would have taken it
+// from that module and left its own types unregistered — which is exactly what happened once.
+[fmdbsamplemix:enrichedResponse] mixin
+ itemtype = content
+
+// A field action written in Java, the shape a module of its own copies (docs/architecture/field-actions.md,
+// "A field action in Java"): the type takes fmdbmix:fieldAction as a supertype, carries its own settings
+// — here the words that make a value unwelcome — and a FieldAction OSGi service bound to the type judges the
+// value. The visitor's message, the trigger, the severity and the outage rule reach the type through the
+// engine's fmdbmix:fieldActionFeedback, unasked. Exercised by the test suite against the pre-check endpoint
+// and the submission pipeline.
+[fmdbsample:blockedWordsAction] > jnt:content, fmdbmix:fieldAction, mix:title
+ - jcr:title (string) = resourceBundle('fmdbsample_blockedWordsAction') autocreated i18n
+ - words (string) multiple indexed=no
+
+// A second field action of the samples, and the one a real project is most likely to want: does the domain of the
+// address exist? It asks the domain name system, needs no provider and no configuration, and refuses one thing only
+// — a domain the resolver denies, which is the mistyped domain. Shipped as a sample rather than by the engine: the
+// engine provides the mechanism, a project decides which checks its forms deserve.
+[fmdbsample:emailDeliverabilityAction] > jnt:content, fmdbmix:fieldAction, mix:title
+ - jcr:title (string) = resourceBundle('fmdbsample_emailDeliverabilityAction') autocreated i18n

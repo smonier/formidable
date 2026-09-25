@@ -9,11 +9,11 @@
 					"name": "<main>",
 					"fields": [
 						{
-							"name": "fmdb:minBoundMode",
+							"name": "minBoundMode",
 							"rank": 1.5
 						},
 						{
-							"name": "fmdb:maxBoundMode",
+							"name": "maxBoundMode",
 							"rank": 1.6
 						}
 					]

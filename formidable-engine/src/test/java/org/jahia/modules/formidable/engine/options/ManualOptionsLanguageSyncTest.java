@@ -37,7 +37,7 @@ class ManualOptionsLanguageSyncTest {
         JCRNodeWrapper field = fieldNode("en", master, fr);
 
         assertTrue(ManualOptionsLanguageSync.sync(field, Set.of("fr")));
-        verify(fr).setProperty("fmdb:options",
+        verify(fr).setProperty("options",
                 new String[]{option("a", ""), frB});
     }
 
@@ -53,7 +53,7 @@ class ManualOptionsLanguageSyncTest {
         JCRNodeWrapper field = markMigrated(fieldNode("en", master, fr));
 
         assertTrue(ManualOptionsLanguageSync.sync(field, Set.of("en")));
-        verify(fr).setProperty("fmdb:options",
+        verify(fr).setProperty("options",
                 new String[]{option("red", "Rouge"), option("green", "Vert")});
         // One-shot: the marker is dropped once the languages converge.
         verify(field).removeMixin("fmdbmix:migratedChoiceOptions");
@@ -72,7 +72,7 @@ class ManualOptionsLanguageSyncTest {
         JCRNodeWrapper field = fieldNode("en", master, fr);
 
         assertTrue(ManualOptionsLanguageSync.sync(field, Set.of("en")));
-        verify(fr).setProperty("fmdb:options",
+        verify(fr).setProperty("options",
                 new String[]{option("blue", ""), option("yellow", "")});
     }
 
@@ -86,7 +86,7 @@ class ManualOptionsLanguageSyncTest {
         JCRNodeWrapper field = markMigrated(fieldNode("en", master, fr));
 
         assertTrue(ManualOptionsLanguageSync.sync(field, Set.of("en")));
-        verify(fr).setProperty("fmdb:options",
+        verify(fr).setProperty("options",
                 new String[]{option("red", ""), option("green", "")});
     }
 
@@ -101,7 +101,7 @@ class ManualOptionsLanguageSyncTest {
         JCRNodeWrapper field = fieldNode("en", master, fr);
 
         assertFalse(ManualOptionsLanguageSync.sync(field, Set.of("en")));
-        verify(fr, never()).setProperty(eq("fmdb:options"), any(String[].class));
+        verify(fr, never()).setProperty(eq("options"), any(String[].class));
     }
 
     @Test
@@ -114,7 +114,7 @@ class ManualOptionsLanguageSyncTest {
         JCRNodeWrapper field = fieldNode("en", master, fr);
 
         assertTrue(ManualOptionsLanguageSync.sync(field, Set.of("en")));
-        verify(fr).setProperty("fmdb:options",
+        verify(fr).setProperty("options",
                 new String[]{option("a", "Alfa", true), option("b", "B\u00e9", false)});
     }
 
@@ -131,7 +131,7 @@ class ManualOptionsLanguageSyncTest {
         JCRNodeWrapper field = fieldNode("en", master, fr);
 
         assertTrue(ManualOptionsLanguageSync.sync(field, Set.of("en")));
-        verify(fr).setProperty("fmdb:options",
+        verify(fr).setProperty("options",
                 new String[]{frA1, frA2, option("b", "")});
     }
 
@@ -150,8 +150,8 @@ class ManualOptionsLanguageSyncTest {
                 .thenReturn(master);
 
         assertTrue(ManualOptionsLanguageSync.sync(field, Set.of("fr")));
-        verify(master).setProperty("fmdb:options", new String[]{frA});
-        verify(fr, never()).setProperty(eq("fmdb:options"), any(String[].class));
+        verify(master).setProperty("options", new String[]{frA});
+        verify(fr, never()).setProperty(eq("options"), any(String[].class));
     }
 
     @Test
@@ -168,7 +168,7 @@ class ManualOptionsLanguageSyncTest {
                 .thenReturn(fr);
 
         assertTrue(ManualOptionsLanguageSync.sync(field, Set.of("en")));
-        verify(fr).setProperty("fmdb:options",
+        verify(fr).setProperty("options",
                 new String[]{option("a", ""), option("b", "", true)});
     }
 
@@ -183,7 +183,7 @@ class ManualOptionsLanguageSyncTest {
         JCRNodeWrapper field = fieldNode("en", master, fr);
 
         assertFalse(ManualOptionsLanguageSync.sync(field, Set.of("fr")));
-        verify(fr, never()).setProperty(eq("fmdb:options"), any(String[].class));
+        verify(fr, never()).setProperty(eq("options"), any(String[].class));
     }
 
     @Test
@@ -199,7 +199,7 @@ class ManualOptionsLanguageSyncTest {
         JCRNodeWrapper field = fieldNode("en", master, fr);
 
         assertTrue(ManualOptionsLanguageSync.sync(field, Set.of("en")));
-        verify(fr).setProperty("fmdb:options",
+        verify(fr).setProperty("options",
                 new String[]{option("a", "Alfa"), option("b", "")});
     }
 
@@ -214,7 +214,7 @@ class ManualOptionsLanguageSyncTest {
         JCRNodeWrapper field = fieldNode("en", master, fr);
 
         assertTrue(ManualOptionsLanguageSync.sync(field, Set.of("en")));
-        verify(fr).setProperty("fmdb:options", new String[]{option("a", "")});
+        verify(fr).setProperty("options", new String[]{option("a", "")});
         verify(field, never()).getOrCreateI18N(any());
     }
 
@@ -230,7 +230,7 @@ class ManualOptionsLanguageSyncTest {
         JCRNodeWrapper field = fieldNode("en", master, fr);
 
         assertTrue(ManualOptionsLanguageSync.sync(field, Set.of("fr")));
-        verify(fr).setProperty("fmdb:options",
+        verify(fr).setProperty("options",
                 new String[]{option("a", ""), option("b", "")});
     }
 
@@ -244,7 +244,7 @@ class ManualOptionsLanguageSyncTest {
         JCRNodeWrapper field = fieldNode("en", master, fr);
 
         assertFalse(ManualOptionsLanguageSync.sync(field, Set.of("fr")));
-        verify(master, never()).setProperty(eq("fmdb:options"), any(String[].class));
+        verify(master, never()).setProperty(eq("options"), any(String[].class));
     }
 
     @Test
@@ -256,8 +256,8 @@ class ManualOptionsLanguageSyncTest {
         JCRNodeWrapper field = fieldNode("en", master, fr);
 
         assertFalse(ManualOptionsLanguageSync.sync(field, Set.of("en")));
-        verify(fr, never()).setProperty(eq("fmdb:options"), any(String[].class));
-        verify(master, never()).setProperty(eq("fmdb:options"), any(String[].class));
+        verify(fr, never()).setProperty(eq("options"), any(String[].class));
+        verify(master, never()).setProperty(eq("options"), any(String[].class));
     }
 
     @Test
@@ -272,8 +272,8 @@ class ManualOptionsLanguageSyncTest {
 
         assertFalse(ManualOptionsLanguageSync.sync(field, Set.of("en")));
         verify(field, never()).getOrCreateI18N(any());
-        verify(master, never()).setProperty(eq("fmdb:options"), any(String[].class));
-        verify(fr, never()).setProperty(eq("fmdb:options"), any(String[].class));
+        verify(master, never()).setProperty(eq("options"), any(String[].class));
+        verify(fr, never()).setProperty(eq("options"), any(String[].class));
     }
 
     @Test
@@ -290,6 +290,6 @@ class ManualOptionsLanguageSyncTest {
                 .thenReturn(master);
 
         assertTrue(ManualOptionsLanguageSync.sync(field, Set.of()));
-        verify(master).setProperty("fmdb:options", new String[]{frA});
+        verify(master).setProperty("options", new String[]{frA});
     }
 }

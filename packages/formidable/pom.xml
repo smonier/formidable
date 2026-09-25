@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>formidable</artifactId>
+        <groupId>org.jahia.modules</groupId>
+        <version>0.5.0-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+    <artifactId>formidable-npm</artifactId>
+    <name>Formidable npm package</name>
+    <packaging>pom</packaging>
+    <!-- Not a Jahia module: the npm package @jahia/formidable-library, published by the
+         publish-npm job of .github/workflows/on-release.yml. This pom puts the package in the
+         reactor so the regular build lints, builds and tests it, and so the release keeps its
+         package.json version in step with the maven version (sync-version execution inherited
+         from the release-prepare profile of the root pom, which reads .m2/sync-version.js). -->
+    <description>The markup contract and input-mask behaviour of Formidable forms, published to npm as @jahia/formidable-library</description>
+
+    <scm>
+        <connection>scm:git:git@github.com:Jahia/formidable.git</connection>
+        <developerConnection>scm:git:git@github.com:Jahia/formidable.git</developerConnection>
+        <url>scm:git:git@github.com:Jahia/formidable.git</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <!-- equivalent of 'yarn clean' -->
+                            <directory>${project.basedir}/dist/</directory>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>yarn install - Formidable npm package</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>yarn</executable>
+                            <arguments>
+                                <argument>install</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>yarn lint - Formidable npm package</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>yarn</executable>
+                            <arguments>
+                                <argument>lint</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- The tests are excluded from the build: this is what type-checks them -->
+                        <id>yarn typecheck - Formidable npm package</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>yarn</executable>
+                            <arguments>
+                                <argument>typecheck</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>yarn build - Formidable npm package</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>yarn</executable>
+                            <arguments>
+                                <argument>build</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>yarn test - Formidable npm package</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>yarn</executable>
+                            <arguments>
+                                <argument>test</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- The packed tarball must import under Node ESM through its exports map (scripts/smoke.mjs) -->
+                        <id>yarn smoke - Formidable npm package</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>yarn</executable>
+                            <arguments>
+                                <argument>smoke</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

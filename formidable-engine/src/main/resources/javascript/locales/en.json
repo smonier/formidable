@@ -7,7 +7,7 @@
 		"contributeInMain": "Options are authored in the site's default language ({{lang}}). This option carries no value there, so its label is edited there too; options with a value appear here for translation as soon as the field is saved in {{lang}}"
 	},
 	"fmdbmix_optionsSource": {
-		"fmdb_optionsMode": {
+		"optionsMode": {
 			"manual": "Manual options",
 			"sourced": "Options from a third-party source",
 			"category": "Options from categories",
@@ -15,13 +15,13 @@
 		}
 	},
 	"fmdbmix_dateBounds": {
-		"fmdb_minBoundMode": {
+		"minBoundMode": {
 			"none": "No minimum",
 			"date": "Fixed date (picked from the calendar)",
 			"today": "Current date (the day the form is submitted)",
 			"relative": "Relative date (the current date shifted by a fixed offset)"
 		},
-		"fmdb_maxBoundMode": {
+		"maxBoundMode": {
 			"none": "No maximum",
 			"date": "Fixed date (picked from the calendar)",
 			"today": "Current date (the day the form is submitted)",
@@ -29,13 +29,13 @@
 		}
 	},
 	"fmdbmix_datetimeBounds": {
-		"fmdb_minBoundMode": {
+		"minBoundMode": {
 			"none": "No minimum",
 			"date": "Fixed date and time (picked from the calendar)",
 			"today": "Current date (from the start of the submission day)",
 			"relative": "Relative date (shifted from the current date, from the start of that day)"
 		},
-		"fmdb_maxBoundMode": {
+		"maxBoundMode": {
 			"none": "No maximum",
 			"date": "Fixed date and time (picked from the calendar)",
 			"today": "Current date (until the end of the submission day)",
@@ -158,7 +158,8 @@
 			"origin": "Origin",
 			"locale": "Locale",
 			"user": "User",
-			"referer": "Referer"
+			"referer": "Referer",
+			"timeZone": "Time zone"
 		},
 		"export": {
 			"title": "Export results",

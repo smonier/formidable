@@ -1,0 +1,6 @@
+{
+	"name": "fmdbmix:jExperienceProfileMapping",
+	"fields": [
+		{ "name": "jExperiencePrefillThen", "mandatory": true }
+	]
+}

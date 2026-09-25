@@ -19,8 +19,8 @@ import java.util.Map;
 /**
  * Content types offerable as options under the root a contributor picked.
  *
- * Declared on fmdb:optionsNodeType (fmdbmix:contentOptions) with
- * {@code dependentProperties='fmdb:optionsRootNode'}: the editor re-resolves the
+ * Declared on optionsNodeType (fmdbmix:contentOptions) with
+ * {@code dependentProperties='optionsRootNode'}: the editor re-resolves the
  * choicelist through {@code forms.fieldConstraints} whenever the root changes,
  * passing the new — possibly unsaved — root as a context entry, and resolves it from
  * the stored property at form build (standard dependent-properties mechanism, no
@@ -34,7 +34,7 @@ import java.util.Map;
 public class FormidableContentTypesInitializer implements ModuleChoiceListInitializer {
 
     private static final String KEY = "formidableContentTypes";
-    static final String ROOT_PROPERTY = "fmdb:optionsRootNode";
+    static final String ROOT_PROPERTY = "optionsRootNode";
     private static final Logger log = LoggerFactory.getLogger(FormidableContentTypesInitializer.class);
 
     private FormidableOptionsSourceService optionsSourceService;

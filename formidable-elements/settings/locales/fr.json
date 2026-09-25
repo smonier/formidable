@@ -37,5 +37,11 @@
 	"fmdb_inputRange": {
 		"required": "Veuillez choisir une valeur",
 		"unanswered": "Aucune valeur choisie pour l’instant"
+	},
+	"fmdb_actionList": {
+		"heading": "Actions à l'envoi · {{count}}",
+		"inOrder": "Exécutées dans cet ordre. Invisibles pour les visiteurs.",
+		"notLive": "Invisible pour les visiteurs.",
+		"empty": "Aucune action : les soumissions ne seront ni enregistrées ni transmises."
 	}
 }

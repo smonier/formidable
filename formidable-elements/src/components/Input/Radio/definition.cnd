@@ -1,4 +1,4 @@
 // Radio component - unified field: single radio if 1 choice, radio group if > 1
-[fmdb:radio] > jnt:content, fmdbmix:element, fmdbmix:choiceField, fmdbmix:validationMessages
+[fmdb:radio] > jnt:content, fmdbmix:element, fmdbmix:profileMappableField, fmdbmix:choiceField, fmdbmix:validationMessages
  - helpText (string, richtext[ckeditor.toolbar='FormidableHelp',ckeditor.customConfig='$context/modules/formidable-engine/javascript/ckeditor/helpTextConfig.js']) i18n indexed=no
  - required (boolean) = false

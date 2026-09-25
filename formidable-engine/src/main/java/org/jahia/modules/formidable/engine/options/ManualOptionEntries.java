@@ -17,12 +17,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.OPTIONS_PROPERTY;
+import org.jahia.modules.formidable.engine.api.FmdbProperty;
 
 /**
  * The single reading of a manual option entry's storage, shared by everything
- * that interprets fmdb:options — the language sync, the forged-value allowed
+ * that interprets options — the language sync, the forged-value allowed
  * set — so a storage-format evolution has one parser to update.
  */
 public final class ManualOptionEntries {
@@ -252,11 +251,11 @@ public final class ManualOptionEntries {
     /** The raw entries of one language's translation subnode, in stored order. */
     public static List<String> readOptions(Node translation) throws RepositoryException {
         List<String> options = new ArrayList<>();
-        if (!translation.hasProperty(OPTIONS_PROPERTY)) {
+        if (!translation.hasProperty(FmdbProperty.OPTIONS)) {
             return options;
         }
 
-        for (Value value : translation.getProperty(OPTIONS_PROPERTY).getValues()) {
+        for (Value value : translation.getProperty(FmdbProperty.OPTIONS).getValues()) {
             options.add(value.getString());
         }
 

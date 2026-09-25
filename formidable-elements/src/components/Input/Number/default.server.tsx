@@ -1,6 +1,6 @@
 import {jahiaComponent} from "@jahia/javascript-modules-library";
-import {type RangeValidationMessageProps, validationDataAttributes} from "formidable-shared";
-import {HelpText, helpTextId} from "formidable-shared";
+import {type RangeValidationMessageProps, validationDataAttributes} from "@jahia/formidable-library";
+import {HelpText, helpTextId} from "@jahia/formidable-library";
 
 interface InputNumberProps extends RangeValidationMessageProps {
 	"jcr:title"?: string;

@@ -1,6 +1,6 @@
 package org.jahia.modules.formidable.engine.servlet;
 
-import org.jahia.modules.formidable.engine.actions.FormDataParser;
+import org.jahia.modules.formidable.engine.servlet.FormDataParser;
 import org.jahia.services.content.JCRNodeIteratorWrapper;
 import org.jahia.services.content.JCRPropertyWrapper;
 import org.jahia.services.content.JCRNodeWrapper;
@@ -136,7 +136,7 @@ class FormFieldMetadataCollectorTest {
                 "birthday",
                 "fmdb:inputDate",
                 Set.of("fmdbmix:formElement", "fmdbmix:dateField"),
-                Map.of("fmdb:maxBoundMode", stringProperty("today")),
+                Map.of("maxBoundMode", stringProperty("today")),
                 List.of()
         );
         // One side relative, the other fixed: each side resolves independently.
@@ -145,8 +145,8 @@ class FormFieldMetadataCollectorTest {
                 "fmdb:inputDatetimeLocal",
                 Set.of("fmdbmix:formElement", "fmdbmix:datetimeLocalField"),
                 Map.of(
-                        "fmdb:minBoundMode", stringProperty("today"),
-                        "fmdb:maxBoundMode", stringProperty("date"),
+                        "minBoundMode", stringProperty("today"),
+                        "maxBoundMode", stringProperty("date"),
                         "max", dateProperty(calendar(2030, 6, 30, 18, 0))
                 ),
                 List.of()
@@ -159,9 +159,9 @@ class FormFieldMetadataCollectorTest {
                 "fmdb:inputDate",
                 Set.of("fmdbmix:formElement", "fmdbmix:dateField"),
                 Map.of(
-                        "fmdb:maxBoundMode", stringProperty("relative"),
-                        "fmdb:maxRelativeAmount", longProperty(-18),
-                        "fmdb:maxRelativeUnit", stringProperty("years")
+                        "maxBoundMode", stringProperty("relative"),
+                        "maxRelativeAmount", longProperty(-18),
+                        "maxRelativeUnit", stringProperty("years")
                 ),
                 List.of()
         );
@@ -170,9 +170,9 @@ class FormFieldMetadataCollectorTest {
                 "fmdb:inputDatetimeLocal",
                 Set.of("fmdbmix:formElement", "fmdbmix:datetimeLocalField"),
                 Map.of(
-                        "fmdb:maxBoundMode", stringProperty("relative"),
-                        "fmdb:maxRelativeAmount", longProperty(30),
-                        "fmdb:maxRelativeUnit", stringProperty("days")
+                        "maxBoundMode", stringProperty("relative"),
+                        "maxRelativeAmount", longProperty(30),
+                        "maxRelativeUnit", stringProperty("days")
                 ),
                 List.of()
         );
@@ -182,7 +182,7 @@ class FormFieldMetadataCollectorTest {
                 "deadline",
                 "fmdb:inputDatetimeLocal",
                 Set.of("fmdbmix:formElement", "fmdbmix:datetimeLocalField"),
-                Map.of("fmdb:maxBoundMode", stringProperty("today")),
+                Map.of("maxBoundMode", stringProperty("today")),
                 List.of()
         );
         // An explicit 'none' wins over a residual fixed value left behind by an
@@ -192,7 +192,7 @@ class FormFieldMetadataCollectorTest {
                 "fmdb:inputDate",
                 Set.of("fmdbmix:formElement", "fmdbmix:dateField"),
                 Map.of(
-                        "fmdb:maxBoundMode", stringProperty("none"),
+                        "maxBoundMode", stringProperty("none"),
                         "max", dateProperty(calendar(2020, 6, 30, 0, 0))
                 ),
                 List.of()
@@ -273,7 +273,7 @@ class FormFieldMetadataCollectorTest {
         // master's and is.
         JCRNodeWrapper choiceField = manualChoiceField(
                 "flavor",
-                Map.of("fmdb:options", multiValueProperty(
+                Map.of("options", multiValueProperty(
                         "{\"value\":\"mint\",\"label\":\"Menthe\"}",
                         "{\"value\":\"chocolate\",\"label\":\"Chocolat\"}"
                 )),
@@ -322,7 +322,7 @@ class FormFieldMetadataCollectorTest {
         // only, or one whose options were cleared: the stored list stays the identity.
         JCRNodeWrapper choiceField = manualChoiceField(
                 "flavor",
-                Map.of("fmdb:options", multiValueProperty("{\"value\":\"mint\",\"label\":\"Menthe\"}")),
+                Map.of("options", multiValueProperty("{\"value\":\"mint\",\"label\":\"Menthe\"}")),
                 "en",
                 Map.of("fr", new String[]{"{\"value\":\"mint\",\"label\":\"Menthe\"}"})
         );
@@ -381,9 +381,9 @@ class FormFieldMetadataCollectorTest {
         when(translation.getName()).thenReturn("j:translation_" + language);
         when(translation.hasProperty("jcr:language")).thenReturn(true);
         when(translation.getProperty("jcr:language")).thenReturn(languageProperty);
-        when(translation.hasProperty("fmdb:options")).thenReturn(optionsProperty != null);
+        when(translation.hasProperty("options")).thenReturn(optionsProperty != null);
         if (optionsProperty != null) {
-            when(translation.getProperty("fmdb:options")).thenReturn(optionsProperty);
+            when(translation.getProperty("options")).thenReturn(optionsProperty);
         }
 
         return translation;

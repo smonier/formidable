@@ -14,8 +14,8 @@ It is the e-deal member of the CRM connector family, next to
 error policies. Only the CRM layer differs.
 
 Part of the CRM connector family with the two other modules: see
-[docs/crm-connector-actions.md](../docs/crm-connector-actions.md) for the shared architecture and
-the side-by-side comparison, and its [consolidated changelog](../docs/crm-connector-actions-changelog.md).
+[docs/administration/crm-connector-actions.md](../docs/administration/crm-connector-actions.md) for the shared architecture and
+the side-by-side comparison, and its [consolidated changelog](../docs/administration/crm-connector-actions-changelog.md).
 
 ## Contents
 

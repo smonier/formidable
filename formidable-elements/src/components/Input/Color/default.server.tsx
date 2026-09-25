@@ -1,6 +1,6 @@
 import {jahiaComponent} from "@jahia/javascript-modules-library";
-import {type BaseValidationMessageProps, validationDataAttributes} from "formidable-shared";
-import {HelpText, helpTextId} from "formidable-shared";
+import {type BaseValidationMessageProps, validationDataAttributes} from "@jahia/formidable-library";
+import {HelpText, helpTextId} from "@jahia/formidable-library";
 
 interface InputColorProps extends BaseValidationMessageProps {
 	"jcr:title"?: string;

@@ -9,6 +9,8 @@ import org.osgi.service.component.annotations.Component;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import java.util.Set;
+import org.jahia.modules.formidable.engine.api.FmdbNodeName;
+import org.jahia.modules.formidable.engine.api.FmdbNodeType;
 
 /**
  * Semantic integrity check for form submissions.
@@ -25,7 +27,7 @@ import java.util.Set;
         service = ContentIntegrityCheck.class,
         immediate = true,
         property = {
-                ContentIntegrityCheck.ExecutionCondition.APPLY_ON_NT + "=" + AbstractFormidableIntegrityCheck.FMDB_FORM_SUBMISSION,
+                ContentIntegrityCheck.ExecutionCondition.APPLY_ON_NT + "=" + FmdbNodeType.FORM_SUBMISSION,
                 ContentIntegrityCheck.ExecutionCondition.APPLY_ON_SUBTREES + "=/sites"
         }
 )
@@ -49,8 +51,8 @@ public class FormSubmissionPayloadIntegrityCheck extends AbstractFormidableInteg
             ContentIntegrityErrorList errors = null;
 
             // Check data properties: every user property in data/ must correspond to a declared field
-            if (node.hasNode(DATA_NODE)) {
-                JCRNodeWrapper dataNode = node.getNode(DATA_NODE);
+            if (node.hasNode(FmdbNodeName.DATA)) {
+                JCRNodeWrapper dataNode = node.getNode(FmdbNodeName.DATA);
                 for (String propertyName : getUserPropertyNames(dataNode)) {
                     if (!declaredFieldNames.contains(propertyName)) {
                         ContentIntegrityError error = createPropertyRelatedError(node, UNDECLARED_SUBMISSION_FIELD)
@@ -62,14 +64,14 @@ public class FormSubmissionPayloadIntegrityCheck extends AbstractFormidableInteg
             }
 
             // Check file subfolders: every child under files/ must correspond to a declared file field
-            if (node.hasNode(FILES_NODE)) {
-                JCRNodeWrapper filesNode = node.getNode(FILES_NODE);
+            if (node.hasNode(FmdbNodeName.FILES)) {
+                JCRNodeWrapper filesNode = node.getNode(FmdbNodeName.FILES);
                 NodeIterator children = filesNode.getNodes();
                 while (children.hasNext()) {
                     JCRNodeWrapper child = (JCRNodeWrapper) children.nextNode();
                     if (!declaredFileFieldNames.contains(child.getName())) {
                         ContentIntegrityError error = createError(node, UNDECLARED_FILE_STORAGE_FIELD)
-                                .addExtraInfo(EXTRA_INFO_CHILD_NAME, FILES_NODE + "/" + child.getName())
+                                .addExtraInfo(EXTRA_INFO_CHILD_NAME, FmdbNodeName.FILES + "/" + child.getName())
                                 .addExtraInfo("files-node-path", filesNode.getPath(), true);
                         errors = trackError(errors, error);
                     }

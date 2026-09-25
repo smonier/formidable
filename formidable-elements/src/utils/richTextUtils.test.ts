@@ -4,7 +4,7 @@ import {styleTagCss} from './richTextUtils';
 describe('styleTagCss', () => {
 	it('lets the documented selectors through verbatim', () => {
 		// The exact shapes the HTML-escaping regression dropped: a child combinator
-		// and the attribute selector docs/styling.md documents for targeting a field.
+		// and the attribute selector docs/styling/class-hooks.md documents for targeting a field.
 		const css = '.fmdb-form > .a { color: red; } .fmdb-form [data-fmdb-node-name="email"] { display: none; }';
 
 		expect(styleTagCss(css)).toBe(css);

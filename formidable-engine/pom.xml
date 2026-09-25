@@ -13,6 +13,7 @@
     <properties>
         <jahia-depends>javascript-modules-engine</jahia-depends>
         <jahia-module-signature>MC0CFA34BUMVXOQaf1i8dEQX4aD9Lac5AhUAkOEYgGmNqIt+xpMlhtzXofNoskI=</jahia-module-signature>
+        <sonar.sources>src,package.json,pom.xml</sonar.sources>
     </properties>
     <scm>
         <connection>scm:git:git@github.com:Jahia/formidable.git</connection>
@@ -78,6 +79,15 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <!-- A backend for the tests only: without one, slf4j binds its no-operation logger and a test cannot
+             assert that a line an operator depends on was actually written. slf4j-simple writes to System.err,
+             which the test captures. Never shipped: the platform supplies the runtime backend. -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -168,6 +178,13 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Mocking ConfigurationAdmin in the tests needs org.osgi.framework (thrown types) on the classpath -->
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.core</artifactId>
+            <version>${osgi.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -278,6 +295,9 @@
                         <ignoredUnusedDeclaredDependency>org.apache.commons:commons-text</ignoredUnusedDeclaredDependency>
                         <ignoredUnusedDeclaredDependency>org.junit.jupiter:junit-jupiter-api</ignoredUnusedDeclaredDependency>
                         <ignoredUnusedDeclaredDependency>org.mockito:mockito-core</ignoredUnusedDeclaredDependency>
+                        <!-- The test-scope slf4j backend: nothing imports it, the tests bind it at runtime. -->
+                        <ignoredUnusedDeclaredDependency>org.slf4j:slf4j-simple</ignoredUnusedDeclaredDependency>
+                        <ignoredUnusedDeclaredDependency>org.osgi:osgi.core</ignoredUnusedDeclaredDependency>
                         <!-- Used by Surefire/JUnit platform at test runtime, not by direct imports. -->
                         <ignoredUnusedDeclaredDependency>org.junit.jupiter:junit-jupiter-engine</ignoredUnusedDeclaredDependency>
                         <!-- Inherited from the Jahia modules parent and unused by formidable-engine. -->

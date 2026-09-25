@@ -50,5 +50,5 @@ Release notes for the whole repository are assembled by [chachalog](../.chachalo
 
 ### Documentation
 
-* `README.md` and `docs/how-to-salesforce-lead-action.md`, including the connection file
+* `README.md` and `docs/administration/how-to-salesforce-lead-action.md`, including the connection file
   ownership requirement (a file the Jahia user cannot write is loaded read-only).

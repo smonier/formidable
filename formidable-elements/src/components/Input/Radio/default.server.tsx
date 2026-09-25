@@ -1,13 +1,13 @@
 import {jahiaComponent} from "@jahia/javascript-modules-library";
 import {resolveFieldOptions} from "~/utils/optionsSource.server";
 import OptionsSourceError from "~/design/OptionsSourceError";
-import {type BaseValidationMessageProps, validationDataAttributes} from "formidable-shared";
-import {HelpText, helpTextId} from "formidable-shared";
+import {type BaseValidationMessageProps, validationDataAttributes} from "@jahia/formidable-library";
+import {HelpText, helpTextId} from "@jahia/formidable-library";
 
 interface RadiosProps extends BaseValidationMessageProps {
 	"jcr:title"?: string;
 	helpText?: string;
-	"fmdb:options"?: string[];
+	"options"?: string[];
 	required?: boolean;
 }
 
@@ -18,7 +18,7 @@ jahiaComponent(
 		name: "default"
 	},
 	(
-		{"jcr:title": label, helpText, "fmdb:options": rawChoices = [], required, ...validationMsgs}: RadiosProps,
+		{"jcr:title": label, helpText, "options": rawChoices = [], required, ...validationMsgs}: RadiosProps,
 		{currentNode, renderContext}
 	) => {
 		const inputName = currentNode.getName();
@@ -57,8 +57,10 @@ jahiaComponent(
 			);
 		}
 
+		// radiogroup: what a fieldset of radios is, and the one role of the group that carries aria-readonly
+		// (the jExperience prefill sets it when the author locks the field)
 		return (
-			<fieldset className="fmdb-form-group fmdb-radio-group" aria-describedby={helpId}>
+			<fieldset className="fmdb-form-group fmdb-radio-group" role="radiogroup" aria-describedby={helpId}>
 				{label && (
 					<legend className="fmdb-group-legend">
 						{label}

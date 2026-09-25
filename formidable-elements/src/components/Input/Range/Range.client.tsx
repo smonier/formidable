@@ -1,10 +1,16 @@
 import {useEffect, useRef, useState, type KeyboardEvent} from 'react';
 import {useTranslation} from 'react-i18next';
 import './range.css';
+import {applyAfterPrefill, clearPrefillMarks, type PrefillDetail, prefillValue, restoreMirror} from './rangePrefill';
 
 // Keys that operate a range slider: releasing a focus-navigation key (e.g. Tab
 // landing on the slider) must not count as an answer.
 const SLIDER_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown']);
+
+// Dispatched on the hidden mirror by a script that prefills the form (the jExperience integration): the
+// mirror is controlled, so a value written into it would be reset at the next render — the island takes
+// the value from the event instead, under the rules of rangePrefill.ts.
+const PREFILL_EVENT = 'formidable:prefill';
 
 interface RangeInputProps {
 	name: string;
@@ -54,7 +60,13 @@ export default function RangeInput({
 	const [value, setValue] = useState<string>(initialValue);
 	const answered = value !== '';
 	const rangeRef = useRef<HTMLInputElement>(null);
+	const mirrorRef = useRef<HTMLInputElement>(null);
+	const answeredByVisitorRef = useRef(false);
 	const mountedRef = useRef(false);
+	// Set when a prefill wrote the slider and the author asked for read-only: the visible slider is disabled,
+	// the named mirror keeps the value for the submission. The island applies what follows the write itself
+	// (rangePrefill.ts): the script knows what it wrote into the mirror, not what the slider accepted.
+	const [lockedByPrefill, setLockedByPrefill] = useState(false);
 
 	// The thumb needs a position even while unanswered; the midpoint mirrors the
 	// browser default for a valueless range, snapped to the step grid so the
@@ -68,6 +80,7 @@ export default function RangeInput({
 	// completed interaction (pointer release, slider-operating key release) also
 	// counts as an answer.
 	const confirmCurrentPosition = () => {
+		answeredByVisitorRef.current = true;
 		if (!answered && rangeRef.current) {
 			setValue(rangeRef.current.value);
 		}
@@ -117,10 +130,46 @@ export default function RangeInput({
 			return;
 		}
 
-		const handleReset = () => setValue(initialValue);
+		const handleReset = () => {
+			answeredByVisitorRef.current = false;
+			setValue(initialValue);
+			// Nothing is prefilled after a reset: give the slider back its hand and its wrapper back its
+			// place, or a required slider would stay unanswered behind a hidden wrapper, or locked on a
+			// value the visitor no longer has.
+			setLockedByPrefill(false);
+			clearPrefillMarks(mirrorRef.current);
+		};
 		formElement.addEventListener('reset', handleReset);
 		return () => formElement.removeEventListener('reset', handleReset);
 	}, [initialValue]);
+
+	useEffect(() => {
+		const mirror = mirrorRef.current;
+		if (!mirror) return;
+		const handlePrefill = (event: Event) => {
+			const detail = (event as CustomEvent<PrefillDetail>).detail ?? {};
+			const accepted = prefillValue(detail, {
+				answeredByVisitor: answeredByVisitorRef.current,
+				minValue,
+				maxValue,
+				step: stepValue
+			});
+			if (accepted !== null) {
+				setValue(accepted);
+				if (applyAfterPrefill(detail.then, mirror)) {
+					setLockedByPrefill(true);
+				}
+			}
+
+			// The script writes the profile's value into the mirror before telling the island, and the mirror
+			// is what the form posts and what the conditional logic reads: whatever the slider settled on has
+			// to be what it says — the value it took, since React skips the render when that already equals
+			// the state, or its own when it refused.
+			restoreMirror(mirror, accepted ?? value);
+		};
+		mirror.addEventListener(PREFILL_EVENT, handlePrefill);
+		return () => mirror.removeEventListener(PREFILL_EVENT, handlePrefill);
+	}, [minValue, maxValue, stepValue, value]);
 
 	return (
 		<>
@@ -140,9 +189,12 @@ export default function RangeInput({
 					value={displayValue}
 					title={title}
 					autoFocus={autofocus}
-					disabled={disabled}
+					disabled={disabled || lockedByPrefill}
 					form={form}
-					onChange={event => setValue(event.target.value)}
+					onChange={event => {
+						answeredByVisitorRef.current = true;
+						setValue(event.target.value);
+					}}
 					onPointerUp={confirmCurrentPosition}
 					onKeyUp={confirmOnSliderKey}
 					{...validationAttributes}
@@ -152,7 +204,7 @@ export default function RangeInput({
 					{answered ? value : '–'}
 				</output>
 			</div>
-			<input type="hidden" name={name} value={value} form={form}/>
+			<input ref={mirrorRef} type="hidden" name={name} value={value} form={form}/>
 		</>
 	);
 }

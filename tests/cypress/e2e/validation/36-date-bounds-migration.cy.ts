@@ -22,10 +22,10 @@ const GET_MIGRATED_FIELD = gql`
 				mixinTypes {
 					name
 				}
-				minBoundMode: property(name: "fmdb:minBoundMode") {
+				minBoundMode: property(name: "minBoundMode") {
 					value
 				}
-				maxBoundMode: property(name: "fmdb:maxBoundMode") {
+				maxBoundMode: property(name: "maxBoundMode") {
 					value
 				}
 				min: property(name: "min") {
@@ -63,7 +63,7 @@ const SWITCH_MIN_TO_TODAY = gql`
 		jcr {
 			mutateNode(pathOrId: $path) {
 				removeMixins(mixins: ["fmdbmix:fixedMinDate"])
-				mutateProperty(name: "fmdb:minBoundMode") {
+				mutateProperty(name: "minBoundMode") {
 					setValue(value: "today")
 				}
 			}
@@ -124,7 +124,7 @@ describe('Validation - 36 Date bounds migration', () => {
 					(response: MigratedFieldResponse) =>
 						response.data?.jcr?.nodeByPath?.maxBoundMode?.value === 'date'
 				),
-				{timeout: 60000, interval: 2000, errorMsg: 'the migration never stamped fmdb:maxBoundMode in live'}
+				{timeout: 60000, interval: 2000, errorMsg: 'the migration never stamped maxBoundMode in live'}
 			);
 
 			(['EDIT', 'LIVE'] as const).forEach(workspace => {

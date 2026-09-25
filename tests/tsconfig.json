@@ -1,13 +1,24 @@
+// The suite's one TypeScript config: what an editor checks a spec against, what `yarn typecheck`
+// runs in the static-analysis CI job (#280), and what Cypress compiles the specs with (ts-loader,
+// transpile only) — so it carries type-level options only, plus downlevelIteration, which gives the
+// emitted code the standard iteration helpers and changes nothing else. Not strict:
+// the suite is not strict-clean yet (implicit any on .then() callbacks, nullable subjects — about
+// thirty errors), and one @jahia/cypress source file reached through @jahia/jcontent-cypress's
+// typings adds two we cannot fix.
 {
-  "include": [
-    "node_modules/cypress",
-    "cypress/*/*.ts"
-  ],
+  "include": ["cypress/**/*.ts"],
   "compilerOptions": {
+    "lib": ["es2022", "dom", "dom.iterable"],
+    "downlevelIteration": true,
+    "skipLibCheck": true,
     "types": [
+      "cypress",
+      "node",
       "@jahia/cypress",
+      "@4tw/cypress-drag-drop",
       "cypress-iframe",
+      "cypress-real-events",
       "cypress-wait-until"
     ]
-  },
+  }
 }

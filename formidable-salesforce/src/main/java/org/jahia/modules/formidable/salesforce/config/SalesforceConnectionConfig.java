@@ -12,7 +12,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
  *
  * <p>Authentication is the OAuth 2.0 JWT Bearer flow: a Connected App with "Use digital
  * signatures" enabled, its certificate uploaded, the {@code api} scope, and the running user
- * pre-authorized. See docs/how-to-salesforce-lead-action.md.
+ * pre-authorized. See docs/administration/how-to-salesforce-lead-action.md.
  */
 @ObjectClassDefinition(
         name = "Formidable Salesforce connection",

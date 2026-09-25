@@ -6,7 +6,7 @@
 // - colorspace (string) = 'limited-srgb' < 'limited-srgb', 'display-p3'
 
 // Color input component properties
-[fmdb:inputColor] > jnt:content, fmdbmix:element, fmdbmix:colorField, fmdbmix:validationMessages
+[fmdb:inputColor] > jnt:content, fmdbmix:element, fmdbmix:profileMappableField, fmdbmix:colorField, fmdbmix:validationMessages
  - helpText (string, richtext[ckeditor.toolbar='FormidableHelp',ckeditor.customConfig='$context/modules/formidable-engine/javascript/ckeditor/helpTextConfig.js']) i18n indexed=no
  - required (boolean) = false
  - defaultValue (string) indexed=no

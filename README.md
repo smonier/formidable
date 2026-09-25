@@ -17,23 +17,12 @@ Formidable is based on Jahia standard technologies:
 
 ## Documentation
 
-- [CND module ownership](docs/cnd-module-ownership.md) - where JCR types and mixins belong, and how to choose between `formidable-elements` and `formidable-engine`
-- [Form submission flow](docs/form-submission-flow.md) - request lifecycle, pipeline steps, and server-side safeguards
-- [CAPTCHA server-side validation](docs/captcha-server-side-validation.md) - provider verification endpoints and token handling
-- [How to create a form action](docs/how-to-create-form-action.md) - step-by-step guide for implementing a custom `FormAction` OSGi service
-- [How to extend views and elements from a third-party module](docs/how-to-extend-views-and-elements-from-third-party-module.md) - rendering contract for external container views and custom form elements
-- [Save to JCR](docs/save-to-jcr.md) - how submissions and uploaded files are stored in JCR
-- [Results permissions](docs/results-permissions.md) - per-form access control for submission results (`fmdb-results-reader` role)
-- [Export](docs/export.md) - multi-format export architecture (CSV, JSON) with date range filtering
-- [Styling a form](docs/styling.md) - class hooks, CSS variables and edit-mode cues for template sets and custom CSS
-- [Custom validation](docs/custom-validation.md) - inline validation messages replacing native browser tooltips, with per-field contributor overrides
-- [Conditional logic field resolution](docs/conditional-logic-field-resolution.md) - weakref-based model for conditional logic dependencies
-- [Error codes](docs/error-codes.md) - server-side error codes returned on form submission failure
-- [CRM connector actions](docs/crm-connector-actions.md) - the Salesforce, HubSpot and Efficy actions side by side: shared architecture, per-CRM differences, connections, troubleshooting; [consolidated changelog](docs/crm-connector-actions-changelog.md)
-- [Efficy Opportunity action](docs/how-to-efficy-opportunity-action.md) - `formidable-efficy`: create e-deal Opportunities from any form, with a field catalog per connection, referential values and a person lookup by email
-- [HubSpot Contact action](docs/how-to-hubspot-contact-action.md) - `formidable-hubspot`: create Contacts from any form, same mapping approach with the private app token in operator configuration
-- [Salesforce Lead action](docs/how-to-salesforce-lead-action.md) - `formidable-salesforce`: create Leads from any form, with the field mapping authored in Content Editor and the org credentials in operator configuration
-- [Dependency decisions](docs/dependency-decisions.md) - rationale for embedded vs. provided dependencies in Java modules
+[`docs/README.md`](docs/README.md) is the map: one folder per reader.
+
+- [`docs/styling/`](docs/styling/README.md) — for the template set: how the rendered form is structured, the class hooks, the CSS variables
+- [`docs/extension/`](docs/extension/README.md) — for a third-party module: adding a form action, a view, a container, a field
+- [`docs/administration/`](docs/administration/README.md) — for the administrator: upgrade notes, error codes, CAPTCHA verification, results permissions
+- [`docs/architecture/`](docs/architecture/README.md) — for the maintainer: how the modules work, and why they are built this way
 
 ## Scope
 
@@ -72,24 +61,27 @@ The current release includes the ability to:
   - Multi-format export (CSV, JSON) with date range filtering
   - Per-form access control via `fmdb-results-reader` role (results are private by default)
   - Submission deletion (admin-only in v1)
-- Custom CSS injection per form (see [Styling a form](docs/styling.md) for the class hooks and CSS variables)
+- Custom CSS injection per form (see [Styling a form](docs/styling/README.md) for the class hooks and CSS variables)
 - Extension points:
   - Create your own action (implement `FormAction` OSGi service via `org.jahia.modules.formidable.engine.api`)
   - Overwrite the view for a field type
   - Create a new field type (CND + server view + optional client Island)
 
 ### Packaging
-- 6 modules:
+- 7 modules:
   - **formidable-elements** — provides the fields, form structure and rendering views
   - **formidable-engine** — provides the action framework (Java/OSGi), CAPTCHA verification, editor extensions (custom selectors, form results panel)
   - **formidable-extended-inputs** — provides the optional extra field types, as a separate module so a site can stay on the core set
-  - **formidable-salesforce** — optional: the "Create Salesforce Lead" action (Java/OSGi) plus its `SalesforceLeadMapping` Content Editor selector (React 18, Module Federation)
+  - **formidable-jexperience-engine** — integrates the forms with jExperience when it is installed: fields mapped to the visitor's profile from a **jExperience** section of the editor, the form's identity in jCustomer (Java/OSGi, depends on `formidable-engine` and `jexperience`; the mapping rule, the submission event and the prefill follow — see [`docs/architecture/jexperience-integration.md`](docs/architecture/jexperience-integration.md))
+  - **formidable-salesforce** - optional: the "Create Salesforce Lead" action (Java/OSGi) plus its `SalesforceLeadMapping` Content Editor selector (React 18, Module Federation)
   - **formidable-hubspot** - optional: the "Create HubSpot Contact" action plus its `HubspotContactMapping` selector, same architecture
   - **formidable-efficy** - optional: the "Create Efficy Opportunity" action (e-deal) plus its `EfficyOpportunityMapping` selector, with a field catalog per connection
+- 1 npm package, [`@jahia/formidable-library`](packages/formidable/README.md) — the markup contract and input-mask behaviour a module of your own builds on to render form fields, published with each release
 
 ### Current known limitations
 - When selecting a field, users don't know what it will look like. This pain point will be addressed globally inside Jahia in 2026.
 - Forms embedded in a page can be edited through Page Builder (each element gets its own
-  box), but forms cannot yet be created or authored in Page Builder mode from jContent's
+  box, and the form's actions are listed under it with their own **New Form Action**
+  button), but forms cannot yet be created or authored in Page Builder mode from jContent's
   Content Folders — that is targeted for 1.0. Until then, form authoring happens in
   jContent's list or structured view.

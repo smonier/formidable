@@ -1,6 +1,7 @@
 package org.jahia.modules.formidable.engine.options;
 
 import org.jahia.modules.formidable.engine.migration.ChoiceOptionsContentMigration;
+import org.jahia.modules.formidable.engine.migration.MigrationWrites;
 import org.jahia.services.content.DefaultEventListener;
 import org.jahia.services.content.JCRNodeWrapper;
 import org.jahia.services.content.JCRSessionWrapper;
@@ -17,15 +18,15 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import org.jahia.modules.formidable.engine.api.FmdbMixin;
+import org.jahia.modules.formidable.engine.api.FmdbProperty;
 
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.MANUAL_OPTIONS_MIXIN;
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.OPTIONS_PROPERTY;
 import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.TRANSLATION_NODE_PREFIX;
 
 /**
  * Re-aligns the manual options of every language on the site's default language
  * whenever a contributor saves them (see ManualOptionsLanguageSync for the
- * contract). fmdb:options is i18n, so its events fire on the j:translation_*
+ * contract). options is i18n, so its events fire on the j:translation_*
  * subnode; Jahia's observation manager merges the parent node's types into
  * translation events, so the fmdbmix:manualOptions type filter applies before
  * onEvent, and the path is stripped back to the field node here.
@@ -45,7 +46,7 @@ public class ManualOptionsLanguageSyncListener extends DefaultEventListener {
 
     private static final Logger log = LoggerFactory.getLogger(ManualOptionsLanguageSyncListener.class);
 
-    private static final String OPTIONS_PROPERTY_SUFFIX = "/" + OPTIONS_PROPERTY;
+    private static final String OPTIONS_PROPERTY_SUFFIX = "/" + FmdbProperty.OPTIONS;
     private static final String TRANSLATION_SEGMENT = "/" + TRANSLATION_NODE_PREFIX;
 
     /**
@@ -59,7 +60,7 @@ public class ManualOptionsLanguageSyncListener extends DefaultEventListener {
      * <p>This ordering only covers the engine-activation run. On the engine-first
      * upgrade path the migration does its work on the elements-redeploy run, when
      * this listener is already registered — that entry point is covered by the
-     * {@code isMigrationWrite()} check in {@link #onEvent}.
+     * {@link MigrationWrites#isActive()} check in {@link #onEvent}.
      */
     @Reference
     @SuppressWarnings("unused")
@@ -131,14 +132,14 @@ public class ManualOptionsLanguageSyncListener extends DefaultEventListener {
 
     @Override
     public String[] getNodeTypes() {
-        return new String[]{MANUAL_OPTIONS_MIXIN};
+        return new String[]{FmdbMixin.MANUAL_OPTIONS};
     }
 
     @Override
     public void onEvent(EventIterator events) {
         // The migration's own saves must never be re-aligned: the migrated values are
         // the 0.3-era per-language truth (values were allowed to diverge back then).
-        if (ChoiceOptionsContentMigration.isMigrationWrite()) {
+        if (MigrationWrites.isActive()) {
             return;
         }
 

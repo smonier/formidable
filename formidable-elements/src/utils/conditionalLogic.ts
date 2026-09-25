@@ -618,8 +618,12 @@ const setWrapperVisibility = (wrapper: HTMLElement, visible: boolean) => {
 	// the field inherits the step's verdict — rejected the whole submission.
 	const effectiveVisible = visible &&
 		!wrapper.parentElement?.closest('[data-fmdb-logic-hidden="true"]');
-	wrapper.style.display = effectiveVisible ? '' : 'none';
-	wrapper.setAttribute('aria-hidden', effectiveVisible ? 'false' : 'true');
+	// A field a prefill filled and the author hid (data-fmdb-prefilled, written by the prefill script) stays
+	// out of sight whatever the rule says — but it is not hidden BY the logic: its controls follow the rule
+	// like any other's, so its value is still submitted, and it still counts as a source.
+	const shown = effectiveVisible && wrapper.dataset.fmdbPrefilled !== 'hidden';
+	wrapper.style.display = shown ? '' : 'none';
+	wrapper.setAttribute('aria-hidden', shown ? 'false' : 'true');
 	wrapper.dataset.fmdbLogicHidden = effectiveVisible ? 'false' : 'true';
 	toggleDescendantControls(wrapper, !effectiveVisible);
 };

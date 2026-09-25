@@ -45,8 +45,10 @@ import java.util.Set;
  * STARTED-only gate leaves the healing silently inert on its main path), so the gate
  * refuses only an absent or stopping package.
  *
- * <p>Lifecycle: upgrade healing introduced in 0.4.0, to be removed in 0.5 with the other
- * startup migrations — see docs/upgrade-notes.md, "Startup migrations".
+ * <p>Lifecycle: upgrade healing introduced in 0.4.0, kept through 0.5.x so that a
+ * 0.3.x instance can still upgrade directly, to be removed in 0.6 with the other startup
+ * migrations — the {@code fmdbmix:elementsReactivated} declaration outlives this class, every
+ * healed site carries it — see docs/administration/upgrade-notes.md, "Startup migrations".
  */
 @Component(service = {ElementsSiteReactivation.class, JahiaEventListener.class}, immediate = true)
 public class ElementsSiteReactivation extends ElementsRedeployRetriggeredMigration {
@@ -54,7 +56,6 @@ public class ElementsSiteReactivation extends ElementsRedeployRetriggeredMigrati
     private static final Logger log = LoggerFactory.getLogger(ElementsSiteReactivation.class);
 
     private static final String FORM_TYPE = "fmdb:form";
-    private static final String REACTIVATED_MARKER = "fmdbmix:elementsReactivated";
 
     @Activate
     public void activate() {
@@ -97,7 +98,7 @@ public class ElementsSiteReactivation extends ElementsRedeployRetriggeredMigrati
         try {
             JCRNodeWrapper site = session.getNode(sitePath);
             session.checkout(site);
-            site.addMixin(REACTIVATED_MARKER);
+            site.addMixin(MigrationMarker.ELEMENTS_REACTIVATED);
             session.save();
             return true;
         } catch (RepositoryException | RuntimeException e) {
@@ -161,7 +162,7 @@ public class ElementsSiteReactivation extends ElementsRedeployRetriggeredMigrati
     static String orphanedSitePath(JCRNodeWrapper form) throws RepositoryException {
         JCRSiteNode site = form.getResolveSite();
         if (site == null || site.getInstalledModules().contains(ELEMENTS_MODULE_ID)
-                || site.isNodeType(REACTIVATED_MARKER)) {
+                || site.isNodeType(MigrationMarker.ELEMENTS_REACTIVATED)) {
             return null;
         }
         return site.getPath();
@@ -170,7 +171,7 @@ public class ElementsSiteReactivation extends ElementsRedeployRetriggeredMigrati
     /**
      * One site at a time: a failure must never keep the later sites broken, and the
      * one-shot marker is stamped only on success so a failed site is retried on the
-     * next run. The remedy is the exact gesture docs/upgrade-notes.md step 4 asks of
+     * next run. The remedy is the exact gesture docs/administration/upgrade-notes.md step 4 asks of
      * the operator.
      */
     private static void reactivate(JCRSessionWrapper session, String sitePath) {
@@ -188,7 +189,7 @@ public class ElementsSiteReactivation extends ElementsRedeployRetriggeredMigrati
                            : "");
         } catch (RepositoryException | RuntimeException e) {
             log.error("[ElementsSiteReactivation] Could not re-enable {} on site '{}' — do it manually "
-                    + "(docs/upgrade-notes.md step 4): {}", ELEMENTS_MODULE_ID, sitePath, e.getMessage(), e);
+                    + "(docs/administration/upgrade-notes.md step 4): {}", ELEMENTS_MODULE_ID, sitePath, e.getMessage(), e);
         }
     }
 }

@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
- * Populates the fmdb:optionsSourceKey choice list for sourced choice fields from the
+ * Populates the optionsSourceKey choice list for sourced choice fields from the
  * options sources declared in org.jahia.modules.formidable.cfg.
  *
  * Only the curated allowlist is exposed — never the raw platform-wide initializer list,

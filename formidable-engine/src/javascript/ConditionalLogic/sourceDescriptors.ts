@@ -21,7 +21,7 @@ export interface LogicSourceDescriptor {
 const KIND_DEFAULTS: Record<SourceValueKind, LogicSourceDescriptor> = {
     choice: {
         valueKind: 'choice',
-        choiceProperty: 'fmdb:options',
+        choiceProperty: 'options',
         getOperators: () => ['in', 'notIn']
     },
     date: {
@@ -45,7 +45,7 @@ const KIND_DEFAULTS: Record<SourceValueKind, LogicSourceDescriptor> = {
 const TYPE_OVERRIDES = new Map<string, LogicSourceDescriptor>([
     ['fmdb:checkbox', {
         valueKind: 'choice',
-        choiceProperty: 'fmdb:options',
+        choiceProperty: 'options',
         getOperators: source => source.choiceValues.length <= 1
             ? ['isChecked', 'isUnchecked']
             : ['containsAny', 'containsAll']

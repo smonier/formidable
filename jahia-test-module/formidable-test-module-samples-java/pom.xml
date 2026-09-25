@@ -72,6 +72,21 @@
             <version>${json.version}</version>
             <scope>provided</scope>
         </dependency>
+        <!-- The samples carry one unit test: a field action's rules are worth showing tested, since a module
+             copying this one inherits the shape of both. Nothing else in this module is tested here — the
+             Cypress suite exercises it on a running Jahia. -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -84,7 +99,10 @@
                     <instructions>
                         <_dsannotations>*</_dsannotations>
                         <Jahia-Module-Type>module</Jahia-Module-Type>
-                        <Jahia-Depends>default,formidable-engine,content-integrity</Jahia-Depends>
+                        <!-- The types the integrity checks resolve (AbstractFormidableIntegrityCheck):
+                             fmdb:form and fmdb:formReference from formidable-elements, fmdb:formSubmission,
+                             fmdb:formResults and fmdb:logicSrc from formidable-engine -->
+                        <Jahia-Depends>default,formidable-engine,formidable-elements,content-integrity</Jahia-Depends>
                     </instructions>
                 </configuration>
             </plugin>
@@ -101,6 +119,7 @@
                 <configuration>
                     <failOnWarning>true</failOnWarning>
                     <ignoredUnusedDeclaredDependencies>
+                        <ignoredUnusedDeclaredDependency>org.junit.jupiter:junit-jupiter-engine</ignoredUnusedDeclaredDependency>
                         <ignoredUnusedDeclaredDependency>javax.jcr:jcr</ignoredUnusedDeclaredDependency>
                         <ignoredUnusedDeclaredDependency>org.osgi:osgi.annotation</ignoredUnusedDeclaredDependency>
                         <ignoredUnusedDeclaredDependency>org.springframework:spring-webmvc</ignoredUnusedDeclaredDependency>

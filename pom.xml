@@ -48,9 +48,13 @@
     </scm>
 
     <modules>
+        <!-- Not a Jahia module: the npm package @jahia/formidable-library, linted, built, tested and smoke-imported here;
+             the form modules read its sources through the yarn workspace and need no build order -->
+        <module>packages/formidable</module>
         <module>formidable-engine</module>
         <module>formidable-elements</module>
         <module>formidable-extended-inputs</module>
+        <module>formidable-jexperience-engine</module>
         <module>formidable-salesforce</module>
         <module>formidable-hubspot</module>
         <module>formidable-efficy</module>
@@ -82,6 +86,24 @@
         <build-helper-maven-plugin.version>3.6.0</build-helper-maven-plugin.version>
         <buildnumber-maven-plugin.version>3.2.1</buildnumber-maven-plugin.version>
         <jahia.plugin.version>6.9</jahia.plugin.version>
+        <!-- S6842 "non-interactive elements should not be assigned interactive roles" is wrong on a fieldset
+             of radio buttons: ARIA in HTML lists radiogroup among the roles a fieldset may take
+             (https://www.w3.org/TR/html-aria/), and it is the only role aria-readonly is supported on —
+             which the jExperience prefill sets when the author locks the field. The repo's own eslint agrees;
+             Sonar's copy of the jsx-a11y rule does not know the allowance. Declared here rather than
+             dismissed in the dashboard, so that it is read in a review and holds for the next view that
+             renders a group of radios. It has to be the root pom: an issue exclusion is a project-level
+             analysis property, and the same lines in a module's pom are read by nothing. The four views:
+             fmdb:radio, and fmdbext:switch in its buttons mode, fmdbext:rating, fmdbext:scale. -->
+        <sonar.issue.ignore.multicriteria>radiogroupRadio,radiogroupSwitch,radiogroupRating,radiogroupScale</sonar.issue.ignore.multicriteria>
+        <sonar.issue.ignore.multicriteria.radiogroupRadio.ruleKey>typescript:S6842</sonar.issue.ignore.multicriteria.radiogroupRadio.ruleKey>
+        <sonar.issue.ignore.multicriteria.radiogroupRadio.resourceKey>**/Input/Radio/default.server.tsx</sonar.issue.ignore.multicriteria.radiogroupRadio.resourceKey>
+        <sonar.issue.ignore.multicriteria.radiogroupSwitch.ruleKey>typescript:S6842</sonar.issue.ignore.multicriteria.radiogroupSwitch.ruleKey>
+        <sonar.issue.ignore.multicriteria.radiogroupSwitch.resourceKey>**/Input/Switch/default.server.tsx</sonar.issue.ignore.multicriteria.radiogroupSwitch.resourceKey>
+        <sonar.issue.ignore.multicriteria.radiogroupRating.ruleKey>typescript:S6842</sonar.issue.ignore.multicriteria.radiogroupRating.ruleKey>
+        <sonar.issue.ignore.multicriteria.radiogroupRating.resourceKey>**/Input/Rating/default.server.tsx</sonar.issue.ignore.multicriteria.radiogroupRating.resourceKey>
+        <sonar.issue.ignore.multicriteria.radiogroupScale.ruleKey>typescript:S6842</sonar.issue.ignore.multicriteria.radiogroupScale.ruleKey>
+        <sonar.issue.ignore.multicriteria.radiogroupScale.resourceKey>**/Input/Scale/ScaleField.tsx</sonar.issue.ignore.multicriteria.radiogroupScale.resourceKey>
     </properties>
 
     <repositories>

@@ -48,6 +48,7 @@ export interface SubmissionRow {
     origin: string | null;
     locale: string | null;
     referer: string | null;
+    timeZone: string | null;
     fieldValues: SubmissionFieldValue[];
     files: SubmissionFile[];
 }
@@ -77,16 +78,21 @@ function normalizePropertyValues(property: SubmissionProperty): string[] {
     return [String(property.value)];
 }
 
+/** The field types whose stored value is a date the reader should see in their own format. */
+export type FieldValueKind = 'date' | 'datetime';
+
 /**
  * What the results screen knows about the source form: the label of each field in
- * the UI language, and the order in which the fields are displayed in the form.
+ * the UI language, the order in which the fields are displayed in the form, and the
+ * fields whose values are dates (stored as the ISO strings the browser inputs post).
  */
 export interface FormFields {
     labels: Map<string, string>;
     order: string[];
+    kinds: Map<string, FieldValueKind>;
 }
 
-export const EMPTY_FORM_FIELDS: FormFields = {labels: new Map(), order: []};
+export const EMPTY_FORM_FIELDS: FormFields = {labels: new Map(), order: [], kinds: new Map()};
 
 /**
  * Sorts items by the position of their field in the form. Fields the form no longer
@@ -123,6 +129,7 @@ export type GqlSubmissionNode = {
     origin?: {value?: string};
     locale?: {value?: string};
     referer?: {value?: string};
+    timeZone?: {value?: string};
     data?: {nodes?: Array<{properties?: SubmissionProperty[]}>};
     files?: {nodes?: Array<{children?: {nodes?: Array<{name: string; children?: {nodes?: GqlFileNode[]}}>}}>};
 } & Record<string, unknown>;
@@ -170,6 +177,7 @@ export function parseSubmissionNode(node: GqlSubmissionNode, fieldOrder: string[
         origin: node.origin?.value ?? null,
         locale: node.locale?.value ?? null,
         referer: node.referer?.value ?? null,
+        timeZone: node.timeZone?.value ?? null,
         fieldValues: sortByFormOrder(fieldValues, field => field.name, fieldOrder),
         files: sortByFormOrder(files, file => file.fieldName, fieldOrder)
     };
@@ -230,6 +238,71 @@ export function formatDate(isoDate: string): string {
     }
 }
 
+const DATE_VALUE = /^(\d{4})-(\d{2})-(\d{2})$/;
+// Seconds and a fraction are optional, as in the backend's format (HH:mm[:ss[.SSS]]); the
+// fraction is matched but not read: the short time style shows none of it.
+const DATETIME_VALUE = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?$/;
+
+/**
+ * Formats a stored field value for the reader when the field is a date or a datetime
+ * field, in the browser's locale like the submission metadata. The inputs post wall-clock
+ * strings without a zone ("2026-09-09", "2026-09-05T12:53"), and the results show them as
+ * typed: the parts are carried in UTC and formatted in UTC, so the reader's own zone never
+ * shifts them (`new Date("2026-09-09")` would read UTC midnight and show the previous day
+ * west of Greenwich) nor rejects them (02:30 on a spring-forward day does not exist in the
+ * reader's zone but did where the submitter typed it). Anything that does not parse, and
+ * every other field kind, is shown as stored.
+ *
+ * A datetime is followed by the submitter's time zone when the submission recorded one
+ * ("05/09/2026 12:53 (Europe/Paris)"): the value stays as typed, the zone says where 12:53
+ * applies. A date has no zone, and a submission without one (posted outside a browser, or
+ * stored before the zone was recorded) shows the value alone.
+ *
+ * The zone is the submitter's — where the text was typed — not a property of the value, which
+ * the datetime-local input stores without one: a datetime meant for a fixed remote place (an
+ * appointment at a venue in another zone) still shows the submitter's zone. The exports keep
+ * the two apart, the raw value in its column and the zone in its own.
+ */
+export function formatFieldValue(value: string, kind: FieldValueKind | undefined, timeZone?: string | null): string {
+    if (kind === 'date') {
+        const date = wallClockDate(DATE_VALUE.exec(value));
+        return date ? date.toLocaleDateString(undefined, {timeZone: 'UTC'}) : value;
+    }
+
+    if (kind === 'datetime') {
+        const date = wallClockDate(DATETIME_VALUE.exec(value));
+        if (!date) {
+            return value;
+        }
+
+        const formatted = date.toLocaleString(undefined, {dateStyle: 'short', timeStyle: 'short', timeZone: 'UTC'});
+        return timeZone ? `${formatted} (${timeZone})` : formatted;
+    }
+
+    return value;
+}
+
+/**
+ * Builds the Date carrying the matched parts as UTC fields, or null when they do not
+ * describe a date: Date silently rolls an out-of-range part over ("2026-13-45" becomes
+ * February 2027), so every part is read back and compared. UTC has no daylight-saving
+ * gap, so a valid wall-clock value always round-trips.
+ */
+function wallClockDate(match: RegExpExecArray | null): Date | null {
+    if (!match) {
+        return null;
+    }
+
+    const [year, month, day, hours = 0, minutes = 0, seconds = 0] = match.slice(1).map(part => Number(part ?? 0));
+    // Not Date.UTC(): it maps the years 0-99 to 1900-1999, and "0099-01-01" is a valid date value.
+    const date = new Date(0);
+    date.setUTCFullYear(year, month - 1, day);
+    date.setUTCHours(hours, minutes, seconds, 0);
+    const roundTrips = date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+        && date.getUTCHours() === hours && date.getUTCMinutes() === minutes && date.getUTCSeconds() === seconds;
+    return roundTrips ? date : null;
+}
+
 export function formatFileSize(bytes: number | null): string {
     if (bytes == null) {
         return '';
@@ -250,13 +323,15 @@ export function formatFileSize(bytes: number | null): string {
  * Reads GET_FORM_FIELD_LABELS. The descendants come back in tree order, which is
  * the order the form displays its fields in (steps, then blocks, then fields).
  */
+type GqlFormFieldNode = {name: string; displayName?: string; isDate?: boolean; isDatetime?: boolean} & Record<string, unknown>;
 type GqlFormFieldsResponse = {
-    jcr?: {nodeById?: {fields?: {nodes?: Array<{descendants?: {nodes?: Array<{name: string; displayName?: string} & Record<string, unknown>>}}>}}};
+    jcr?: {nodeById?: {fields?: {nodes?: Array<{descendants?: {nodes?: Array<GqlFormFieldNode>}}>}}};
 };
 
 export function parseFormFields(data: GqlFormFieldsResponse | undefined): FormFields {
     const labels = new Map<string, string>();
     const order: string[] = [];
+    const kinds = new Map<string, FieldValueKind>();
     const fieldListNodes = data?.jcr?.nodeById?.fields?.nodes;
     if (!Array.isArray(fieldListNodes) || fieldListNodes.length === 0) {
         return EMPTY_FORM_FIELDS;
@@ -276,9 +351,15 @@ export function parseFormFields(data: GqlFormFieldsResponse | undefined): FormFi
         if (node.displayName && node.displayName !== node.name) {
             labels.set(node.name, node.displayName);
         }
+
+        if (node.isDate === true) {
+            kinds.set(node.name, 'date');
+        } else if (node.isDatetime === true) {
+            kinds.set(node.name, 'datetime');
+        }
     }
 
-    return {labels, order};
+    return {labels, order, kinds};
 }
 
 /** Typed access to Jahia's global UI context (window.contextJsParameters). */

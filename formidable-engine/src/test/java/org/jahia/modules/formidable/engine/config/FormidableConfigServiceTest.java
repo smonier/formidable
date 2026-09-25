@@ -1,18 +1,59 @@
 package org.jahia.modules.formidable.engine.config;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.net.http.HttpClient;
+import java.io.InputStream;
 import java.time.Duration;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.Properties;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class FormidableConfigServiceTest {
+
+    @Test
+    void theShippedConfigurationFileAgreesWithTheAnnotationsDefaults() throws Exception {
+        // Verifies the one thing two copies of a default cannot verify about each other: the .cfg an administrator
+        // reads and edits ships the same numbers as the annotation the code falls back on. They agree today, and a
+        // drift would be silent — the file would promise one bound and the engine apply another.
+        Properties shipped = new Properties();
+        try (InputStream in = FormidableConfig.class.getResourceAsStream("/META-INF/configurations/org.jahia.modules.formidable.cfg")) {
+            assertNotNull(in, "the module ships its configuration file");
+            shipped.load(in);
+        }
+
+        assertEquals(String.valueOf(FormidableConfig.DEFAULT_FIELD_ACTION_MAX_VALUES_PER_FIELD),
+                shipped.getProperty("fieldActionMaxValuesPerField"));
+        assertEquals(String.valueOf(FormidableConfig.DEFAULT_FIELD_ACTION_RATE_LIMIT_PER_MINUTE),
+                shipped.getProperty("fieldActionRateLimitPerMinute"));
+        assertEquals(String.valueOf(FormidableConfig.DEFAULT_FIELD_ACTION_MAX_VALUE_LENGTH),
+                shipped.getProperty("fieldActionMaxValueLength"));
+        assertEquals(String.valueOf(FormidableConfig.DEFAULT_FIELD_ACTION_CACHE_TTL_SECONDS),
+                shipped.getProperty("fieldActionVerdictCacheTtlSeconds"));
+    }
 
     @Test
     void activateAcceptsValidHttpsForwardTarget() {
@@ -315,6 +356,186 @@ class FormidableConfigServiceTest {
                 service.getOptionsSourcesCacheTtl().toSeconds());
     }
 
+    private static final String LEGACY_TARGETS = "crm01|CRM|https://crm.example.com/forms";
+
+    /** The raw properties DS hands over: without the file (legacy), then from the deployed file. */
+    private static final Map<String, Object> LEGACY_PROPERTIES = Map.of("forwardTargets", LEGACY_TARGETS);
+    private static final Map<String, Object> FILE_PROPERTIES = Map.of(
+            LegacyConfigurationCarryOver.FILEINSTALL_FILENAME, "file:/karaf/etc/org.jahia.modules.formidable.cfg",
+            "forwardTargets", "");
+
+    /** The file after an administrator edited the target while a write-back was still pending. */
+    private static final String EDITED_TARGETS = "other|Other|https://other.example.com/forms";
+    private static final Map<String, Object> EDITED_FILE_PROPERTIES = Map.of(
+            LegacyConfigurationCarryOver.FILEINSTALL_FILENAME, "file:/karaf/etc/org.jahia.modules.formidable.cfg",
+            "forwardTargets", EDITED_TARGETS);
+
+    private static Configuration configurationHolding(ConfigurationAdmin admin) throws IOException {
+        Configuration configuration = mock(Configuration.class);
+        when(admin.getConfiguration(FormidableConfigService.PID, "?")).thenReturn(configuration);
+        when(configuration.getProperties()).thenAnswer(invocation -> new Hashtable<>(FILE_PROPERTIES));
+        return configuration;
+    }
+
+    @Test
+    void carryOverWaitsForConfigurationAdminAndWritesWhenItBinds() throws IOException {
+        // The deployed file takes over while the optional ConfigurationAdmin is not bound yet.
+        FormidableConfigService service = new FormidableConfigService();
+        service.configure(new TestFormidableConfig(LEGACY_TARGETS, false, ""), LEGACY_PROPERTIES);
+        service.configure(new TestFormidableConfig("", false, ""), FILE_PROPERTIES);
+
+        // Meanwhile the settings in force are still the legacy ones, not the file's defaults.
+        assertTrue(service.resolveForwardTarget("crm01").isPresent());
+
+        ConfigurationAdmin admin = mock(ConfigurationAdmin.class);
+        Configuration configuration = configurationHolding(admin);
+        service.setConfigurationAdmin(admin);
+
+        // Expected outcome: the legacy target is written into the file-backed configuration on bind.
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Dictionary<String, Object>> written = ArgumentCaptor.forClass(Dictionary.class);
+        verify(configuration).update(written.capture());
+        assertEquals(LEGACY_TARGETS, written.getValue().get("forwardTargets"));
+    }
+
+    @Test
+    void aRetryLeavesASettingTheAdministratorEditedSince() throws IOException {
+        // The first write fails; before the retry, the administrator changes the target in the file.
+        FormidableConfigService service = new FormidableConfigService();
+        ConfigurationAdmin admin = mock(ConfigurationAdmin.class);
+        Configuration configuration = configurationHolding(admin);
+        doThrow(new IOException("disk full")).when(configuration).update(any());
+        service.setConfigurationAdmin(admin);
+        service.configure(new TestFormidableConfig(LEGACY_TARGETS, false, ""), LEGACY_PROPERTIES);
+        service.configure(new TestFormidableConfig("", false, ""), FILE_PROPERTIES);
+        verify(configuration, times(1)).update(any());
+
+        when(configuration.getProperties()).thenAnswer(invocation -> new Hashtable<>(EDITED_FILE_PROPERTIES));
+        service.configure(new TestFormidableConfig(EDITED_TARGETS, false, ""), EDITED_FILE_PROPERTIES);
+
+        // Expected outcome: the edit wins, nothing is rewritten, and nothing stays pending.
+        verify(configuration, times(1)).update(any());
+        assertTrue(service.resolveForwardTarget("other").isPresent());
+        assertFalse(service.resolveForwardTarget("crm01").isPresent());
+        service.configure(new TestFormidableConfig(EDITED_TARGETS, false, ""), EDITED_FILE_PROPERTIES);
+        verify(configuration, times(1)).update(any());
+    }
+
+    @Test
+    void carryOverIsRetriedOnTheNextCallbackWhenTheWriteFailed() throws IOException {
+        // The first write fails; the transition must not be consumed by that failure.
+        FormidableConfigService service = new FormidableConfigService();
+        ConfigurationAdmin admin = mock(ConfigurationAdmin.class);
+        Configuration configuration = configurationHolding(admin);
+        doThrow(new IOException("disk full")).doNothing().when(configuration).update(any());
+        service.setConfigurationAdmin(admin);
+
+        service.configure(new TestFormidableConfig(LEGACY_TARGETS, false, ""), LEGACY_PROPERTIES);
+        service.configure(new TestFormidableConfig("", false, ""), FILE_PROPERTIES);
+        verify(configuration, times(1)).update(any());
+
+        // A later callback with the same file-backed properties retries the pending write, and
+        // the legacy settings stay in force until the merged configuration comes back...
+        service.configure(new TestFormidableConfig("", false, ""), FILE_PROPERTIES);
+        verify(configuration, times(2)).update(any());
+        assertTrue(service.resolveForwardTarget("crm01").isPresent());
+
+        // ...which is this callback: nothing is pending any more, the file rules.
+        Map<String, Object> merged = Map.of(
+                LegacyConfigurationCarryOver.FILEINSTALL_FILENAME, "file:/karaf/etc/org.jahia.modules.formidable.cfg",
+                "forwardTargets", LEGACY_TARGETS);
+        service.configure(new TestFormidableConfig(LEGACY_TARGETS, false, ""), merged);
+        verify(configuration, times(2)).update(any());
+        assertTrue(service.resolveForwardTarget("crm01").isPresent());
+    }
+
+    @Test
+    void theLegacySettingsStayInForceWhileTheWriteKeepsFailing() throws IOException {
+        // Every write fails: the file's defaults must not take over in the meantime.
+        FormidableConfigService service = new FormidableConfigService();
+        ConfigurationAdmin admin = mock(ConfigurationAdmin.class);
+        Configuration configuration = configurationHolding(admin);
+        doThrow(new IOException("disk full")).when(configuration).update(any());
+        service.setConfigurationAdmin(admin);
+
+        service.configure(new TestFormidableConfig(LEGACY_TARGETS, false, ""), LEGACY_PROPERTIES);
+        service.configure(new TestFormidableConfig("", false, ""), FILE_PROPERTIES);
+        service.configure(new TestFormidableConfig("", false, ""), FILE_PROPERTIES);
+
+        // Expected outcome: two failed attempts, the legacy target still resolves.
+        verify(configuration, times(2)).update(any());
+        assertTrue(service.resolveForwardTarget("crm01").isPresent());
+    }
+
+    @Test
+    void nothingIsWrittenWhenTheConfigurationWasFileBackedAllAlong() throws IOException {
+        FormidableConfigService service = new FormidableConfigService();
+        ConfigurationAdmin admin = mock(ConfigurationAdmin.class);
+        Configuration configuration = configurationHolding(admin);
+        service.setConfigurationAdmin(admin);
+
+        service.configure(new TestFormidableConfig("", false, ""), FILE_PROPERTIES);
+        service.configure(new TestFormidableConfig("", false, ""), FILE_PROPERTIES);
+
+        verify(configuration, never()).update(any());
+    }
+
+    @Test
+    void aTypedLegacyValueIsWrittenBackAsAString() throws IOException {
+        // The Felix console stores typed values (a Long here); written back typed, fileinstall would
+        // persist L"7" into the .cfg file, which a .cfg does not read back. Strings only.
+        FormidableConfigService service = new FormidableConfigService();
+        ConfigurationAdmin admin = mock(ConfigurationAdmin.class);
+        Configuration configuration = configurationHolding(admin);
+        service.setConfigurationAdmin(admin);
+        Map<String, Object> typedLegacy = Map.of("forwardTargets", LEGACY_TARGETS, "uploadMaxFileCount", 7L);
+        Map<String, Object> file = Map.of(
+                LegacyConfigurationCarryOver.FILEINSTALL_FILENAME, "file:/karaf/etc/org.jahia.modules.formidable.cfg",
+                "forwardTargets", "", "uploadMaxFileCount", "10");
+        when(configuration.getProperties()).thenAnswer(invocation -> new Hashtable<>(file));
+
+        service.configure(new TestFormidableConfig(LEGACY_TARGETS, false, ""), typedLegacy);
+        service.configure(new TestFormidableConfig("", false, ""), file);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Dictionary<String, Object>> written = ArgumentCaptor.forClass(Dictionary.class);
+        verify(configuration).update(written.capture());
+        assertEquals("7", written.getValue().get("uploadMaxFileCount"));
+        assertEquals(LEGACY_TARGETS, written.getValue().get("forwardTargets"));
+    }
+
+    @Test
+    void activateParsesFieldActionProvidersAndSkipsWhatItCannotTrust() {
+        // Verifies the provider registry: a full entry and a credential-less one are kept, the empty label falling
+        // back to the id; an entry with a header but no credential, an HTTP base, embedded credentials, a duplicate
+        // id and a two-part line are skipped without poisoning the rest — and a parsed provider never prints its
+        // secret, since a toString reaches the logs.
+        FormidableConfigService service = new FormidableConfigService();
+
+        service.activate(TestFormidableConfig.withFieldActionProviders(
+                """
+                email-check|Email verification|https://api.example.com/v1|X-Api-Key|s3cr3t
+                crm||https://crm.internal/api
+                half|Half|https://api.example.com|X-Api-Key
+                plain|Plain|http://api.example.com
+                creds|Creds|https://user:pw@api.example.com
+                email-check|Again|https://other.example.com
+                two|parts"""));
+
+        FormidableConfigService.FieldActionSettings settings = service.getFieldActionSettings();
+        assertEquals(List.of("email-check", "crm"), List.copyOf(settings.providers().keySet()));
+        FormidableConfigService.FieldActionProvider emailCheck = service.resolveFieldActionProvider("email-check").orElseThrow();
+        assertEquals("X-Api-Key", emailCheck.credentialHeader());
+        assertEquals("s3cr3t", emailCheck.credential());
+        assertFalse(emailCheck.toString().contains("s3cr3t"));
+        assertEquals("crm", service.resolveFieldActionProvider("crm").orElseThrow().label());
+        assertTrue(service.resolveFieldActionProvider("half").isEmpty());
+        assertTrue(service.resolveFieldActionProvider(null).isEmpty());
+        assertEquals(300L, settings.verdictCacheTtl().toSeconds());
+        assertEquals(30, settings.rateLimitPerMinute());
+        assertEquals(512, settings.maxValueLength());
+    }
+
     private static final class TestFormidableConfig implements FormidableConfig {
         private final String forwardTargets;
         private final boolean enableDevForwardTargets;
@@ -332,6 +553,13 @@ class FormidableConfigServiceTest {
         private final String captchaVerifyUrl;
         private String optionsSources = "";
         private long optionsSourcesCacheTtlSeconds = 300L;
+        private String fieldActionProviders = "";
+
+        private static TestFormidableConfig withFieldActionProviders(String fieldActionProviders) {
+            TestFormidableConfig config = new TestFormidableConfig("", false, "");
+            config.fieldActionProviders = fieldActionProviders;
+            return config;
+        }
 
         private static TestFormidableConfig withOptionsSources(String optionsSources, long cacheTtlSeconds) {
             TestFormidableConfig config = new TestFormidableConfig("", false, "");
@@ -532,8 +760,85 @@ class FormidableConfigServiceTest {
         }
 
         @Override
+        public String fieldActionProviders() {
+            return fieldActionProviders;
+        }
+
+        @Override
+        public long fieldActionHttpConnectTimeoutSeconds() {
+            return 5L;
+        }
+
+        @Override
+        public long fieldActionHttpRequestTimeoutSeconds() {
+            return 10L;
+        }
+
+        @Override
+        public long fieldActionVerdictCacheTtlSeconds() {
+            return 300L;
+        }
+
+        @Override
+        public int fieldActionRateLimitPerMinute() {
+            return 30;
+        }
+
+        @Override
+        public int fieldActionMaxValueLength() {
+            return 512;
+        }
+
+        @Override
+        public int fieldActionMaxValuesPerField() {
+            return 20;
+        }
+
+        @Override
         public Class<? extends java.lang.annotation.Annotation> annotationType() {
             return FormidableConfig.class;
+        }
+    }
+
+    @Test
+    void carryOverGivesUpAfterThreeFailedAttemptsAndLetsTheFileRule() throws IOException {
+        // An update that keeps failing must not keep every later edit of the file from applying.
+        FormidableConfigService service = new FormidableConfigService();
+        ConfigurationAdmin admin = mock(ConfigurationAdmin.class);
+        Configuration configuration = configurationHolding(admin);
+        doThrow(new IOException("read-only")).when(configuration).update(any());
+        service.setConfigurationAdmin(admin);
+
+        service.configure(new TestFormidableConfig(LEGACY_TARGETS, false, ""), LEGACY_PROPERTIES);
+        service.configure(new TestFormidableConfig("", false, ""), FILE_PROPERTIES);
+        service.configure(new TestFormidableConfig("", false, ""), FILE_PROPERTIES);
+        // Two failures so far: the legacy target is still in force.
+        assertTrue(service.resolveForwardTarget("crm01").isPresent());
+
+        // The third failure is the last attempt: the file's values (no target) rule from now on...
+        service.configure(new TestFormidableConfig("", false, ""), FILE_PROPERTIES);
+        verify(configuration, times(FormidableConfigService.MAX_WRITE_BACK_ATTEMPTS)).update(any());
+        assertTrue(service.resolveForwardTarget("crm01").isEmpty());
+
+        // ...and a later edit of the file applies, with no further write attempt.
+        service.configure(new TestFormidableConfig(EDITED_TARGETS, false, ""), EDITED_FILE_PROPERTIES);
+        verify(configuration, times(FormidableConfigService.MAX_WRITE_BACK_ATTEMPTS)).update(any());
+        assertTrue(service.resolveForwardTarget("other").isPresent());
+    }
+
+    @Test
+    void aFirstActivationFromAFreshlyCopiedFileIsReportedAndActivated() throws IOException {
+        // The miss the carry-over cannot see: the file was loaded before the component started.
+        Path file = Files.createTempFile("org.jahia.modules.formidable", ".cfg");
+        try {
+            FormidableConfigService service = new FormidableConfigService();
+            Map<String, Object> properties = Map.of(
+                    LegacyConfigurationCarryOver.FILEINSTALL_FILENAME, file.toUri().toString(),
+                    "forwardTargets", "");
+            service.configure(new TestFormidableConfig("", false, ""), properties);
+            assertTrue(service.getForwardTargets().isEmpty());
+        } finally {
+            Files.deleteIfExists(file);
         }
     }
 }

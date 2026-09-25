@@ -4,8 +4,7 @@ import org.jahia.services.content.JCRNodeWrapper;
 
 import javax.jcr.RepositoryException;
 import java.util.UUID;
-
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.FIELD_KEY_PROPERTY;
+import org.jahia.modules.formidable.engine.api.FmdbProperty;
 
 /**
  * Access to the fieldKey property: the stable business identity of a form element,
@@ -20,11 +19,11 @@ final class FieldKeys {
      * Returns the node's fieldKey, or {@code null} when absent or blank.
      */
     static String get(JCRNodeWrapper node) throws RepositoryException {
-        if (!node.hasProperty(FIELD_KEY_PROPERTY)) {
+        if (!node.hasProperty(FmdbProperty.FIELD_KEY)) {
             return null;
         }
 
-        String value = node.getProperty(FIELD_KEY_PROPERTY).getString();
+        String value = node.getProperty(FmdbProperty.FIELD_KEY).getString();
         return value == null || value.isBlank() ? null : value;
     }
 
@@ -34,7 +33,7 @@ final class FieldKeys {
      */
     static String assign(JCRNodeWrapper node) throws RepositoryException {
         String key = UUID.randomUUID().toString();
-        node.setProperty(FIELD_KEY_PROPERTY, key);
+        node.setProperty(FmdbProperty.FIELD_KEY, key);
         return key;
     }
 

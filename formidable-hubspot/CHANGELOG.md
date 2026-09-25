@@ -52,6 +52,6 @@ Release notes for the whole repository are assembled by [chachalog](../.chachalo
 
 ### Documentation
 
-* `README.md` and `docs/how-to-hubspot-contact-action.md`, including the Contacts versus Leads
+* `README.md` and `docs/administration/how-to-hubspot-contact-action.md`, including the Contacts versus Leads
   model (lifecycle stage constants), the private app token requirement (developer API keys are
   refused by the CRM endpoints) and the connection file ownership requirement.

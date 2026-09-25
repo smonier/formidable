@@ -10,9 +10,8 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
-
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.FORM_LOGIC_ELEMENT_MIXIN;
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.LOGICS_PROPERTY;
+import org.jahia.modules.formidable.engine.api.FmdbMixin;
+import org.jahia.modules.formidable.engine.api.FmdbProperty;
 
 /**
  * Keeps logicsSrc child nodes in sync with the logics JSON property during normal authoring.
@@ -35,7 +34,7 @@ public class FormLogicSyncListener extends DefaultEventListener {
 
     @Override
     public String[] getNodeTypes() {
-        return new String[]{FORM_LOGIC_ELEMENT_MIXIN};
+        return new String[]{FmdbMixin.FORM_LOGIC_ELEMENT};
     }
 
     @Override
@@ -44,7 +43,7 @@ public class FormLogicSyncListener extends DefaultEventListener {
             Event event = events.nextEvent();
             try {
                 String path = event.getPath();
-                if (!path.endsWith("/" + LOGICS_PROPERTY)) {
+                if (!path.endsWith("/" + FmdbProperty.LOGICS)) {
                     continue;
                 }
 

@@ -17,4 +17,4 @@ To upgrade, in **Administration > Server > Modules and Extensions > Modules**:
 4. **Re-enable formidable-elements on every site that uses it**: the uninstall removed it from the sites' enabled modules, and forms show a "Module error" box until it is enabled again. A server restart does not repair this; re-enabling the module does, immediately.
 5. Check that forms render again. Existing content is migrated automatically; the migrated fields may show as *modified* (pending publication) afterwards — nothing is actually pending, publishing them is optional and only clears the flag.
 
-This is a one-time procedure: later upgrades install in place as usual. The full walkthrough, with the exact messages to expect, is in [docs/upgrade-notes.md](https://github.com/Jahia/formidable/blob/main/docs/upgrade-notes.md).
+This is a one-time procedure: later upgrades install in place as usual. The full walkthrough, with the exact messages to expect, is in [docs/administration/upgrade-notes.md](https://github.com/Jahia/formidable/blob/main/docs/administration/upgrade-notes.md).

@@ -155,8 +155,12 @@ describe('Form fields - 28 File upload saved fixtures', () => {
 			form.waitForSubmit().shouldHaveSubmissionMessage('Form submitted successfully!');
 
 			getLatestLiveFormSubmission(formName)
-				.then(({name, path}) => {
+				.then(({name, path, timeZone}) => {
 					expect(name).to.match(/^submission-/);
+					// The submission records the browser's time zone, the one the results show next to date-times.
+					cy.window().then(win => {
+						expect(timeZone, 'time zone of the submission').to.equal(win.Intl.DateTimeFormat().resolvedOptions().timeZone);
+					});
 
 					// Uploaded files are persisted under /files/<fieldName> as jnt:file nodes.
 					return getNodeByPath(

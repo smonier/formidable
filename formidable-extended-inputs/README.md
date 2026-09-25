@@ -4,7 +4,7 @@ Optional add-on field types for Formidable (see [issue #158](https://github.com/
 
 Keeps the core element set lean and HTML5-native while richer widgets live in this optional module.
 It follows the third-party extension contract documented in
-[`docs/how-to-extend-views-and-elements-from-third-party-module.md`](../docs/how-to-extend-views-and-elements-from-third-party-module.md)
+[`docs/extension/how-to-extend-views-and-elements-from-third-party-module.md`](../docs/extension/how-to-extend-views-and-elements-from-third-party-module.md)
 and serves as a real-world validation of it.
 
 ## Field types

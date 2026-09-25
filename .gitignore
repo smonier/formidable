@@ -29,3 +29,8 @@ node_modules
 
 # Local working notes (personal session/spec docs, never meant for the repo)
 .harness/
+/.settings/
+/.project
+
+# scratch directory of packages/formidable/scripts/smoke.mjs
+.smoke

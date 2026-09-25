@@ -1,0 +1,50 @@
+<jnt = 'http://www.jahia.org/jahia/nt/1.0'>
+<fmdb = 'http://www.jahia.org/jahia/fmdb/nt/1.0'>
+<fmdbmix = 'http://www.jahia.org/jahia/fmdb/mix/1.0'>
+<jmix = 'http://www.jahia.org/jahia/mix/1.0'>
+
+// The jExperience mapping of a field: attached to the engine's marker mixin (extends), so it
+// reaches every field type that claims fmdbmix:profileMappableField — built-in, extended or
+// third-party — without naming one. Shown as the "jExperience" section of the field's editor
+// (META-INF/jahia-content-editor-forms/forms/fmdbmix_jExperienceProfileMapping.json); the
+// section's switch is the author's "map this field to the visitor profile". dependentProperties:
+// the editor asks the property list again when the author switches the field's "multiple"
+// toggle or edits a checkbox's choices or options mode, so the offered cardinality follows the
+// unsaved values (jcontent re-queries a choicelist only for the properties its selector options
+// name, and sends their current values in the initializer's context).
+//
+// The prefill lives here, as two properties of the mapping rather than a mixin of its own: it needs the
+// mapping and a property to do anything at all, and the editor has no way to show one fieldset only when
+// another is switched on — a mixin's switch is all it offers, and a fieldset condition is resolved against
+// the saved node when the form is built. Inside the mapping the dependency is structural: no mapping, no
+// prefill, and switching the mapping off takes the prefill with it. jExperiencePrefill is "fill this field
+// from the visitor profile when the page opens": the profile's value replaces a default value the author
+// gave the field, and a field the profile has no value for keeps its default. jExperiencePrefillThen says
+// what the page then does with the field — leave it editable, make it read-only, or hide it, its value
+// still submitted; a field the prefill left alone (nothing to write, or the visitor's own input) is never
+// touched by it. Its choicelist chains the resource bundle with an initializer of ours, which replaces the
+// three values with one message while the prefill is off, and dependentProperties makes the editor ask the
+// list again the moment the box is ticked, with no save. The option is required by the editor only — the
+// fieldsets/ override, the one static registry the Content Editor merges into a field (a forms/ file
+// places the fields and says nothing else about them): a JCR-level mandatory ADDED to a type already
+// deployed is a MAJOR change to Jahia's DefinitionsBundleChecker, which cancels the deployment. The
+// options-source settings of formidable-elements carry theirs in a fieldsets/ override for the same reason.
+[fmdbmix:jExperienceProfileMapping] mixin
+ extends = fmdbmix:profileMappableField
+ itemtype = content
+ - jExperienceProfileProperty (string, choicelist[formidableJExperienceProfileProperties,dependentProperties='multiple,options,optionsMode,jExperienceSensitive']) indexed=no
+ - jExperienceSetStrategy (string, choicelist[resourceBundle]) = 'alwaysSet' autocreated indexed=no < 'alwaysSet', 'setIfMissing'
+ - jExperiencePrefill (boolean) = false autocreated indexed=no
+ - jExperiencePrefillThen (string, choicelist[resourceBundle,formidableJExperiencePrefillThen,dependentProperties='jExperiencePrefill,jExperiencePrefillThen']) = 'editable' autocreated indexed=no < 'editable', 'readOnly', 'hidden'
+
+
+// A field the author marked sensitive: its value never leaves the site — it is not in the
+// submission event, and no mapping can be made on it. The flag has to be answerable before the
+// mapping fieldset is switched on, and a switch of its own could contradict that one, so it is a
+// property of a mixin jcontent renders without an enable switch: jmix:templateMixin, the one
+// supertype that drops it. The mapping's choicelist names this property in its dependentProperties,
+// so ticking the box empties the dropdown at once, without a save.
+[fmdbmix:jExperienceSensitiveField] > jmix:templateMixin mixin
+ extends = fmdbmix:profileMappableField
+ itemtype = content
+ - jExperienceSensitive (boolean) = false autocreated indexed=no

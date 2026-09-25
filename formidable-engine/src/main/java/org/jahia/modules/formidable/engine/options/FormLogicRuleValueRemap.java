@@ -13,6 +13,8 @@ import javax.jcr.Value;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.jahia.modules.formidable.engine.api.FmdbMixin;
+import org.jahia.modules.formidable.engine.api.FmdbProperty;
 
 /**
  * Follows a choice field's value realignment into the logic rules that reference it.
@@ -29,10 +31,6 @@ import java.util.Map;
 final class FormLogicRuleValueRemap {
 
     private static final Logger log = LoggerFactory.getLogger(FormLogicRuleValueRemap.class);
-
-    private static final String LOGICS_PROPERTY = "logics";
-    private static final String FORM_TYPE = "fmdb:form";
-    private static final String LOGIC_ELEMENT_MIXIN = "fmdbmix:formLogicElement";
 
     private FormLogicRuleValueRemap() {
     }
@@ -58,7 +56,7 @@ final class FormLogicRuleValueRemap {
 
     private static JCRNodeWrapper formAncestor(JCRNodeWrapper node) throws RepositoryException {
         for (JCRNodeWrapper current = node; current != null; current = parentOrNull(current)) {
-            if (current.isNodeType(FORM_TYPE)) {
+            if (current.isNodeType(FmdbMixin.FORM_ROOT)) {
                 return current;
             }
         }
@@ -77,7 +75,7 @@ final class FormLogicRuleValueRemap {
     private static boolean remapDescendants(JCRNodeWrapper node, String sourceId,
             Map<String, String> valueReplacements) throws RepositoryException {
         boolean updated = false;
-        if (node.isNodeType(LOGIC_ELEMENT_MIXIN) && node.hasProperty(LOGICS_PROPERTY)) {
+        if (node.isNodeType(FmdbMixin.FORM_LOGIC_ELEMENT) && node.hasProperty(FmdbProperty.LOGICS)) {
             updated = remapRules(node, sourceId, valueReplacements);
         }
 
@@ -94,7 +92,7 @@ final class FormLogicRuleValueRemap {
 
     private static boolean remapRules(JCRNodeWrapper node, String sourceId,
             Map<String, String> valueReplacements) throws RepositoryException {
-        Value[] raw = node.getProperty(LOGICS_PROPERTY).getValues();
+        Value[] raw = node.getProperty(FmdbProperty.LOGICS).getValues();
         List<String> rewritten = new ArrayList<>(raw.length);
         boolean updated = false;
         for (Value value : raw) {
@@ -106,7 +104,7 @@ final class FormLogicRuleValueRemap {
 
         if (updated) {
             node.getSession().checkout(node);
-            node.setProperty(LOGICS_PROPERTY, rewritten.toArray(new String[0]));
+            node.setProperty(FmdbProperty.LOGICS, rewritten.toArray(new String[0]));
             log.info("[FormLogicRuleValueRemap] Followed the option realignment of source '{}' into the "
                     + "rules of '{}': values authored against a pre-0.4 language list are remapped to the "
                     + "identity values, so the rules keep matching submissions.", sourceId, node.getPath());

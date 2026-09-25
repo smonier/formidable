@@ -43,6 +43,8 @@ export const expectErrorResponse = (
 		errorCode: string
 ) => {
 	expect(response.status).to.eq(status);
+	// Exact, unlike the success case: a rejected submission is never enriched, so anything else in
+	// the body would be a leak worth failing on.
 	expect(response.body).to.deep.equal({
 		success: false,
 		errorCode
@@ -51,6 +53,10 @@ export const expectErrorResponse = (
 
 export const expectSuccessResponse = (response: Cypress.Response<unknown>) => {
 	expect(response.status).to.eq(200);
+	// Exactly one key, as before the response-enricher SPI: none of the forms these specs submit
+	// carries the sample enricher's mixin, so nothing may be added to their body — an enricher, or a
+	// pipeline regression, putting a JCR path or a stack trace there must fail here. The enriched
+	// shape has its own spec, which names the keys it expects.
 	expect(response.body).to.deep.equal({success: true});
 };
 

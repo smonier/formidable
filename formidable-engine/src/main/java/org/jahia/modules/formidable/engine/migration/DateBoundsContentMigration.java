@@ -16,8 +16,8 @@ import java.util.Calendar;
 
 /**
  * One-shot content migration for date and datetime fields: nodes stored before the
- * bound modes existed carry fixed 'min'/'max' values but no fmdb:minBoundMode /
- * fmdb:maxBoundMode. Each such bound is stamped with mode 'date' plus the matching
+ * bound modes existed carry fixed 'min'/'max' values but no minBoundMode /
+ * maxBoundMode. Each such bound is stamped with mode 'date' plus the matching
  * fixed-bound dynamic-fieldset mixin, and its value is re-written under the mixin's
  * definition, so the editor reopens it as the fixed-date choice with its calendar.
  *
@@ -37,8 +37,9 @@ import java.util.Calendar;
  * NOT on the previously installed module version. Re-running is a no-op once
  * every bound carries a mode.
  *
- * <p>Lifecycle: startup migration introduced in 0.4.0 (#202), to be removed in 0.5 — see
- * docs/upgrade-notes.md, "Startup migrations".
+ * <p>Lifecycle: startup migration introduced in 0.4.0 (#202), kept through 0.5.x so that a
+ * 0.3.x instance can still upgrade directly, to be removed in 0.6 with the other startup
+ * migrations — see docs/administration/upgrade-notes.md, "Startup migrations".
  */
 // Also a JahiaEventListener: the modes and mixins it stamps resolve through the
 // element types, so the engine-activation run fails against pre-0.4 element
@@ -50,8 +51,11 @@ public class DateBoundsContentMigration extends ElementsRedeployRetriggeredMigra
     private static final Logger log = LoggerFactory.getLogger(DateBoundsContentMigration.class);
 
     private static final String MODE_FIXED_DATE = "date";
-    private static final String MIN_MODE_PROPERTY = "fmdb:minBoundMode";
-    private static final String MAX_MODE_PROPERTY = "fmdb:maxBoundMode";
+    private static final String MIN_MODE_PROPERTY = "minBoundMode";
+    private static final String MAX_MODE_PROPERTY = "maxBoundMode";
+    /** The 0.4.0 spelling of the modes, renamed at startup by MixinPropertyNamesMigration (#310). */
+    private static final String PREFIXED_MIN_MODE_PROPERTY = "fmdb:minBoundMode";
+    private static final String PREFIXED_MAX_MODE_PROPERTY = "fmdb:maxBoundMode";
 
     /** One legacy field type, with its bounds-contract mixin and fixed-bound fieldset mixins. */
     record BoundsContract(String legacyNodeType, String contractMixin, String fixedMinMixin, String fixedMaxMixin) {
@@ -149,8 +153,13 @@ public class DateBoundsContentMigration extends ElementsRedeployRetriggeredMigra
         // Definition-less legacy values are invisible to the wrapper API: both the
         // detection and the read go through the underlying Jackrabbit node.
         Node realNode = node.getRealNode();
-        boolean legacyMin = !node.hasProperty(MIN_MODE_PROPERTY) && realNode.hasProperty("min");
-        boolean legacyMax = !node.hasProperty(MAX_MODE_PROPERTY) && realNode.hasProperty("max");
+        // A 0.4.0 field carries its modes under the fmdb: prefix until MixinPropertyNamesMigration
+        // renames them (#310): it has a mode, whatever the order the two migrations run in — stamping
+        // 'date' here would make that stamp win over the 0.4 value at the rename.
+        boolean hasMinMode = node.hasProperty(MIN_MODE_PROPERTY) || realNode.hasProperty(PREFIXED_MIN_MODE_PROPERTY);
+        boolean hasMaxMode = node.hasProperty(MAX_MODE_PROPERTY) || realNode.hasProperty(PREFIXED_MAX_MODE_PROPERTY);
+        boolean legacyMin = !hasMinMode && realNode.hasProperty("min");
+        boolean legacyMax = !hasMaxMode && realNode.hasProperty("max");
         if (!legacyMin && !legacyMax) {
             return false;
         }

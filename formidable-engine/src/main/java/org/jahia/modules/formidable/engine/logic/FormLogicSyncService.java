@@ -15,11 +15,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.jahia.modules.formidable.engine.api.FmdbMixin;
+import org.jahia.modules.formidable.engine.api.FmdbProperty;
 
 import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.FIELDS_NODE;
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.FORM_LOGIC_ELEMENT_MIXIN;
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.FORM_NODE_TYPE;
-import static org.jahia.modules.formidable.engine.util.FormidableJcrConstants.LOGICS_PROPERTY;
 
 /**
  * Idempotent service that keeps the logicsSrc child structure in sync
@@ -66,7 +65,7 @@ public final class FormLogicSyncService {
     public static boolean remapFieldKeysAfterCopy(JCRNodeWrapper copiedRoot, JCRNodeWrapper formNode)
             throws RepositoryException {
         List<JCRNodeWrapper> copiedElements = new ArrayList<>();
-        if (copiedRoot.isNodeType(FORM_LOGIC_ELEMENT_MIXIN)) {
+        if (copiedRoot.isNodeType(FmdbMixin.FORM_LOGIC_ELEMENT)) {
             copiedElements.add(copiedRoot);
         }
 
@@ -119,11 +118,11 @@ public final class FormLogicSyncService {
 
     private static boolean rewriteSourceFieldKeys(JCRNodeWrapper element, Map<String, String> remappedKeys)
             throws RepositoryException {
-        if (!element.hasProperty(LOGICS_PROPERTY)) {
+        if (!element.hasProperty(FmdbProperty.LOGICS)) {
             return false;
         }
 
-        Value[] values = element.getProperty(LOGICS_PROPERTY).getValues();
+        Value[] values = element.getProperty(FmdbProperty.LOGICS).getValues();
         List<String> rewritten = new ArrayList<>();
         boolean updated = false;
 
@@ -146,7 +145,7 @@ public final class FormLogicSyncService {
         }
 
         if (updated) {
-            element.setProperty(LOGICS_PROPERTY, rewritten.toArray(new String[0]));
+            element.setProperty(FmdbProperty.LOGICS, rewritten.toArray(new String[0]));
         }
 
         return updated;
@@ -157,7 +156,7 @@ public final class FormLogicSyncService {
      * Must be called with a JCR session that will be saved by the caller.
      */
     public static boolean sync(JCRNodeWrapper targetNode) throws RepositoryException {
-        if (!targetNode.isNodeType(FORM_LOGIC_ELEMENT_MIXIN)) {
+        if (!targetNode.isNodeType(FmdbMixin.FORM_LOGIC_ELEMENT)) {
             return false;
         }
 
@@ -169,11 +168,11 @@ public final class FormLogicSyncService {
 
         boolean keyAssigned = FieldKeys.assignIfMissing(targetNode);
 
-        if (!targetNode.hasProperty(LOGICS_PROPERTY)) {
+        if (!targetNode.hasProperty(FmdbProperty.LOGICS)) {
             return FormLogicReferenceStore.removeAllLogicsSrc(targetNode) || keyAssigned;
         }
 
-        Value[] values = targetNode.getProperty(LOGICS_PROPERTY).getValues();
+        Value[] values = targetNode.getProperty(FmdbProperty.LOGICS).getValues();
         if (values.length == 0) {
             return FormLogicReferenceStore.removeAllLogicsSrc(targetNode) || keyAssigned;
         }
@@ -183,7 +182,7 @@ public final class FormLogicSyncService {
         boolean updated = keyAssigned;
 
         if (sweep.jsonUpdated() || sweep.droppedLeftovers() > 0) {
-            targetNode.setProperty(LOGICS_PROPERTY, sweep.updatedJsonValues().toArray(new String[0]));
+            targetNode.setProperty(FmdbProperty.LOGICS, sweep.updatedJsonValues().toArray(new String[0]));
             updated = true;
         }
 
@@ -243,7 +242,7 @@ public final class FormLogicSyncService {
 
     static JCRNodeWrapper findFormAncestor(JCRNodeWrapper node) throws RepositoryException {
         for (JCRItemWrapper ancestor : node.getAncestors()) {
-            if (ancestor instanceof JCRNodeWrapper n && n.isNodeType(FORM_NODE_TYPE)) {
+            if (ancestor instanceof JCRNodeWrapper n && n.isNodeType(FmdbMixin.FORM_ROOT)) {
                 return n;
             }
         }
@@ -282,7 +281,7 @@ public final class FormLogicSyncService {
         NodeIterator it = node.getNodes();
         while (it.hasNext()) {
             JCRNodeWrapper child = (JCRNodeWrapper) it.nextNode();
-            if (child.isNodeType(FORM_LOGIC_ELEMENT_MIXIN)) {
+            if (child.isNodeType(FmdbMixin.FORM_LOGIC_ELEMENT)) {
                 result.add(child);
             }
 

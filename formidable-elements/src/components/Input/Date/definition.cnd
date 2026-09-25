@@ -3,7 +3,7 @@
 // min/max is a mode — none, a fixed date (fmdbmix:fixedMinDate/fixedMaxDate
 // dynamic fieldsets carrying the calendar), or the submission day, resolved at
 // render/validation time. Modes are exclusive, so no bound-combination rule.
-[fmdb:inputDate] > jnt:content, fmdbmix:element, fmdbmix:dateField, fmdbmix:dateBounds, fmdbmix:rangeValidationMessages
+[fmdb:inputDate] > jnt:content, fmdbmix:element, fmdbmix:profileMappableField, fmdbmix:dateField, fmdbmix:dateBounds, fmdbmix:rangeValidationMessages
  - helpText (string, richtext[ckeditor.toolbar='FormidableHelp',ckeditor.customConfig='$context/modules/formidable-engine/javascript/ckeditor/helpTextConfig.js']) i18n indexed=no
  - required (boolean) = false
  - defaultValue (date, DatePicker)

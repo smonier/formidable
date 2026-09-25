@@ -2,7 +2,11 @@
 	"name": "fmdbmix:relativeMaxDate",
 	"fields": [
 		{
-			"name": "fmdb:maxRelativeUnit",
+			"name": "maxRelativeAmount",
+			"mandatory": true
+		},
+		{
+			"name": "maxRelativeUnit",
 			"valueConstraints": [
 				{
 					"value": {
@@ -25,7 +29,8 @@
 					},
 					"displayValueKey": "formidable-engine:relativeUnit.years"
 				}
-			]
+			],
+			"mandatory": true
 		}
 	]
 }

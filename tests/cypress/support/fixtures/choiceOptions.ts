@@ -2,32 +2,35 @@ import {JahiaNode} from './types';
 
 export type ChoiceFieldType = 'fmdb:select' | 'fmdb:radio' | 'fmdb:checkbox';
 
-export interface SourcedChoiceFieldData {
+interface ChoiceFieldData {
 	primaryNodeType: ChoiceFieldType;
 	name: string;
 	title: string;
+	required?: boolean;
+	multiple?: boolean;
+}
+
+export interface SourcedChoiceFieldData extends ChoiceFieldData {
 	sourceKey: string;
-	required?: boolean;
-	multiple?: boolean;
 }
 
-export interface CategoryChoiceFieldData {
-	primaryNodeType: ChoiceFieldType;
-	name: string;
-	title: string;
+export interface CategoryChoiceFieldData extends ChoiceFieldData {
 	rootCategoryUuid: string;
-	required?: boolean;
-	multiple?: boolean;
 }
 
-export interface ContentChoiceFieldData {
-	primaryNodeType: ChoiceFieldType;
-	name: string;
-	title: string;
+export interface ContentChoiceFieldData extends ChoiceFieldData {
 	rootNodeUuid: string;
 	nodeType: string;
-	required?: boolean;
-	multiple?: boolean;
+}
+
+/** A choice field carrying the mixin of one options mode and the properties that mode reads. */
+function getChoiceFieldNode(data: ChoiceFieldData, mixin: string, modeProperties: JahiaNode['properties']): JahiaNode {
+	const properties: JahiaNode['properties'] = [{name: 'jcr:title', value: data.title, language: 'en'}, ...modeProperties];
+
+	if (data.required !== undefined) properties.push({name: 'required', value: String(data.required), type: 'BOOLEAN'});
+	if (data.multiple !== undefined) properties.push({name: 'multiple', value: String(data.multiple), type: 'BOOLEAN'});
+
+	return {name: data.name, primaryNodeType: data.primaryNodeType, mixins: [mixin], properties};
 }
 
 /**
@@ -35,21 +38,10 @@ export interface ContentChoiceFieldData {
  * (fmdbmix:sourcedOptions), resolved at render and submit time.
  */
 export function getSourcedChoiceFieldNode(data: SourcedChoiceFieldData): JahiaNode {
-	const properties: JahiaNode['properties'] = [
-		{name: 'jcr:title', value: data.title, language: 'en'},
-		{name: 'fmdb:optionsMode', value: 'sourced'},
-		{name: 'fmdb:optionsSourceKey', value: data.sourceKey}
-	];
-
-	if (data.required !== undefined) properties.push({name: 'required', value: String(data.required), type: 'BOOLEAN'});
-	if (data.multiple !== undefined) properties.push({name: 'multiple', value: String(data.multiple), type: 'BOOLEAN'});
-
-	return {
-		name: data.name,
-		primaryNodeType: data.primaryNodeType,
-		mixins: ['fmdbmix:sourcedOptions'],
-		properties
-	};
+	return getChoiceFieldNode(data, 'fmdbmix:sourcedOptions', [
+		{name: 'optionsMode', value: 'sourced'},
+		{name: 'optionsSourceKey', value: data.sourceKey}
+	]);
 }
 
 /**
@@ -57,21 +49,10 @@ export function getSourcedChoiceFieldNode(data: SourcedChoiceFieldData): JahiaNo
  * (fmdbmix:categoryOptions): value = category name, label = localized title.
  */
 export function getCategoryChoiceFieldNode(data: CategoryChoiceFieldData): JahiaNode {
-	const properties: JahiaNode['properties'] = [
-		{name: 'jcr:title', value: data.title, language: 'en'},
-		{name: 'fmdb:optionsMode', value: 'category'},
-		{name: 'fmdb:optionsRootCategory', value: data.rootCategoryUuid, type: 'WEAKREFERENCE'}
-	];
-
-	if (data.required !== undefined) properties.push({name: 'required', value: String(data.required), type: 'BOOLEAN'});
-	if (data.multiple !== undefined) properties.push({name: 'multiple', value: String(data.multiple), type: 'BOOLEAN'});
-
-	return {
-		name: data.name,
-		primaryNodeType: data.primaryNodeType,
-		mixins: ['fmdbmix:categoryOptions'],
-		properties
-	};
+	return getChoiceFieldNode(data, 'fmdbmix:categoryOptions', [
+		{name: 'optionsMode', value: 'category'},
+		{name: 'optionsRootCategory', value: data.rootCategoryUuid, type: 'WEAKREFERENCE'}
+	]);
 }
 
 /**
@@ -80,22 +61,11 @@ export function getCategoryChoiceFieldNode(data: CategoryChoiceFieldData): Jahia
  * label = localized displayable name.
  */
 export function getContentChoiceFieldNode(data: ContentChoiceFieldData): JahiaNode {
-	const properties: JahiaNode['properties'] = [
-		{name: 'jcr:title', value: data.title, language: 'en'},
-		{name: 'fmdb:optionsMode', value: 'content'},
-		{name: 'fmdb:optionsRootNode', value: data.rootNodeUuid, type: 'WEAKREFERENCE'},
-		{name: 'fmdb:optionsNodeType', value: data.nodeType}
-	];
-
-	if (data.required !== undefined) properties.push({name: 'required', value: String(data.required), type: 'BOOLEAN'});
-	if (data.multiple !== undefined) properties.push({name: 'multiple', value: String(data.multiple), type: 'BOOLEAN'});
-
-	return {
-		name: data.name,
-		primaryNodeType: data.primaryNodeType,
-		mixins: ['fmdbmix:contentOptions'],
-		properties
-	};
+	return getChoiceFieldNode(data, 'fmdbmix:contentOptions', [
+		{name: 'optionsMode', value: 'content'},
+		{name: 'optionsRootNode', value: data.rootNodeUuid, type: 'WEAKREFERENCE'},
+		{name: 'optionsNodeType', value: data.nodeType}
+	]);
 }
 
 /**

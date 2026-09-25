@@ -7,7 +7,7 @@
 		"contributeInMain": "Les options se contribuent dans la langue par défaut du site ({{lang}}). Cette option n'y porte aucune valeur, son libellé se modifie donc là aussi ; les options qui ont une valeur apparaissent ici pour traduction dès que le champ est enregistré en {{lang}}"
 	},
 	"fmdbmix_optionsSource": {
-		"fmdb_optionsMode": {
+		"optionsMode": {
 			"manual": "Options manuelles",
 			"sourced": "Options depuis une source tierce",
 			"category": "Options depuis des catégories",
@@ -15,13 +15,13 @@
 		}
 	},
 	"fmdbmix_dateBounds": {
-		"fmdb_minBoundMode": {
+		"minBoundMode": {
 			"none": "Aucun minimum",
 			"date": "Date fixe (choisie dans le calendrier)",
 			"today": "Date courante (le jour où le formulaire est soumis)",
 			"relative": "Date relative (la date courante décalée d'un écart fixe)"
 		},
-		"fmdb_maxBoundMode": {
+		"maxBoundMode": {
 			"none": "Aucun maximum",
 			"date": "Date fixe (choisie dans le calendrier)",
 			"today": "Date courante (le jour où le formulaire est soumis)",
@@ -29,13 +29,13 @@
 		}
 	},
 	"fmdbmix_datetimeBounds": {
-		"fmdb_minBoundMode": {
+		"minBoundMode": {
 			"none": "Aucun minimum",
 			"date": "Date et heure fixes (choisies dans le calendrier)",
 			"today": "Date courante (dès le début du jour de soumission)",
 			"relative": "Date relative (décalée depuis la date courante, à partir du début de ce jour)"
 		},
-		"fmdb_maxBoundMode": {
+		"maxBoundMode": {
 			"none": "Aucun maximum",
 			"date": "Date et heure fixes (choisies dans le calendrier)",
 			"today": "Date courante (jusqu'à la fin du jour de soumission)",
@@ -158,7 +158,8 @@
 			"origin": "Origine",
 			"locale": "Langue",
 			"user": "Utilisateur",
-			"referer": "Provenance"
+			"referer": "Provenance",
+			"timeZone": "Fuseau horaire"
 		},
 		"export": {
 			"title": "Exporter les résultats",

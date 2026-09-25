@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
+import org.jahia.modules.formidable.engine.api.FmdbMixin;
 
 /**
  * Render filter that injects CAPTCHA front-end configuration as request attributes
@@ -31,7 +32,6 @@ import java.util.Objects;
 public class CaptchaRenderFilter extends AbstractFilter {
 
     private static final Logger log = LoggerFactory.getLogger(CaptchaRenderFilter.class);
-    private static final String CAPTCHA_PROTECTED_FORM_MIXIN = "fmdbmix:captchaProtectedForm";
 
     static final String ATTR_SITE_KEY       = "formidable.captcha.siteKey";
     static final String ATTR_SCRIPT_URL     = "formidable.captcha.scriptUrl";
@@ -51,7 +51,7 @@ public class CaptchaRenderFilter extends AbstractFilter {
         setPriority(10);
         // fmdbmix:captcha in formidable-elements extends fmdbmix:captchaProtectedForm, so
         // applyOnNodeTypes can target the engine-owned contract directly.
-        setApplyOnNodeTypes(CAPTCHA_PROTECTED_FORM_MIXIN);
+        setApplyOnNodeTypes(FmdbMixin.CAPTCHA_PROTECTED_FORM);
         setApplyOnTemplateTypes("html");
     }
 
@@ -62,7 +62,7 @@ public class CaptchaRenderFilter extends AbstractFilter {
             if (!config.isCaptchaWidgetConfigured()) {
                 log.warn("[Formidable] {} is applied on form '{}' but CAPTCHA is not configured " +
                         "(captchaSiteKey, captchaScriptUrl, captchaWidgetVar or captchaTokenField missing in org.jahia.modules.formidable.cfg). The widget will not be rendered.",
-                        CAPTCHA_PROTECTED_FORM_MIXIN, resource.getNodePath());
+                        FmdbMixin.CAPTCHA_PROTECTED_FORM, resource.getNodePath());
                 return null;
             }
 

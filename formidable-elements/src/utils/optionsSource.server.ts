@@ -60,7 +60,7 @@ const alignManualOptions = (currentNode: JCRNodeWrapper, manualOptions: string[]
 };
 
 // The root a category- or content-mode field reads its options under, by mixin.
-const SOURCE_ROOT_PROPERTIES = ["fmdb:optionsRootCategory", "fmdb:optionsRootNode"];
+const SOURCE_ROOT_PROPERTIES = ["optionsRootCategory", "optionsRootNode"];
 
 const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -87,7 +87,7 @@ const declareSourceRootDependency = (currentNode: JCRNodeWrapper, renderContext:
 /**
  * Resolves the option list of a choice field at render time.
  *
- * Manual mode renders the stored fmdb:options values, realigned on the default
+ * Manual mode renders the stored options values, realigned on the default
  * language's identity (see alignManualOptions). Sourced mode asks the engine's
  * options-source resolver (in-process OSGi call) for the current language; the
  * resolver answers in the manual-options JSON format, so both modes feed the same

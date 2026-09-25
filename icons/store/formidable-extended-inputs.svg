@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 125 125" width="125" height="125">
+  <title>Formidable Extended Inputs: three sliders, their knobs in blue</title>
+  <rect x="0" y="0" width="125" height="125" rx="22" fill="#1F2937"/>
+  <g transform="translate(11.7 11.7) scale(4.23)" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.5 5h9M18 5h3.5M2.5 12h3M11 12h10.5M2.5 19h11M19.5 19h2"/>
+    <path d="M15.5 2v6M8 9v6M16.5 16v6" stroke="#00A0E3" stroke-width="3"/>
+  </g>
+</svg>

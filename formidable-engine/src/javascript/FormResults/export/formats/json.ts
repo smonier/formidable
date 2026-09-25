@@ -22,6 +22,7 @@ const buildJsonContent = (
         origin: submission.origin,
         locale: submission.locale,
         referer: submission.referer,
+        timeZone: submission.timeZone,
         fields: Object.fromEntries(
             submission.fieldValues.map(field => {
                 const label = formFieldLabels.get(field.name);

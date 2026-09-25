@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.jahia.modules.formidable.engine.api.FmdbMixin;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -96,7 +97,7 @@ class FormLogicSyncServiceTest {
                 "form",
                 "/form",
                 "fmdb:form",
-                Set.of(),
+                Set.of(FmdbMixin.FORM_ROOT),
                 Map.of(),
                 List.of(fields),
                 List.of()
@@ -199,7 +200,7 @@ class FormLogicSyncServiceTest {
                 "form",
                 "/form",
                 "fmdb:form",
-                Set.of(),
+                Set.of(FmdbMixin.FORM_ROOT),
                 Map.of(),
                 List.of(fields),
                 List.of()
@@ -304,7 +305,7 @@ class FormLogicSyncServiceTest {
                 "form",
                 "/form",
                 "fmdb:form",
-                Set.of(),
+                Set.of(FmdbMixin.FORM_ROOT),
                 Map.of(),
                 List.of(fields),
                 List.of()
@@ -392,7 +393,7 @@ class FormLogicSyncServiceTest {
                 "form",
                 "/new-form",
                 "fmdb:form",
-                Set.of(),
+                Set.of(FmdbMixin.FORM_ROOT),
                 Map.of(),
                 List.of(fields),
                 List.of()
@@ -469,7 +470,7 @@ class FormLogicSyncServiceTest {
                 "form",
                 "/form",
                 "fmdb:form",
-                Set.of(),
+                Set.of(FmdbMixin.FORM_ROOT),
                 Map.of(),
                 List.of(fields),
                 List.of()
@@ -526,7 +527,7 @@ class FormLogicSyncServiceTest {
                 "form",
                 "/form",
                 "fmdb:form",
-                Set.of(),
+                Set.of(FmdbMixin.FORM_ROOT),
                 Map.of(),
                 List.of(fields),
                 List.of()
@@ -604,7 +605,7 @@ class FormLogicSyncServiceTest {
                 "form",
                 "/form",
                 "fmdb:form",
-                Set.of(),
+                Set.of(FmdbMixin.FORM_ROOT),
                 Map.of(),
                 List.of(fields),
                 List.of()
@@ -703,7 +704,7 @@ class FormLogicSyncServiceTest {
                 "form",
                 "/form",
                 "fmdb:form",
-                Set.of(),
+                Set.of(FmdbMixin.FORM_ROOT),
                 Map.of(),
                 List.of(fields),
                 List.of()
@@ -750,7 +751,7 @@ class FormLogicSyncServiceTest {
         JCRNodeWrapper fields = node(
                 "fields", "/form/fields", "fmdb:fieldList", Set.of(), Map.of(), List.of(target), List.of());
         JCRNodeWrapper form = node(
-                "form", "/form", "fmdb:form", Set.of(), Map.of(), List.of(fields), List.of());
+                "form", "/form", "fmdb:form", Set.of(FmdbMixin.FORM_ROOT), Map.of(), List.of(fields), List.of());
         when(target.getAncestors()).thenReturn(List.of(form));
 
         assertTrue(FormLogicSyncService.sync(target), "dropping leftovers must be reported as an update");
@@ -781,7 +782,7 @@ class FormLogicSyncServiceTest {
         JCRNodeWrapper fields = node(
                 "fields", "/form/fields", "fmdb:fieldList", Set.of(), Map.of(), List.of(target), List.of());
         JCRNodeWrapper form = node(
-                "form", "/form", "fmdb:form", Set.of(), Map.of(), List.of(fields), List.of());
+                "form", "/form", "fmdb:form", Set.of(FmdbMixin.FORM_ROOT), Map.of(), List.of(fields), List.of());
         when(target.getAncestors()).thenReturn(List.of(form));
 
         assertFalse(FormLogicSyncService.sync(target), "a complete provider rule must not trigger any update");

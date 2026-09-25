@@ -12,8 +12,8 @@ It is the twin of [`formidable-salesforce`](../formidable-salesforce/README.md):
 architecture, same selector, same error policies. Only the CRM layer differs.
 
 Part of the CRM connector family with the two other modules: see
-[docs/crm-connector-actions.md](../docs/crm-connector-actions.md) for the shared architecture and
-the side-by-side comparison, and its [consolidated changelog](../docs/crm-connector-actions-changelog.md).
+[docs/administration/crm-connector-actions.md](../docs/administration/crm-connector-actions.md) for the shared architecture and
+the side-by-side comparison, and its [consolidated changelog](../docs/administration/crm-connector-actions-changelog.md).
 
 ## Contents
 
@@ -201,7 +201,7 @@ Uploaded files are not sent.
 HubSpot errors are parsed (`category`, `errors[].context.propertyName`) and logged with the
 action path, never with submitted values. With the default policy the action throws a
 `FormActionException` with HTTP 502, surfaced to the visitor as the generic action failure code
-(`FMDB-008`, see `docs/error-codes.md`). Typical log lines:
+(`FMDB-008`, see `docs/administration/error-codes.md`). Typical log lines:
 
 ```
 Created HubSpot contact 1234567 from /sites/x/contents/form/actions/hubspotContact (5 property(ies))

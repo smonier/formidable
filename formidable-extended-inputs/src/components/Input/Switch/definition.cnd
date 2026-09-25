@@ -11,7 +11,7 @@
 // fmdbmix:booleanField makes the field a conditional-logic source (is true / is false).
 // Both display modes expose the state to the generic logic reader: 'toggle' as a lone
 // checkbox (checked state), 'buttons' as a radio pair submitting "true"/"false".
-[fmdbext:switch] > jnt:content, fmdbmix:element, fmdbmix:booleanField, fmdbmix:validationMessages
+[fmdbext:switch] > jnt:content, fmdbmix:element, fmdbmix:profileMappableField, fmdbmix:booleanField, fmdbmix:validationMessages
  - helpText (string, richtext[ckeditor.toolbar='FormidableHelp',ckeditor.customConfig='$context/modules/formidable-engine/javascript/ckeditor/helpTextConfig.js']) i18n indexed=no
  - displayMode (string, choicelist[resourceBundle]) = 'toggle' autocreated indexed=no < 'toggle', 'buttons'
  - onLabel (string) = resourceBundle('fmdbext_switch.defaultOnLabel') autocreated i18n indexed=no

@@ -1,4 +1,4 @@
-import {type ChangeEvent, useRef, useState} from 'react';
+import {type ChangeEvent, useEffect, useRef, useState} from 'react';
 import {formatFileSize} from '~/utils/fileUtils';
 import {useTranslation} from "react-i18next";
 
@@ -128,6 +128,24 @@ export default function FileInput(
 	const allowedTypesLabel = getDisplayFormats(acceptTokens)
 		.map(format => `"${format}"`)
 		.join(", ");
+
+	// The chip list is React state: a native form reset — the Reset button, or the form
+	// coming back after a successful submission — empties the input but not the list,
+	// and the visitor would believe the previous file is still attached (#288).
+	useEffect(() => {
+		const formElement = fileInputRef.current?.form;
+		if (!formElement) {
+			return;
+		}
+
+		const handleReset = () => {
+			fileInputRef.current?.setCustomValidity("");
+			setSelectionNotice(null);
+			setSelectedFiles(null);
+		};
+		formElement.addEventListener('reset', handleReset);
+		return () => formElement.removeEventListener('reset', handleReset);
+	}, []);
 
 	const syncInputFiles = (files: File[]) => {
 		if (!fileInputRef.current) return;

@@ -25,6 +25,7 @@
              is only read by the maven-bundle-plugin of the JAVA modules (packaging pom here,
              so it never ran) — a value kept in both places would only drift. -->
         <jahia-module-signature>MCwCFFn2JaGmbMsOtS1uDORN1UI2byBnAhQ59M73aLjDwGQ7LTArc6RaBK74AA==</jahia-module-signature>
+        <sonar.sources>src,package.json,pom.xml</sonar.sources>
     </properties>
 
     <repositories>
