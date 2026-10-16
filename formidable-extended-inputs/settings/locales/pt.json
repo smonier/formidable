@@ -1,0 +1,19 @@
+{
+  "fmdbext_rating": {
+    "configClamped": "Classificação: maxValue {{configured}} está fora do intervalo suportado 2-{{max}} e é apresentado com {{effective}} ícones."
+  },
+  "fmdbext_scale": {
+    "npsMinLabel": "Nada provável",
+    "npsMaxLabel": "Extremamente provável",
+    "configTruncated": "Escala: a configuração min/max/step produz mais de {{max}} valores; a escala é truncada.",
+    "configMaxUnreachable": "Escala: maxValue {{configured}} é saltado pelo passo {{step}}; o último valor selecionável é {{effective}}."
+  },
+  "fmdbext_switch": {
+    "defaultOnLabel": "Sim",
+    "defaultOffLabel": "Não"
+  },
+  "fmdbext_consent": {
+    "defaultTermsLinkLabel": "Ler os termos completos",
+    "termsTargetUnresolved": "Consentimento: não é possível resolver o destino dos termos (não publicado ou não visível para os visitantes); a ligação não será mostrada."
+  }
+}

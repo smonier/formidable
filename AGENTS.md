@@ -99,7 +99,7 @@ The `<Island>` is the SSR-to-client hydration boundary. **Props must be serialis
 
 ### i18n
 
-`react-i18next`, namespace `formidable-elements`, key prefix = node type name (e.g. `fmdb_form`, `fmdb_inputCheckbox`). Translation files: `formidable-elements/settings/locales/{en,fr}.json`.
+`react-i18next`, namespace `formidable-elements`, key prefix = node type name (e.g. `fmdb_form`, `fmdb_inputCheckbox`). Translation files: `formidable-elements/settings/locales/{en,fr,pt}.json` (pt is European Portuguese, for visitors only: the editor labels stay English, `docs/administration/languages.md`). A key added to `en.json` goes into every language file of the folder, in the same order (`scripts/check-locales.mjs`).
 
 ### Action Pipeline (Java)
 

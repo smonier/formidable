@@ -79,6 +79,9 @@ jobs:
       # A Java resource bundle is read as ISO-8859-1: a raw accent or dash shows as mojibake; \uXXXX or nothing.
       - name: Check the Java resource bundles are ASCII
         run: node scripts/check-properties-ascii.mjs
+      # A key missing from one language renders as the raw key for its visitors; a translated bundle holds only keys of its base (docs/administration/languages.md).
+      - name: Check the locale files and translated bundles
+        run: node scripts/check-locales.mjs
 
   build:
     name: Build Module

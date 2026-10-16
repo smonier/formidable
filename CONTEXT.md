@@ -74,7 +74,7 @@ Both coexist on the same element:
 ### i18n
 
 `react-i18next`, namespace `formidable-elements`, key prefix = node type name (e.g. `fmdb_form`, `fmdb_inputCheckbox`).
-Translation files: `formidable-elements/settings/locales/en.json` and `fr.json`.
+Translation files: `formidable-elements/settings/locales/en.json`, `fr.json` and `pt.json` (European Portuguese, visitor texts only: `docs/administration/languages.md`); every key in every file, in the order of `en.json` (`scripts/check-locales.mjs`).
 Server-side labels come from JCR properties (`jcr:title`).
 
 ---

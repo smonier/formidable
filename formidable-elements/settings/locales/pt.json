@@ -1,0 +1,59 @@
+{
+	"fmdb_inputFile": {
+		"selectedFiles": "Ficheiros selecionados:",
+		"removeFile": "Remover ficheiro",
+		"noFilesSelected": "Nenhum ficheiro selecionado",
+		"singleInvalidFile": "O ficheiro {{invalidFormats}} não é permitido. Formatos permitidos: {{allowedTypes}}.",
+		"multipleInvalidFiles": "Os ficheiros {{invalidFormats}} não são permitidos. Formatos permitidos: {{allowedTypes}}.",
+		"ignoredSingleInvalidFile": "O ficheiro {{invalidFormats}} foi ignorado. Formatos permitidos: {{allowedTypes}}.",
+		"ignoredMultipleInvalidFiles": "Os ficheiros {{invalidFormats}} foram ignorados. Formatos permitidos: {{allowedTypes}}.",
+		"noAcceptedType": "Este campo não aceita nenhum ficheiro."
+	},
+	"fmdb_inputHidden": {
+		"label": "Campo oculto",
+		"empty": "Sem valor"
+	},
+	"fmdb_inputCheckbox": {
+		"error": "É necessário selecionar pelo menos uma opção"
+	},
+	"fmdb_choiceField": {
+		"sourceUnavailable": "As opções deste campo estão temporariamente indisponíveis.",
+		"sourceUnavailableRequired": "As opções deste campo obrigatório estão temporariamente indisponíveis. Não é possível enviar o formulário. Tente novamente mais tarde."
+	},
+	"fmdb_form": {
+		"submitBtn": "Enviar",
+		"resetBtn": "Repor",
+		"newFormBtn": "Novo formulário",
+		"tryAgainBtn": "Tentar novamente",
+		"submitting": "A enviar...",
+		"loading": "A carregar...",
+		"previousBtn": "Anterior",
+		"nextBtn": "Seguinte",
+		"stepsNav": "Etapas do formulário",
+		"captchaRequired": "É necessário concluir a verificação CAPTCHA.",
+		"editModeSubmitDisabled": "O envio do formulário está desativado no modo de edição/pré-visualização.",
+		"maintenanceUnavailable": "Este formulário está temporariamente indisponível durante a manutenção da plataforma. Tente novamente mais tarde.",
+		"errorCode": "Código de erro",
+		"actionsProgress": "{{completed}}/{{total}} ações concluídas",
+		"checking": "A verificar…"
+	},
+	"fmdb_formReference": {
+		"noFormSelected": "Nenhum formulário selecionado"
+	},
+	"fmdb_inputRange": {
+		"required": "É necessário selecionar um valor",
+		"unanswered": "Ainda não foi selecionado nenhum valor"
+	},
+	"fmdb_actionList": {
+		"heading": "Ações no envio · {{count}}",
+		"inOrder": "Executadas por esta ordem. Não são mostradas aos visitantes.",
+		"notLive": "Não é mostrado aos visitantes.",
+		"empty": "Ainda não há ações: as submissões não serão guardadas nem enviadas."
+	},
+	"fmdb_fieldActionList": {
+		"heading": "Ações do campo · {{count}}",
+		"inOrder": "Executadas por esta ordem. Não são mostradas aos visitantes.",
+		"notLive": "Não é mostrado aos visitantes.",
+		"empty": "Ainda não há ações do campo: adicione uma abaixo para verificar o que os visitantes escrevem neste campo."
+	}
+}
