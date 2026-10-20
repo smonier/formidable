@@ -63,6 +63,8 @@ export class CheckboxGroup extends BaseComponent {
 
 	shouldBeRequired(): this {
 		this.getLegend().find('.fmdb-required-indicator').should('exist');
+		// ARIA allows no aria-required on a group: the group's validation says when no box is ticked
+		this.get().should('not.have.attr', 'aria-required');
 		return this;
 	}
 

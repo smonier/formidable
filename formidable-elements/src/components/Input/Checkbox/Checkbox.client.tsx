@@ -73,7 +73,6 @@ export default function Checkbox({ label, required = false, errorMessage, helpTe
 			ref={fieldsetRef}
 			className="fmdb-form-group fmdb-checkbox-group"
 			aria-invalid={!isValid}
-			aria-required={required}
 			aria-describedby={helpId}
 		>
 			{label && (
