@@ -27,6 +27,23 @@ const FIELD_ACTION_REFUSED_CODE = 'FMDB-015';
 const ACTION_REFUSED_CODE = 'FMDB-018';
 /** Dispatched on the form element after a 2xx, before the form is reset. Detail: {formId, response}. */
 export const SUBMITTED_EVENT = 'formidable:submitted';
+/**
+ * How long a redirect waits, at most, for the work the listeners of the submitted event handed to `waitUntil` (the
+ * jExperience module's form event): long enough for a tracker to land its event, short enough that a tracker that never
+ * answers does not keep the visitor on the form.
+ */
+export const REDIRECT_HOLD_MS = 3000;
+
+/**
+ * What a listener of the submitted event receives in `detail`. A listener whose work must land before the visitor leaves
+ * for a redirect (an event the next page is rendered from) passes its promise to `waitUntil`, synchronously: the redirect
+ * waits for every such promise, settled either way, or REDIRECT_HOLD_MS. Without a redirect nothing waits.
+ */
+export interface SubmittedDetail {
+	formId: string;
+	response: unknown;
+	waitUntil: (work: PromiseLike<unknown>) => void;
+}
 
 /**
  * How long the spinner stays on screen at least. A submission answered faster than the eye would
@@ -69,9 +86,24 @@ export function isSameOriginPath(target: unknown): target is string {
  * its own so the listeners of the submitted event have run, and only for a path of this site (the server validated it,
  * this is the second check); `assign`, not `replace`, so the form page stays reachable with the Back button.
  */
-function navigateTo(target: unknown): void {
+function navigateTo(target: unknown, holds: Promise<unknown>[] = []): void {
 	if (!isSameOriginPath(target)) return;
-	setTimeout(() => globalThis.location.assign(target), 0);
+	let gone = false;
+	const go = () => {
+		if (gone) return;
+		gone = true;
+		globalThis.location.assign(target);
+	};
+	setTimeout(() => {
+		if (holds.length === 0) {
+			go();
+			return;
+		}
+		// the jExperience module's form event must reach jCustomer before the next page is rendered from the profile,
+		// and a navigation started earlier cancels it
+		void Promise.all(holds).then(go);
+		setTimeout(go, REDIRECT_HOLD_MS);
+	}, 0);
 }
 
 /** The server's JSON answer, or null for a body that is not JSON: the event never fails on it. */
@@ -279,10 +311,16 @@ export function useFormSubmission({
 			// that know nothing of this island (the jExperience module listens for it). The
 			// event says "accepted, here is what the server answered" and nothing else; a listener
 			// that throws does not reach this code (dispatchEvent reports it to the window).
-			form.dispatchEvent(new CustomEvent(SUBMITTED_EVENT, {
-				bubbles: true,
-				detail: {formId, response: parseJsonBody(response.responseText)},
-			}));
+			const holds: Promise<unknown>[] = [];
+			const detail: SubmittedDetail = {
+				formId,
+				response: parseJsonBody(response.responseText),
+				// settled at once either way, so a rejected promise is never left unhandled until the redirect looks at it
+				waitUntil: work => {
+					holds.push(Promise.resolve(work).then(() => undefined, () => undefined));
+				},
+			};
+			form.dispatchEvent(new CustomEvent<SubmittedDetail>(SUBMITTED_EVENT, {bubbles: true, detail}));
 
 			// The spinner has been visible since before the request: only the rest of the floor is waited for
 			await completeFeedbackPause(spinnerShownAt);
@@ -296,7 +334,7 @@ export function useFormSubmission({
 			// 200 and after every action, so throwing here would tell the visitor the submission failed
 			HTMLFormElement.prototype.reset.call(form);
 			if (isMultiStep) setCurrentStep(0);
-			navigateTo(accepted?.redirect);
+			navigateTo(accepted?.redirect, holds);
 		} catch (error) {
 			showRejection(form, rejection, error);
 		} finally {

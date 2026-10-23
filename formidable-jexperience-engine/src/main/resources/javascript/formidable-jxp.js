@@ -6,7 +6,8 @@
  * 1. Sends the `form` event of an accepted submission through jExperience's tracker, after the
  *    server answered 200 and with the values the server accepted, never the DOM fields. The form
  *    island announces an accepted submission with a bubbling `formidable:submitted` DOM event; the
- *    server put the accepted values in the `jexperience` block of its answer.
+ *    server put the accepted values in the `jexperience` block of its answer. When an action sends the
+ *    visitor elsewhere, the redirect waits for the event (`detail.waitUntil`, capped by the form).
  * 2. Prefills the mapped fields from the visitor's profile. Before the tracker starts, the union of
  *    every block's `prefill` properties is pushed once into `digitalDataOverrides`, so that the one
  *    context request the tracker makes anyway returns them; once the context is loaded AND the form
@@ -129,15 +130,22 @@
     if (!config || !api.shouldCollect(detail.formId)) {
       return;
     }
-    // No success callback: nothing of the page depends on the event having landed.
-    window.wem.collectEvent(api.buildEvent(config, block.fields), undefined, (xhr) => {
-      console.warn(
-        "[Formidable] jExperience did not collect the form event: " +
-          (xhr && xhr.status) +
-          " " +
-          (xhr && xhr.statusText),
-      );
+    // Settled once jCustomer has answered, either way. A redirect after the submission waits for it (the form caps
+    // the wait): the next page is rendered from the profile this event updates, and leaving earlier cancels it.
+    const landed = new Promise((resolve) => {
+      window.wem.collectEvent(api.buildEvent(config, block.fields), resolve, (xhr) => {
+        console.warn(
+          "[Formidable] jExperience did not collect the form event: " +
+            (xhr && xhr.status) +
+            " " +
+            (xhr && xhr.statusText),
+        );
+        resolve();
+      });
     });
+    if (typeof detail.waitUntil === "function") {
+      detail.waitUntil(landed); // formidable-elements before the hold has none: the redirect does not wait
+    }
   });
 
   // ---------------------------------------------------------------------------------------------
