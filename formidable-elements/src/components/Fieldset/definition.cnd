@@ -1,3 +1,6 @@
 [fmdb:fieldset] > jnt:content, fmdbmix:formElement, fmdbmix:formContainer, fmdbmix:nonSubmittable
+// The help of the group, under its legend (#441). Declared here so that the definition matches the instances that
+// already run #441; the views of this branch do not render it yet.
+ - helpText (string, richtext[ckeditor.toolbar='FormidableHelp',ckeditor.customConfig='$context/modules/formidable-engine/javascript/ckeditor/helpTextConfig.js']) i18n indexed=no
  + * (fmdbmix:element) = fmdbmix:element
  + * (fmdbmix:formContent) = fmdbmix:formContent
